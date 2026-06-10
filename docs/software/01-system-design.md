@@ -63,17 +63,17 @@ pub const HISTORY_SIZE: usize = 60;
 
 pub struct AppState {
     pub raid: Option<RaidStatus>,
-    pub disks: Vec<DiskInfo>,
-    pub io_stats: Vec<IoStats>,
+    pub disks: Vec<DiskInfo>,    // one DiskInfo per device; matched to disk_devices by DiskInfo.device
+    pub io_stats: Vec<IoStats>,  // one IoStats per device; matched to disk_devices by IoStats.device
     pub last_updated: std::time::Instant,
-    pub disk_devices: Vec<String>, // ["sdc", "sdd", "sde"]
+    pub disk_devices: Vec<String>, // master device list ["sdc", "sdd", "sde"] — key ที่ใช้ link ทุก collection
 
-    // History ring buffers สำหรับ graph (key = device name)
+    // History ring buffers สำหรับ graph — key = device name (ตรงกับ disk_devices)
     // ใช้ VecDeque เพื่อ push_back O(1) และ pop_front O(1)
-    pub temp_history: HashMap<String, VecDeque<u64>>,   // °C
-    pub read_history: HashMap<String, VecDeque<u64>>,   // MB/s × 10 (เก็บ 1 decimal)
-    pub write_history: HashMap<String, VecDeque<u64>>,  // MB/s × 10
-    pub raid_speed_history: VecDeque<u64>,              // MB/s
+    pub temp_history: HashMap<String, VecDeque<u64>>,   // °C per device
+    pub read_history: HashMap<String, VecDeque<u64>>,   // MB/s × 10 per device (เก็บ 1 decimal)
+    pub write_history: HashMap<String, VecDeque<u64>>,  // MB/s × 10 per device
+    pub raid_speed_history: VecDeque<u64>,              // MB/s (RAID-level ไม่ใช่ per device)
 
     // View & navigation state
     pub view_mode: ViewMode,
@@ -102,6 +102,20 @@ pub enum FocusedPanel {
     RaidGraph,
 }
 ```
+
+**Per-device data model:** `disk_devices` คือ master list — ทุก collection ใช้ device name เดียวกันเป็น key:
+
+```
+disk_devices = ["sdc", "sdd", "sde"]
+     │
+     ├── disks[i].device        → temperature_c, health_ok, serial, …  (per device)
+     ├── io_stats[i].device     → read_mb_s, write_mb_s                (per device)
+     ├── temp_history["sdc"]    → VecDeque<u64> อุณหภูมิย้อนหลัง     (per device)
+     ├── read_history["sdc"]    → VecDeque<u64> read speed ย้อนหลัง   (per device)
+     └── write_history["sdc"]   → VecDeque<u64> write speed ย้อนหลัง  (per device)
+```
+
+UI merge ข้อมูลโดยวน loop `disk_devices` แล้ว lookup `disks`, `io_stats`, และ history maps ด้วย device name เดียวกัน
 
 **History buffer logic:** ทุกครั้งที่ collector อัปเดต ให้ `push_back` ค่าใหม่ และ `pop_front` ถ้า `len() > HISTORY_SIZE`
 
