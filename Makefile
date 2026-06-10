@@ -21,11 +21,15 @@ install-static:
 
 install-service:
 	@if command -v systemctl >/dev/null 2>&1; then \
-		install -Dm644 contrib/vault-watch.service $(SERVICE)/$(BINARY).service; \
+		sed 's#__BINARY_PATH__#$(INSTALL)/$(BINARY)#g' contrib/vault-watch.service > /tmp/$(BINARY).service; \
+		install -Dm644 /tmp/$(BINARY).service $(SERVICE)/$(BINARY).service; \
+		rm -f /tmp/$(BINARY).service; \
 		systemctl daemon-reload; \
 		echo "Installed systemd service. Enable with: systemctl enable --now $(BINARY)"; \
 	elif [ -d /etc/init.d ]; then \
-		install -Dm755 contrib/vault-watch.openrc $(OPENRC_DIR)/$(BINARY); \
+		sed 's#__BINARY_PATH__#$(INSTALL)/$(BINARY)#g' contrib/vault-watch.openrc > /tmp/$(BINARY).openrc; \
+		install -Dm755 /tmp/$(BINARY).openrc $(OPENRC_DIR)/$(BINARY); \
+		rm -f /tmp/$(BINARY).openrc; \
 		echo "Installed OpenRC service. Enable with: rc-update add $(BINARY) default"; \
 	else \
 		echo "No supported init system found (systemd or OpenRC)"; \

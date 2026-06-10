@@ -2,7 +2,7 @@
 
 name="vault-watch"
 description="VaultWatch — SAS HDD & RAID Monitor"
-command="/usr/local/bin/vault-watch"
+command="__BINARY_PATH__"
 command_user="root"
 pidfile="/run/${RC_SVCNAME}.pid"
 command_background=true

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/vault-watch
+ExecStart=__BINARY_PATH__
 Restart=on-failure
 RestartSec=5s
 # Run as root so smartctl can access raw disk devices without sudo

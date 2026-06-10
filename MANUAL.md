@@ -179,8 +179,11 @@ source "$HOME/.cargo/env"
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
 make build          # compile as normal user
-sudo make install   # copy binary to /usr/local/bin
+sudo make install INSTALL=/usr/bin
 ```
+
+openSUSE `sudo` may use a restricted `secure_path` that does not include `/usr/local/bin`.
+Installing to `/usr/bin` allows `sudo vault-watch` to work consistently.
 
 ### 4. Run
 
@@ -191,7 +194,7 @@ sudo vault-watch
 ### 5. Optional: systemd service
 
 ```bash
-sudo make install-service
+sudo make install-service INSTALL=/usr/bin
 sudo systemctl enable --now vault-watch
 ```
 
@@ -373,6 +376,13 @@ sudo journalctl -fu vault-watch
 The service runs as root so smartctl can access raw devices without sudo.
 Unit file: [`contrib/vault-watch.service`](contrib/vault-watch.service)
 
+The service uses the same install path as `make install`. If you install to a custom location, pass the same `INSTALL` value to both commands:
+
+```bash
+sudo make install INSTALL=/usr/bin
+sudo make install-service INSTALL=/usr/bin
+```
+
 ### OpenRC (Alpine)
 
 ```bash
@@ -467,6 +477,20 @@ sudo make uninstall
 
 **`iostat: command not found`**
 → Install `sysstat`. Set `iostat_path` in config if installed elsewhere.
+
+**openSUSE: `sudo: vault-watch: command not found` after `sudo make install`**
+→ The binary was installed to `/usr/local/bin/vault-watch`, but openSUSE `sudo` may not include `/usr/local/bin` in its secure PATH. Use:
+
+```bash
+sudo /usr/local/bin/vault-watch
+```
+
+Or install to `/usr/bin` and install the service with the same path:
+
+```bash
+sudo make install INSTALL=/usr/bin
+sudo make install-service INSTALL=/usr/bin
+```
 
 **`sudo make install` fails with "rustup could not choose a version of cargo"**
 → Never run `sudo make install` to build — rustup installs cargo per-user, so root has no Rust toolchain.
