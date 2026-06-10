@@ -13,10 +13,13 @@ sudo apt install smartmontools sysstat
 # Install Rust (if not installed)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Build and install
+# Clone and build (as normal user — do NOT use sudo here)
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
-make install
+make build
+
+# Install binary (requires root)
+sudo make install
 
 # Run
 sudo vault-watch

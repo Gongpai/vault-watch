@@ -3,21 +3,23 @@ INSTALL    := /usr/local/bin
 SERVICE    := /etc/systemd/system
 OPENRC_DIR := /etc/init.d
 
-.PHONY: build build-static install install-service uninstall clean
+.PHONY: build build-static install install-static install-service uninstall clean
 
+# Build steps — run as normal user (requires cargo/rustup in PATH)
 build:
 	cargo build --release
 
 build-static:
 	cargo build --release --target x86_64-unknown-linux-musl
 
-install: build
+# Install steps — run with sudo (no cargo needed, binary must already be built)
+install:
 	install -Dm755 target/release/$(BINARY) $(INSTALL)/$(BINARY)
 
-install-static: build-static
+install-static:
 	install -Dm755 target/x86_64-unknown-linux-musl/release/$(BINARY) $(INSTALL)/$(BINARY)
 
-install-service: install
+install-service:
 	@if command -v systemctl >/dev/null 2>&1; then \
 		install -Dm644 contrib/vault-watch.service $(SERVICE)/$(BINARY).service; \
 		systemctl daemon-reload; \

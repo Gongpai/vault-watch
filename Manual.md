@@ -2,6 +2,10 @@
 
 Per-distro guide for building, installing, and running VaultWatch on each supported Linux distribution.
 
+> **Note — build vs install:** `cargo`/`rustup` is installed per-user and is not available to root.
+> Always **build as your normal user** (`make build`), then **install as root** (`sudo make install`).
+> Never run `sudo make build` — it will fail because root has no Rust toolchain.
+
 ---
 
 ## Table of Contents
@@ -39,7 +43,8 @@ source "$HOME/.cargo/env"
 ```bash
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
-make install          # builds release binary + installs to /usr/local/bin
+make build          # compile as normal user
+sudo make install   # copy binary to /usr/local/bin
 ```
 
 ### 4. Run
@@ -85,7 +90,8 @@ source "$HOME/.cargo/env"
 ```bash
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
-make install
+make build          # compile as normal user
+sudo make install   # copy binary to /usr/local/bin
 ```
 
 ### 4. Run
@@ -130,7 +136,8 @@ sudo pacman -S rust
 ```bash
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
-make install
+make build          # compile as normal user
+sudo make install   # copy binary to /usr/local/bin
 ```
 
 ### 4. Run
@@ -169,7 +176,8 @@ source "$HOME/.cargo/env"
 ```bash
 git clone https://github.com/YOUR_USERNAME/vault-watch.git
 cd vault-watch
-make install
+make build          # compile as normal user
+sudo make install   # copy binary to /usr/local/bin
 ```
 
 ### 4. Run
@@ -388,6 +396,10 @@ Init script: [`contrib/vault-watch.openrc`](contrib/vault-watch.openrc)
 
 **`iostat: command not found`**
 → Install `sysstat`. Set `iostat_path` in config if installed elsewhere.
+
+**`sudo make install` fails with "rustup could not choose a version of cargo"**
+→ Never run `sudo make install` to build — rustup installs cargo per-user, so root has no Rust toolchain.
+Run `make build` first as your normal user, then `sudo make install` separately.
 
 **Build fails: `linker 'cc' not found`**
 → Install `build-essential` (Debian), `base-devel` (Arch), `gcc` (Fedora), `build-base` (Alpine).
