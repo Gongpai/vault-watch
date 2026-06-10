@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 04 Planned — Cross-Distribution Support
+**Status:** Sprint 04 Planned — Cross-Distribution Support | Sprint 05 Planned — Device Discovery
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
 **Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
@@ -29,6 +29,7 @@
 | Startup Dependency Check | 🔵 Sprint 04 | [US-MON-15](./agile/user-stories/US-MON-15.md) |
 | Static Binary (Alpine/musl) | 🔵 Sprint 04 | [US-MON-16](./agile/user-stories/US-MON-16.md) |
 | Cross-Distro Installation Guide | 🔵 Sprint 04 | [US-MON-17](./agile/user-stories/US-MON-17.md) |
+| Auto-detect Disk Devices | 🟡 Sprint 05 | [US-MON-18](./agile/user-stories/US-MON-18.md) |
 
 ---
 
@@ -47,6 +48,7 @@
 - [sprint-02.md](./agile/sprint-backlogs/sprint-02.md) - Sprint 02 details (Dashboard Panels + Auto-Refresh)
 - [sprint-03.md](./agile/sprint-backlogs/sprint-03.md) - Sprint 03 details (Alerts & Notifications)
 - [sprint-04.md](./agile/sprint-backlogs/sprint-04.md) - Sprint 04 details (Cross-Distribution Support)
+- [sprint-05.md](./agile/sprint-backlogs/sprint-05.md) - Sprint 05 details (Device Discovery)
 
 ---
 

@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.5
+**Last Updated:** 2026-06-11 | **Version:** 1.6
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -30,6 +30,14 @@
 | [US-MON-09](./user-stories/US-MON-09.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้อุณหภูมิ disk มีสีบ่งบอกระดับความร้อน<br>**เพื่อให้** เห็นสถานะอันตรายได้ทันทีโดยไม่ต้องอ่านตัวเลข | 1. < 45°C = สีเขียว<br>2. 45–55°C = สีเหลือง<br>3. > 55°C = สีแดง + ข้อความ WARN | **S** | ✅ Done |
 | [US-MON-10](./user-stories/US-MON-10.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** การแจ้งเตือนเมื่อ SMART threshold ถูกละเมิด<br>**เพื่อให้** รู้ทันทีเมื่อ disk มีปัญหาที่อาจนำไปสู่ความเสียหาย | 1. Warning เมื่อ grown defects > 0<br>2. Alert เมื่อ health != OK<br>3. แสดง notification ชัดเจนบน UI | **M** | ✅ Done |
 | [US-MON-11](./user-stories/US-MON-11.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ส่ง alert ไป Discord webhook เมื่อเกิดเหตุการณ์สำคัญ<br>**เพื่อให้** รับการแจ้งเตือนแม้ไม่ได้นั่งดูหน้าจออยู่ | 1. Config webhook URL ผ่าน config file<br>2. Alert เมื่อ RAID degraded<br>3. Alert เมื่อ temp > 60°C<br>4. Alert เมื่อ SMART health != OK | **L** | ✅ Done |
+
+---
+
+## 🟣 Device Discovery (Sprint 05)
+
+| ID | User Story | Acceptance Criteria | Estimate | Status |
+|:---|:---|:---|:---|:---|
+| [US-MON-18](./user-stories/US-MON-18.md) | **ในฐานะ** ผู้ดูแลระบบที่มี disk setup ต่างจาก `sdc/sdd/sde`<br>**ฉันต้องการ** ให้ VaultWatch ค้นหา disk device อัตโนมัติ<br>**เพื่อให้** รันได้ทันทีโดยไม่ต้อง hardcode ชื่อ device | 1. Auto-detect `sd*` จาก `/sys/block/`<br>2. Config override `devices = [...]` ใน `[system]`<br>3. Filter: ตัด loop, ram, dm-*, md* ออก<br>4. Empty fallback — แสดง warning แทน crash<br>5. แสดง device list ที่ใช้งานใน UI | **S** | 🟡 Planned |
 
 ---
 
