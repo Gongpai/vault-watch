@@ -2,8 +2,8 @@ use tokio::process::Command;
 
 use crate::app::IoStats;
 
-pub async fn collect(devices: &[String]) -> Vec<IoStats> {
-    let output = Command::new("iostat")
+pub async fn collect(devices: &[String], iostat: &str) -> Vec<IoStats> {
+    let output = Command::new(iostat)
         .arg("-d")
         .arg("-k")
         .arg("-y")

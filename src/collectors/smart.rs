@@ -23,17 +23,20 @@ static READ_ERR_RE: LazyLock<Regex> =
 static WRITE_ERR_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"write:\s+\S+\s+\S+\s+\S+\s+\S+\s+(\d+)").unwrap());
 
-pub async fn collect_all(devices: &[String]) -> Vec<DiskInfo> {
-    let futures: Vec<_> = devices.iter().map(|d| collect_one(d.clone())).collect();
+pub async fn collect_all(devices: &[String], prog: &str, base_args: &[String]) -> Vec<DiskInfo> {
+    let futures: Vec<_> = devices
+        .iter()
+        .map(|d| collect_one(d.clone(), prog.to_string(), base_args.to_vec()))
+        .collect();
     join_all(futures).await
 }
 
-async fn collect_one(device: String) -> DiskInfo {
+async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> DiskInfo {
     let dev_path = format!("/dev/{device}");
-    let output = Command::new("sudo")
-        .args(["smartctl", "-a", "-d", "scsi", &dev_path])
-        .output()
-        .await;
+    let mut args: Vec<String> = base_args;
+    args.extend(["-a".to_string(), "-d".to_string(), "scsi".to_string(), dev_path]);
+
+    let output = Command::new(&prog).args(&args).output().await;
 
     let stdout = match output {
         Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),

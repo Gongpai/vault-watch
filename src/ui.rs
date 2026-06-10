@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::app::{AppState, FocusedPanel, ViewMode};
-use crate::widgets::{disk_table, graph_view, raid_panel, smart_details};
+use crate::widgets::{disk_table, error_screen, graph_view, raid_panel, smart_details};
 
 const MIN_WIDTH_TABLE: u16 = 100;
 const MIN_HEIGHT_TABLE: u16 = 28;
@@ -31,6 +31,10 @@ pub fn draw(f: &mut Frame, state: &mut AppState) {
     match state.view_mode {
         ViewMode::Table => render_table_view(f, area, state),
         ViewMode::Graph => render_graph_view(f, area, state),
+    }
+
+    if !state.dep_errors.is_empty() {
+        error_screen::render_dep_error_banner(f, &state.dep_errors);
     }
 }
 

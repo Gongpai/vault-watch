@@ -1,0 +1,26 @@
+# VaultWatch configuration — copy to ~/.config/hdd-monitor/config.toml
+#
+# All fields are optional. Defaults work out-of-the-box if:
+#   - You run as root, OR
+#   - sudo is available and configured for smartctl (NOPASSWD recommended)
+
+[system]
+# Override smartctl privilege prefix.
+# Values: "sudo" | "doas" | "" (empty = run smartctl directly, requires root/setcap)
+# Default: auto-detect — uses "" when running as root, "sudo" otherwise.
+# smartctl_prefix = "sudo"
+
+# Custom path to the smartctl binary (useful if installed outside PATH).
+# Default: "smartctl" (resolved via PATH)
+# smartctl_path = "/usr/sbin/smartctl"
+
+# Custom path to the iostat binary.
+# Default: "iostat" (resolved via PATH)
+# iostat_path = "/usr/bin/iostat"
+
+[discord]
+# Discord webhook URL for alert notifications.
+# Alerts sent: disk FAIL, RAID degraded, temperature > 60°C.
+# Cooldown: 1 hour per alert type to prevent spam.
+# Remove or comment out this section to disable Discord notifications.
+# webhook_url = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN"

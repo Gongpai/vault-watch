@@ -16,6 +16,7 @@ use tokio::time;
 
 mod app;
 mod collectors;
+mod config;
 mod notifier;
 mod ui;
 mod widgets;
@@ -38,15 +39,25 @@ async fn main() -> io::Result<()> {
         default_hook(info);
     }));
 
+    let cfg = Arc::new(config::load_config());
+
     let state = Arc::new(Mutex::new(AppState::new(
         DISK_DEVICES.iter().map(|s| s.to_string()).collect(),
     )));
     let refresh_notify = Arc::new(Notify::new());
 
+    // Startup dependency check — results stored in AppState for UI display
+    let dep_errors = config::check_dependencies(&cfg).await;
+    {
+        let mut s = state.lock().await;
+        s.dep_errors = dep_errors;
+    }
+
     let collector_state = Arc::clone(&state);
     let collector_notify = Arc::clone(&refresh_notify);
+    let collector_cfg = Arc::clone(&cfg);
     tokio::spawn(async move {
-        collector_loop(collector_state, collector_notify).await;
+        collector_loop(collector_state, collector_notify, collector_cfg).await;
     });
 
     enable_raw_mode()?;
@@ -282,7 +293,14 @@ async fn poll_event() -> io::Result<Option<Event>> {
     .unwrap()
 }
 
-async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
+async fn collector_loop(
+    state: Arc<Mutex<AppState>>,
+    notify: Arc<Notify>,
+    cfg: Arc<config::Config>,
+) {
+    let (smartctl_prog, smartctl_base_args) = config::smartctl_base_cmd(&cfg);
+    let iostat_prog = config::iostat_cmd(&cfg);
+
     loop {
         let devices = {
             let s = state.lock().await;
@@ -291,8 +309,8 @@ async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
 
         let (raid_result, disks_result, iostat_result) = tokio::join!(
             collectors::raid::collect(),
-            collectors::smart::collect_all(&devices),
-            collectors::iostat::collect(&devices),
+            collectors::smart::collect_all(&devices, &smartctl_prog, &smartctl_base_args),
+            collectors::iostat::collect(&devices, &iostat_prog),
         );
 
         {
@@ -346,7 +364,7 @@ async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
         };
 
         // Send Discord notifications without holding the lock
-        let updated_cooldowns = notifier::process_alerts(&alerts, &cooldowns).await;
+        let updated_cooldowns = notifier::process_alerts(&alerts, &cooldowns, &cfg).await;
 
         {
             let mut s = state.lock().await;

@@ -1,36 +1,10 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use serde::Deserialize;
-
 use crate::app::Alert;
+use crate::config::Config;
 
 const COOLDOWN: Duration = Duration::from_secs(3600);
-
-#[derive(Debug, Deserialize, Default)]
-struct Config {
-    discord: Option<DiscordConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-struct DiscordConfig {
-    webhook_url: String,
-}
-
-fn config_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-    PathBuf::from(home)
-        .join(".config")
-        .join("hdd-monitor")
-        .join("config.toml")
-}
-
-fn load_webhook_url() -> Option<String> {
-    let content = std::fs::read_to_string(config_path()).ok()?;
-    let config: Config = toml::from_str(&content).ok()?;
-    config.discord.map(|d| d.webhook_url)
-}
 
 fn alert_key(alert: &Alert) -> String {
     match alert {
@@ -79,8 +53,9 @@ async fn send_discord_alert(webhook_url: &str, message: &str) -> Result<(), reqw
 pub async fn process_alerts(
     alerts: &[Alert],
     cooldowns: &HashMap<String, Instant>,
+    config: &Config,
 ) -> HashMap<String, Instant> {
-    let Some(webhook_url) = load_webhook_url() else {
+    let Some(webhook_url) = config.discord.as_ref().map(|d| d.webhook_url.clone()) else {
         return cooldowns.clone();
     };
 

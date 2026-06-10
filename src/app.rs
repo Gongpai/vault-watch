@@ -32,6 +32,12 @@ impl Alert {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct DepError {
+    pub tool: String,
+    pub install_hint: String,
+}
+
 pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
     let mut alerts = Vec::new();
 
@@ -137,6 +143,7 @@ pub struct AppState {
 
     pub alerts: Vec<Alert>,
     pub alert_cooldowns: HashMap<String, Instant>,
+    pub dep_errors: Vec<DepError>,
 }
 
 impl AppState {
@@ -170,6 +177,7 @@ impl AppState {
             panel_rects: HashMap::new(),
             alerts: Vec::new(),
             alert_cooldowns: HashMap::new(),
+            dep_errors: Vec::new(),
         }
     }
 }

@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+name="vault-watch"
+description="VaultWatch — SAS HDD & RAID Monitor"
+command="/usr/local/bin/vault-watch"
+command_user="root"
+pidfile="/run/${RC_SVCNAME}.pid"
+command_background=true
+
+depend() {
+    need net
+}

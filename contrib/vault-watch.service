@@ -1,0 +1,18 @@
+[Unit]
+Description=VaultWatch — SAS HDD & RAID Monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/vault-watch
+Restart=on-failure
+RestartSec=5s
+# Run as root so smartctl can access raw disk devices without sudo
+User=root
+StandardInput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+
+[Install]
+WantedBy=multi-user.target
