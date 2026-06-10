@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.4
+**Last Updated:** 2026-06-11 | **Version:** 1.5
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -30,6 +30,17 @@
 | [US-MON-09](./user-stories/US-MON-09.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้อุณหภูมิ disk มีสีบ่งบอกระดับความร้อน<br>**เพื่อให้** เห็นสถานะอันตรายได้ทันทีโดยไม่ต้องอ่านตัวเลข | 1. < 45°C = สีเขียว<br>2. 45–55°C = สีเหลือง<br>3. > 55°C = สีแดง + ข้อความ WARN | **S** | ✅ Done |
 | [US-MON-10](./user-stories/US-MON-10.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** การแจ้งเตือนเมื่อ SMART threshold ถูกละเมิด<br>**เพื่อให้** รู้ทันทีเมื่อ disk มีปัญหาที่อาจนำไปสู่ความเสียหาย | 1. Warning เมื่อ grown defects > 0<br>2. Alert เมื่อ health != OK<br>3. แสดง notification ชัดเจนบน UI | **M** | ✅ Done |
 | [US-MON-11](./user-stories/US-MON-11.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ส่ง alert ไป Discord webhook เมื่อเกิดเหตุการณ์สำคัญ<br>**เพื่อให้** รับการแจ้งเตือนแม้ไม่ได้นั่งดูหน้าจออยู่ | 1. Config webhook URL ผ่าน config file<br>2. Alert เมื่อ RAID degraded<br>3. Alert เมื่อ temp > 60°C<br>4. Alert เมื่อ SMART health != OK | **L** | ✅ Done |
+
+---
+
+## 🔵 Platform Support (Sprint 04)
+
+| ID | User Story | Acceptance Criteria | Estimate | Status |
+|:---|:---|:---|:---|:---|
+| [US-MON-14](./user-stories/US-MON-14.md) | **ในฐานะ** ผู้ใช้ Alpine/root/doas<br>**ฉันต้องการ** ให้ smartctl ทำงานโดยไม่ต้องใช้ `sudo` แบบ hardcode<br>**เพื่อให้** VaultWatch รันได้บน setup ที่ไม่มี `sudo` | 1. Auto-detect root → ไม่ใช้ prefix<br>2. Config `smartctl_prefix` สำหรับ doas/custom<br>3. Default behavior เดิมบน non-root | **M** | 🔵 Sprint 04 |
+| [US-MON-15](./user-stories/US-MON-15.md) | **ในฐานะ** ผู้ใช้ใหม่<br>**ฉันต้องการ** ให้โปรแกรมแจ้งเตือนเมื่อ external tool ขาด<br>**เพื่อให้** รู้ว่าต้อง install อะไรทันที แทนที่จะเห็น `"--"` ทุกช่อง | 1. ตรวจสอบ smartctl + iostat ตอน startup<br>2. Error screen พร้อม install command ตาม distro<br>3. Degraded mode เมื่อ tool ขาดบางส่วน | **S** | 🔵 Sprint 04 |
+| [US-MON-16](./user-stories/US-MON-16.md) | **ในฐานะ** ผู้ใช้ Alpine/Docker<br>**ฉันต้องการ** static binary ที่รันได้โดยไม่ต้องพึ่ง glibc<br>**เพื่อให้** ใช้งานบน Alpine หรือ minimal container ได้ | 1. `make build-static` → musl binary<br>2. รันบน Alpine 3.19+ ได้จริง<br>3. Systemd + OpenRC service files | **S** | 🔵 Sprint 04 |
+| [US-MON-17](./user-stories/US-MON-17.md) | **ในฐานะ** ผู้ใช้ทุก distro<br>**ฉันต้องการ** คู่มือติดตั้ง per-distro ที่ครบถ้วน<br>**เพื่อให้** ติดตั้งได้ภายใน 5 นาทีโดยไม่ต้องค้นหาเพิ่ม | 1. README.md ครบ 5 distro<br>2. Annotated config.toml example<br>3. Privilege + systemd setup guide | **M** | 🔵 Sprint 04 |
 
 ---
 

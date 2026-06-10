@@ -1,10 +1,10 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 03 Complete — All MVP Stories Done ✅
+**Status:** Sprint 04 Planned — Cross-Distribution Support
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
-**Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu Server 24.04
+**Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
 
 ---
 
@@ -25,6 +25,10 @@
 | Temperature Color Coding | ✅ Done | [US-MON-09](./agile/user-stories/US-MON-09.md) |
 | SMART Threshold Warnings | ✅ Done | [US-MON-10](./agile/user-stories/US-MON-10.md) |
 | Discord Webhook Notifications | ✅ Done | [US-MON-11](./agile/user-stories/US-MON-11.md) |
+| Configurable smartctl Privilege | 🔵 Sprint 04 | [US-MON-14](./agile/user-stories/US-MON-14.md) |
+| Startup Dependency Check | 🔵 Sprint 04 | [US-MON-15](./agile/user-stories/US-MON-15.md) |
+| Static Binary (Alpine/musl) | 🔵 Sprint 04 | [US-MON-16](./agile/user-stories/US-MON-16.md) |
+| Cross-Distro Installation Guide | 🔵 Sprint 04 | [US-MON-17](./agile/user-stories/US-MON-17.md) |
 
 ---
 
@@ -42,6 +46,7 @@
 - [sprint-01.md](./agile/sprint-backlogs/sprint-01.md) - Sprint 01 details (Core Data Collectors + TUI Foundation)
 - [sprint-02.md](./agile/sprint-backlogs/sprint-02.md) - Sprint 02 details (Dashboard Panels + Auto-Refresh)
 - [sprint-03.md](./agile/sprint-backlogs/sprint-03.md) - Sprint 03 details (Alerts & Notifications)
+- [sprint-04.md](./agile/sprint-backlogs/sprint-04.md) - Sprint 04 details (Cross-Distribution Support)
 
 ---
 

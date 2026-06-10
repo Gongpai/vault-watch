@@ -1,6 +1,6 @@
 # HDD Monitor — System Design
 
-**Version:** 1.3.0 | **Last Updated:** 2026-06-10
+**Version:** 0.1.3 | **Last Updated:** 2026-06-10
 
 ---
 

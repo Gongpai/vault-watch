@@ -4,7 +4,25 @@
 
 ---
 
-## [4.0.0] - 2026-06-11
+## [0.4.1] - 2026-06-11
+
+### Added (Sprint 04 Planning)
+
+- **[docs/agile/sprint-backlogs/sprint-04.md](agile/sprint-backlogs/sprint-04.md)**: สร้าง Sprint 04 backlog — Cross-Distribution Support (US-MON-14/15/16/17), timeline 2026-07-22 → 2026-08-05, Gantt chart, DoD, recommended implementation order และ known risks
+- **[docs/agile/user-stories/US-MON-14.md](agile/user-stories/US-MON-14.md)**: Configurable smartctl Privilege Escalation — auto-detect root via `/proc/self/status`, shared `config.rs`, override สำหรับ `doas`/`setcap`
+- **[docs/agile/user-stories/US-MON-15.md](agile/user-stories/US-MON-15.md)**: Startup Dependency Check — `check_dependencies()`, `detect_distro()` จาก `/etc/os-release`, error screen widget, degraded mode
+- **[docs/agile/user-stories/US-MON-16.md](agile/user-stories/US-MON-16.md)**: Static Binary & Alpine/Docker Support — Makefile targets, `.cargo/config.toml` musl, systemd + OpenRC service files
+- **[docs/agile/user-stories/US-MON-17.md](agile/user-stories/US-MON-17.md)**: Cross-Distribution Installation Guide — README.md per-distro, annotated config.example.toml, privilege setup + troubleshooting
+
+### Changed
+
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.4 → v1.5: เพิ่ม section "🔵 Platform Support" พร้อม US-MON-14/15/16/17
+- **[docs/agile/02-sprint-planning.md](agile/02-sprint-planning.md)** v1.1 → v1.2: เพิ่ม Sprint 04 row + section details
+- **[docs/index.md](index.md)**: status → Sprint 04 Planned, target platform อัปเดตเป็น 5 distros, เพิ่ม Sprint 04 US entries
+
+---
+
+## [0.4.0] - 2026-06-11
 
 ### Implemented (Sprint 03 — Alerts & Notifications)
 
@@ -20,7 +38,7 @@
 
 ### Changed
 
-- **`docs/software/00-architecture.md`** v1.0.0 → v1.1.0: เพิ่ม `notifier.rs` ใน module structure; เพิ่ม Notifier+Alert nodes ใน architecture diagram; อัปเดต sequence diagram ใน async data flow
+- **`docs/software/00-architecture.md`** v0.1.0 → v0.1.1: เพิ่ม `notifier.rs` ใน module structure; เพิ่ม Notifier+Alert nodes ใน architecture diagram; อัปเดต sequence diagram ใน async data flow
 - **`docs/agile/user-stories/US-MON-09/10/11.md`**: status → ✅ Done, checkboxes ทั้ง AC และ Tech Tasks
 - **`docs/agile/sprint-backlogs/sprint-03.md`**: status ทุก story → ✅ Done
 - **`docs/agile/01-product-backlog.md`** v1.3 → v1.4: US-MON-09/10/11 → ✅ Done
@@ -29,7 +47,7 @@
 
 ---
 
-## [3.1.0] - 2026-06-11
+## [0.3.1] - 2026-06-11
 
 ### Added (Sprint 03 Planning)
 
@@ -46,7 +64,7 @@
 
 ---
 
-## [3.0.0] - 2026-06-11
+## [0.3.0] - 2026-06-11
 
 ### Implemented (Sprint 02 — Dashboard UI)
 
@@ -68,7 +86,7 @@
 
 ---
 
-## [2.0.0] - 2026-06-10
+## [0.2.0] - 2026-06-10
 
 ### Implemented (Sprint 01 — Core Data Collectors)
 
@@ -86,11 +104,11 @@
 
 ---
 
-## [1.4.0] - 2026-06-10
+## [0.1.4] - 2026-06-10
 
 ### Fixed (contradictions & ambiguities audit)
 
-- **[docs/software/01-system-design.md](software/01-system-design.md)** v1.3.0 → v1.4.0:
+- **[docs/software/01-system-design.md](software/01-system-design.md)** v0.1.3 → v0.1.4:
   - `DiskInfo.serial`: เปลี่ยนจาก `String` → `Option<String>` (None เมื่อ smartctl ไม่ตอบสนอง สอดคล้องกับ optional fields อื่น)
   - `DiskInfo.health_ok`: เพิ่ม comment ว่า default `false` เมื่อ error คือ safe default
   - Section 1.3 header: แก้จาก `iostat -d -k` → `iostat -d -k -y 1 1`
@@ -117,7 +135,7 @@
 
 ---
 
-## [1.3.0] - 2026-06-10
+## [0.1.3] - 2026-06-10
 
 ### Added
 
@@ -125,7 +143,7 @@
 
 ### Changed
 
-- **[docs/software/01-system-design.md](software/01-system-design.md)** v1.2.0 → v1.3.0:
+- **[docs/software/01-system-design.md](software/01-system-design.md)** v0.1.2 → v0.1.3:
   - Section 3 header: แก้ไข "สลับด้วยปุ่ม `Tab`" → `g` (Tab สงวนไว้สำหรับ panel focus)
   - Section 3.1 Table View: ออกแบบใหม่ mockup แสดง 8 disks พร้อม focused panel (double border), scrollbar (`▲ █ ░ ▼`), status bar (`● DiskTable [5/8 — ↑↓:scroll] ○ SmartDetails`), overflow hint (`↓ N more`)
   - Section 3.2 Graph View: อัปเดต title bar แสดง `Tab:panel`, เพิ่มหมายเหตุ `graph_scroll`
@@ -140,7 +158,7 @@
 
 ---
 
-## [1.2.0] - 2026-06-10
+## [0.1.2] - 2026-06-10
 
 ### Added
 
@@ -148,7 +166,7 @@
 
 ### Changed
 
-- **[docs/software/01-system-design.md](software/01-system-design.md)** v1.0.0 → v1.2.0:
+- **[docs/software/01-system-design.md](software/01-system-design.md)** v0.1.0 → v0.1.2:
   - Section 1.4 AppState: เพิ่ม history ring buffers (`temp_history`, `read_history`, `write_history`, `raid_speed_history`) และ `ViewMode` enum พร้อม `view_mode` field
   - Section 3 UI Layout: ออกแบบใหม่ทั้งหมด แบ่งเป็น Table View (inline Sparklines) และ Graph View (full Chart) พร้อม ASCII mockup และ color scheme table
 - **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.0 → v1.1: เพิ่ม US-MON-12 ใน Must Have section
@@ -156,7 +174,7 @@
 
 ---
 
-## [1.1.0] - 2026-06-10
+## [0.1.1] - 2026-06-10
 
 ### Fixed
 
@@ -165,7 +183,7 @@
 
 ---
 
-## [1.0.0] - 2026-06-10
+## [0.1.0] - 2026-06-10
 
 ### Added
 
