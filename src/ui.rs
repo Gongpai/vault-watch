@@ -81,6 +81,7 @@ fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
         Constraint::Min(4),    // disk table
         Constraint::Length(1), // status bar
         Constraint::Length(7), // smart details
+        Constraint::Length(1), // key hint bar
     ]);
 
     let chunks = Layout::default()
@@ -102,40 +103,34 @@ fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     render_status_bar(f, chunks[idx], state);
     idx += 1;
     smart_details::render(f, chunks[idx], state);
+    idx += 1;
+    render_key_bar(f, chunks[idx], state);
 }
 
 fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(1)])
+        .constraints([Constraint::Length(1), Constraint::Min(1), Constraint::Length(1)])
         .split(area);
 
     render_header(f, chunks[0], state);
     graph_view::render(f, chunks[1], state);
+    render_key_bar(f, chunks[2], state);
 }
 
 fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
-    let view_hint = match state.view_mode {
-        ViewMode::Table => "g:graph",
-        ViewMode::Graph => "g:table",
-    };
-
     let title = Span::styled(
         " VaultWatch — HDD Monitor ",
         Style::default()
             .fg(Color::Cyan)
             .add_modifier(Modifier::BOLD),
     );
-    let keys = Span::styled(
-        format!("  q:quit  r:refresh  {}  Tab:panel  ↑↓:scroll", view_hint),
-        Style::default().fg(Color::DarkGray),
-    );
     let last = Span::styled(
         format!("  Last update: {}", state.last_updated_str),
         Style::default().fg(Color::White),
     );
 
-    let line = Line::from(vec![title, keys, last]);
+    let line = Line::from(vec![title, last]);
     let p = Paragraph::new(line);
     f.render_widget(p, area);
 }
@@ -171,6 +166,37 @@ fn render_alert_banner(f: &mut Frame, area: Rect, state: &AppState) {
     let p = Paragraph::new(lines);
     f.render_widget(block, area);
     f.render_widget(p, inner);
+}
+
+fn render_key_bar(f: &mut Frame, area: Rect, state: &AppState) {
+    let graph_label = match state.view_mode {
+        ViewMode::Table => "Graph",
+        ViewMode::Graph => "Table",
+    };
+
+    let mut hints: Vec<(&str, &str)> = vec![
+        ("q", "Quit"),
+        ("r", "Refresh"),
+        ("g", graph_label),
+        ("Tab", "Panel"),
+        ("↑↓", "Scroll"),
+        ("PgU/D", "Page"),
+    ];
+    if matches!(state.view_mode, ViewMode::Table) {
+        hints.push(("Home/End", "Jump"));
+    }
+
+    let key_style = Style::default().fg(Color::Black).bg(Color::Cyan);
+    let action_style = Style::default().fg(Color::DarkGray);
+
+    let mut spans: Vec<Span> = Vec::new();
+    for (key, action) in &hints {
+        spans.push(Span::styled(format!(" {} ", key), key_style));
+        spans.push(Span::styled(format!(" {}  ", action), action_style));
+    }
+
+    let p = Paragraph::new(Line::from(spans));
+    f.render_widget(p, area);
 }
 
 fn render_status_bar(f: &mut Frame, area: Rect, state: &AppState) {

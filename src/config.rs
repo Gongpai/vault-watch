@@ -20,6 +20,8 @@ pub struct SystemConfig {
     pub smartctl_path: Option<String>,
     /// Custom path to iostat binary. Defaults to "iostat" (PATH lookup).
     pub iostat_path: Option<String>,
+    /// Explicit disk device list (e.g. ["sda", "sdb"]). Auto-detected from /sys/block if omitted.
+    pub devices: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -97,6 +99,34 @@ pub fn iostat_cmd(config: &Config) -> String {
         .and_then(|s| s.iostat_path.as_deref())
         .unwrap_or("iostat")
         .to_string()
+}
+
+// ── Device discovery ─────────────────────────────────────────────────────────
+
+/// Discover SAS/SATA block devices from /sys/block (sd* entries only).
+/// Partitions (sda1) do not appear at /sys/block level, so no extra filtering needed.
+fn detect_disk_devices() -> Vec<String> {
+    let mut devices: Vec<String> = std::fs::read_dir("/sys/block")
+        .map(|entries| {
+            entries
+                .flatten()
+                .map(|e| e.file_name().to_string_lossy().to_string())
+                .filter(|name| name.starts_with("sd"))
+                .collect()
+        })
+        .unwrap_or_default();
+    devices.sort();
+    devices
+}
+
+/// Return the device list to monitor: config override takes precedence over auto-detect.
+pub fn resolve_devices(config: &Config) -> Vec<String> {
+    if let Some(devs) = config.system.as_ref().and_then(|s| s.devices.as_ref()) {
+        if !devs.is_empty() {
+            return devs.clone();
+        }
+    }
+    detect_disk_devices()
 }
 
 // ── Distro detection ──────────────────────────────────────────────────────────

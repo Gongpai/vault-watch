@@ -23,7 +23,6 @@ mod widgets;
 
 use app::{collect_alerts, AppState, FocusedPanel, ViewMode, HISTORY_SIZE};
 
-const DISK_DEVICES: &[&str] = &["sdc", "sdd", "sde"];
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
 const RENDER_INTERVAL: Duration = Duration::from_millis(250);
 const PAGE_SCROLL: usize = 5;
@@ -41,9 +40,8 @@ async fn main() -> io::Result<()> {
 
     let cfg = Arc::new(config::load_config());
 
-    let state = Arc::new(Mutex::new(AppState::new(
-        DISK_DEVICES.iter().map(|s| s.to_string()).collect(),
-    )));
+    let devices = config::resolve_devices(&cfg);
+    let state = Arc::new(Mutex::new(AppState::new(devices)));
     let refresh_notify = Arc::new(Notify::new());
 
     // Startup dependency check — results stored in AppState for UI display

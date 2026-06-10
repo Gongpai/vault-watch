@@ -18,6 +18,11 @@
 # Default: "iostat" (resolved via PATH)
 # iostat_path = "/usr/bin/iostat"
 
+# Explicit disk device list (names without /dev/ prefix).
+# Default: auto-detected from /sys/block/sd* at startup.
+# Use this to pin specific devices or override auto-detection order.
+# devices = ["sda", "sdb", "sdc"]
+
 [discord]
 # Discord webhook URL for alert notifications.
 # Alerts sent: disk FAIL, RAID degraded, temperature > 60°C.
