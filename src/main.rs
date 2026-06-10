@@ -16,7 +16,7 @@ mod collectors;
 mod ui;
 mod widgets;
 
-use app::{AppState, FocusedPanel, ViewMode};
+use app::{AppState, FocusedPanel, ViewMode, HISTORY_SIZE};
 
 const DISK_DEVICES: &[&str] = &["sdc", "sdd", "sde"];
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
@@ -188,11 +188,58 @@ async fn poll_event() -> io::Result<Option<Event>> {
     .unwrap()
 }
 
-// Placeholder collector loop — replaced by real collectors in US-MON-01/02/03
 async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
     loop {
+        let devices = {
+            let s = state.lock().await;
+            s.disk_devices.clone()
+        };
+
+        let (raid_result, disks_result, iostat_result) = tokio::join!(
+            collectors::raid::collect(),
+            collectors::smart::collect_all(&devices),
+            collectors::iostat::collect(&devices),
+        );
+
         {
             let mut s = state.lock().await;
+
+            for disk in &disks_result {
+                if let Some(temp) = disk.temperature_c {
+                    if let Some(buf) = s.temp_history.get_mut(&disk.device) {
+                        buf.push_back(temp as u64);
+                        if buf.len() > HISTORY_SIZE {
+                            buf.pop_front();
+                        }
+                    }
+                }
+            }
+            for stat in &iostat_result {
+                if let Some(buf) = s.read_history.get_mut(&stat.device) {
+                    buf.push_back((stat.read_mb_s * 10.0) as u64);
+                    if buf.len() > HISTORY_SIZE {
+                        buf.pop_front();
+                    }
+                }
+                if let Some(buf) = s.write_history.get_mut(&stat.device) {
+                    buf.push_back((stat.write_mb_s * 10.0) as u64);
+                    if buf.len() > HISTORY_SIZE {
+                        buf.pop_front();
+                    }
+                }
+            }
+            if let Some(ref raid) = raid_result {
+                if let Some(speed) = raid.rebuild_speed_mb {
+                    s.raid_speed_history.push_back(speed);
+                    if s.raid_speed_history.len() > HISTORY_SIZE {
+                        s.raid_speed_history.pop_front();
+                    }
+                }
+            }
+
+            s.raid = raid_result;
+            s.disks = disks_result;
+            s.io_stats = iostat_result;
             s.last_updated = std::time::Instant::now();
         }
 
