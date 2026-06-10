@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.6
+**Last Updated:** 2026-06-11 | **Version:** 1.7
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -38,6 +38,7 @@
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
 | [US-MON-18](./user-stories/US-MON-18.md) | **ในฐานะ** ผู้ดูแลระบบที่มี disk setup ต่างจาก `sdc/sdd/sde`<br>**ฉันต้องการ** ให้ VaultWatch ค้นหา disk device อัตโนมัติ<br>**เพื่อให้** รันได้ทันทีโดยไม่ต้อง hardcode ชื่อ device | 1. Auto-detect `sd*` จาก `/sys/block/`<br>2. Config override `devices = [...]` ใน `[system]`<br>3. Filter: ตัด loop, ram, dm-*, md* ออก<br>4. Empty fallback — แสดง warning แทน crash<br>5. แสดง device list ที่ใช้งานใน UI | **S** | 🟡 Planned |
+| [US-MON-19](./user-stories/US-MON-19.md) | **ในฐานะ** ผู้ใช้ที่ไม่คุ้นเคยกับ keyboard shortcuts<br>**ฉันต้องการ** แถบแสดง keyboard shortcuts ที่ด้านล่างสุดของหน้าจอ<br>**เพื่อให้** รู้ว่ากดปุ่มไหนได้บ้างโดยไม่ต้องจำหรืออ่าน README | 1. Key bar ด้านล่างสุดตลอดเวลา<br>2. Context-aware ตาม view/panel<br>3. nano-style: key invert bg, action gray<br>4. ไม่ล้น terminal แคบ<br>5. ลบ shortcuts ซ้ำออกจาก header | **S** | 🟡 Planned |
 
 ---
 

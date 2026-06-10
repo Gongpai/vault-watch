@@ -30,6 +30,7 @@
 | Static Binary (Alpine/musl) | 🔵 Sprint 04 | [US-MON-16](./agile/user-stories/US-MON-16.md) |
 | Cross-Distro Installation Guide | 🔵 Sprint 04 | [US-MON-17](./agile/user-stories/US-MON-17.md) |
 | Auto-detect Disk Devices | 🟡 Sprint 05 | [US-MON-18](./agile/user-stories/US-MON-18.md) |
+| Key Hint Bar (nano-style) | 🟡 Sprint 05 | [US-MON-19](./agile/user-stories/US-MON-19.md) |
 
 ---
 
