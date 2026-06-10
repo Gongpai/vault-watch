@@ -1,9 +1,9 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 03 Active — Alerts & Notifications
+**Status:** Sprint 03 Complete — All MVP Stories Done ✅
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
-**Tech Stack:** Rust, ratatui, crossterm, tokio, serde, regex
+**Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
 **Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu Server 24.04
 
 ---
@@ -22,9 +22,9 @@
 | Auto-Refresh Async Loop | ✅ Done | [US-MON-08](./agile/user-stories/US-MON-08.md) |
 | History Buffer & Graph UI | ✅ Done | [US-MON-12](./agile/user-stories/US-MON-12.md) |
 | Panel Focus & Scroll | ✅ Done | [US-MON-13](./agile/user-stories/US-MON-13.md) |
-| Temperature Color Coding | 🚧 Sprint 03 | [US-MON-09](./agile/user-stories/US-MON-09.md) |
-| SMART Threshold Warnings | 🚧 Sprint 03 | [US-MON-10](./agile/user-stories/US-MON-10.md) |
-| Discord Webhook Notifications | 🚧 Sprint 03 | [US-MON-11](./agile/user-stories/US-MON-11.md) |
+| Temperature Color Coding | ✅ Done | [US-MON-09](./agile/user-stories/US-MON-09.md) |
+| SMART Threshold Warnings | ✅ Done | [US-MON-10](./agile/user-stories/US-MON-10.md) |
+| Discord Webhook Notifications | ✅ Done | [US-MON-11](./agile/user-stories/US-MON-11.md) |
 
 ---
 

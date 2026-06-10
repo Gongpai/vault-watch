@@ -1,6 +1,6 @@
 # User Story: US-MON-11 — Discord Webhook Notifications
 
-**Status:** 🚧 Sprint 03
+**Status:** ✅ Done (Sprint 03)
 **Sprint:** [Sprint 03](../sprint-backlogs/sprint-03.md)
 **Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
 
@@ -16,21 +16,21 @@
 
 ## ✅ Acceptance Criteria
 
-1. [ ] อ่าน webhook URL จาก config file (เช่น `~/.config/hdd-monitor/config.toml`)
-2. [ ] ส่ง alert เมื่อ RAID state เปลี่ยนเป็น `Degraded`
-3. [ ] ส่ง alert เมื่อ temperature > 60°C
-4. [ ] ส่ง alert เมื่อ `health_ok == false`
-5. [ ] ไม่ส่ง alert ซ้ำภายใน 1 ชั่วโมงสำหรับ condition เดิม (cooldown)
-6. [ ] โปรแกรมทำงานได้ปกติถ้าไม่มี config file (Discord เป็น optional)
+1. [x] อ่าน webhook URL จาก config file (เช่น `~/.config/hdd-monitor/config.toml`)
+2. [x] ส่ง alert เมื่อ RAID state เปลี่ยนเป็น `Degraded`
+3. [x] ส่ง alert เมื่อ temperature > 60°C
+4. [x] ส่ง alert เมื่อ `health_ok == false`
+5. [x] ไม่ส่ง alert ซ้ำภายใน 1 ชั่วโมงสำหรับ condition เดิม (cooldown)
+6. [x] โปรแกรมทำงานได้ปกติถ้าไม่มี config file (Discord เป็น optional)
 
 ---
 
 ## 🛠 Technical Tasks
 
-- [ ] เพิ่ม dependency `reqwest` สำหรับ HTTP client
-- [ ] สร้าง `src/notifier.rs` — `async fn send_discord_alert(webhook_url: &str, message: &str)`
-- [ ] สร้าง config struct และ TOML parser
-- [ ] สร้าง alert cooldown tracker ใน AppState
+- [x] เพิ่ม dependency `reqwest = "0.12"` (rustls-tls, no OpenSSL) + `toml = "0.8"`
+- [x] สร้าง `src/notifier.rs` — `async fn send_discord_alert(webhook_url: &str, message: &str)`
+- [x] สร้าง config struct (`Config`, `DiscordConfig`) และ TOML parser
+- [x] สร้าง alert cooldown tracker (`alert_cooldowns: HashMap<String, Instant>`) ใน `AppState`
 
 ---
 

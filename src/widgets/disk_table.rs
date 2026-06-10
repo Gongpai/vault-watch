@@ -9,12 +9,12 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{AppState, FocusedPanel};
+use crate::app::{Alert, AppState, FocusedPanel};
 use crate::widgets::sparkline_cell::sparkline;
 
-// Column widths: total 72 + 5 col_spacings = 77 chars (fits in 80-col terminal)
+// Column widths: 5+23+18+18+5+8 = 77 + 5 col_spacings = 82 chars (fits in 100-col terminal)
 const COL_DISK: u16 = 5;
-const COL_TEMP: u16 = 18; // 12 sparkline + 1 space + 5 value ("NNN°C")
+const COL_TEMP: u16 = 23; // 12 sparkline + 1 space + 5 value + 5 warn (" WARN" or "     ")
 const COL_READ: u16 = 18; // 12 sparkline + 1 space + 5 value
 const COL_WRITE: u16 = 18; // 12 sparkline + 1 space + 5 value
 const COL_HEALTH: u16 = 5;
@@ -33,8 +33,17 @@ const DISK_COLORS: [Color; 6] = [
 
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let focused = state.focused_panel == FocusedPanel::DiskTable;
+    let has_critical = state.alerts.iter().any(|a| matches!(a, Alert::DiskFail { .. }));
+    let has_warn = state
+        .alerts
+        .iter()
+        .any(|a| matches!(a, Alert::GrownDefects { .. } | Alert::HighTemperature { .. }));
     let (border_type, border_color) = if focused {
         (BorderType::Double, Color::Cyan)
+    } else if has_critical {
+        (BorderType::Plain, Color::Red)
+    } else if has_warn {
+        (BorderType::Plain, Color::Yellow)
     } else {
         (BorderType::Plain, Color::White)
     };
@@ -96,10 +105,18 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
                 Some(t) => format!("{:>3}°C", t),
                 None => format!("{:>5}", "--"),
             };
+            let warn_span = match disk.temperature_c {
+                Some(t) if t > 55 => Span::styled(
+                    " WARN",
+                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                ),
+                _ => Span::raw("     "),
+            };
             let temp_cell = Cell::from(Line::from(vec![
                 Span::styled(temp_spk, Style::default().fg(temp_color)),
                 Span::raw(" "),
                 Span::styled(temp_val, Style::default().fg(temp_color)),
+                warn_span,
             ]));
 
             // Read cell: sparkline + value

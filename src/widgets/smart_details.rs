@@ -8,12 +8,21 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{AppState, FocusedPanel};
+use crate::app::{Alert, AppState, FocusedPanel};
 
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let focused = state.focused_panel == FocusedPanel::SmartDetails;
+    let has_critical = state.alerts.iter().any(|a| matches!(a, Alert::DiskFail { .. }));
+    let has_warn = state
+        .alerts
+        .iter()
+        .any(|a| matches!(a, Alert::GrownDefects { .. } | Alert::HighTemperature { .. }));
     let (border_type, border_color) = if focused {
         (BorderType::Double, Color::Cyan)
+    } else if has_critical {
+        (BorderType::Plain, Color::Red)
+    } else if has_warn {
+        (BorderType::Plain, Color::Yellow)
     } else {
         (BorderType::Plain, Color::White)
     };

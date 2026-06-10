@@ -1,6 +1,6 @@
 # User Story: US-MON-09 — Temperature Color Coding
 
-**Status:** 🚧 Sprint 03
+**Status:** ✅ Done (Sprint 03)
 **Sprint:** [Sprint 03](../sprint-backlogs/sprint-03.md)
 **Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
 
@@ -16,18 +16,18 @@
 
 ## ✅ Acceptance Criteria
 
-1. [ ] < 45°C → สีเขียว (Normal)
-2. [ ] 45–55°C → สีเหลือง (Warm)
-3. [ ] > 55°C → สีแดง + text `WARN` ต่อท้าย
-4. [ ] `N/A` (ไม่มีข้อมูล) → สีปกติ ไม่ highlight
+1. [x] < 45°C → สีเขียว (Normal)
+2. [x] 45–55°C → สีเหลือง (Warm)
+3. [x] > 55°C → สีแดง + text `WARN` ต่อท้าย
+4. [x] `N/A` (ไม่มีข้อมูล) → สีปกติ ไม่ highlight
 
 ---
 
 ## 🛠 Technical Tasks
 
-- [ ] อัปเดต `disk_table.rs` — เพิ่ม `" WARN"` suffix ใน temperature value cell เมื่อ > 55°C
-- [ ] ตรวจสอบว่า sparkline สี และ value สีใช้ threshold เดียวกัน (Green/Yellow/Red)
-- [ ] อัปเดต Graph View temp chart — เพิ่ม Y-axis threshold lines หรือ labels ที่ 45°C และ 55°C
+- [x] อัปเดต `disk_table.rs` — เพิ่ม `" WARN"` suffix ใน temperature value cell เมื่อ > 55°C
+- [x] ตรวจสอบว่า sparkline สี และ value สีใช้ threshold เดียวกัน (Green/Yellow/Red)
+- [x] อัปเดต Graph View temp chart — เพิ่ม Y-axis threshold lines หรือ labels ที่ 45°C และ 55°C
 
 ---
 

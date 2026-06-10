@@ -61,24 +61,43 @@ fn render_resize_message(f: &mut Frame, area: Rect, min_w: u16, min_h: u16) {
     f.render_widget(p, area);
 }
 
+fn alert_banner_height(alert_count: usize) -> u16 {
+    if alert_count == 0 { 0 } else { (alert_count.min(2) + 2) as u16 }
+}
+
 fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
-    // Layout: header(1) + raid(4) + disk_table(fill) + status_bar(1) + smart_details(7)
+    let alert_h = alert_banner_height(state.alerts.len());
+
+    let mut constraints: Vec<Constraint> = vec![Constraint::Length(1)]; // header
+    if alert_h > 0 {
+        constraints.push(Constraint::Length(alert_h));
+    }
+    constraints.extend([
+        Constraint::Length(4), // RAID panel
+        Constraint::Min(4),    // disk table
+        Constraint::Length(1), // status bar
+        Constraint::Length(7), // smart details
+    ]);
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),  // header
-            Constraint::Length(4),  // RAID panel
-            Constraint::Min(4),     // disk table
-            Constraint::Length(1),  // status bar
-            Constraint::Length(7),  // smart details
-        ])
+        .constraints(constraints)
         .split(area);
 
-    render_header(f, chunks[0], state);
-    raid_panel::render(f, chunks[1], state);
-    disk_table::render(f, chunks[2], state);
-    render_status_bar(f, chunks[3], state);
-    smart_details::render(f, chunks[4], state);
+    let mut idx = 0;
+    render_header(f, chunks[idx], state);
+    idx += 1;
+    if alert_h > 0 {
+        render_alert_banner(f, chunks[idx], state);
+        idx += 1;
+    }
+    raid_panel::render(f, chunks[idx], state);
+    idx += 1;
+    disk_table::render(f, chunks[idx], state);
+    idx += 1;
+    render_status_bar(f, chunks[idx], state);
+    idx += 1;
+    smart_details::render(f, chunks[idx], state);
 }
 
 fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
@@ -115,6 +134,39 @@ fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
     let line = Line::from(vec![title, keys, last]);
     let p = Paragraph::new(line);
     f.render_widget(p, area);
+}
+
+fn render_alert_banner(f: &mut Frame, area: Rect, state: &AppState) {
+    let total = state.alerts.len();
+    let title = if total > 2 {
+        format!(" ⚠ Alerts ({total}) ")
+    } else {
+        " ⚠ Alerts ".to_string()
+    };
+
+    let block = Block::default()
+        .title(title)
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Red));
+
+    let inner = block.inner(area);
+
+    let lines: Vec<Line> = state
+        .alerts
+        .iter()
+        .take(2)
+        .map(|alert| {
+            let color = if alert.is_critical() { Color::Red } else { Color::Yellow };
+            Line::from(Span::styled(
+                alert.message(),
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
+            ))
+        })
+        .collect();
+
+    let p = Paragraph::new(lines);
+    f.render_widget(block, area);
+    f.render_widget(p, inner);
 }
 
 fn render_status_bar(f: &mut Frame, area: Rect, state: &AppState) {

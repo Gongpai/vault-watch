@@ -1,6 +1,6 @@
 # HDD Monitor — System Architecture
 
-**Version:** 1.0.0 | **Last Updated:** 2026-06-10
+**Version:** 1.1.0 | **Last Updated:** 2026-06-11
 
 ---
 
@@ -28,12 +28,19 @@ graph TD
         RS["RaidStatus"]
         DI["Vec<DiskInfo>"]
         IT["Vec<IoStats>"]
+        AL["Vec<Alert>"]
     end
 
     subgraph UI ["ratatui TUI Renderer"]
         RP["RaidPanel"]
         DT["DiskTable"]
         SD["SmartDetails"]
+        AB["AlertBanner"]
+    end
+
+    subgraph Notifier ["Notifier (Discord)"]
+        NT["notifier::process_alerts()"]
+        WH["Discord Webhook"]
     end
 
     mdstat -->|"read file"| RC
@@ -43,21 +50,28 @@ graph TD
     RC -->|"update"| RS
     SC -->|"update"| DI
     IC -->|"update"| IT
+    DI -->|"collect_alerts()"| AL
+    RS -->|"collect_alerts()"| AL
 
     RS --> RP
     DI --> DT
     DI --> SD
     IT --> DT
+    AL --> AB
+    AL --> NT
+    NT -->|"HTTP POST"| WH
 
     classDef system fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
     classDef collector fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px;
     classDef state fill:#d4edda,stroke:#28a745,stroke-width:2px;
     classDef ui fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
+    classDef notifier fill:#e2d9f3,stroke:#6f42c1,stroke-width:2px;
 
     class mdstat,smartctl,iostat system;
     class RC,SC,IC collector;
-    class RS,DI,IT state;
-    class RP,DT,SD ui;
+    class RS,DI,IT,AL state;
+    class RP,DT,SD,AB ui;
+    class NT,WH notifier;
 ```
 
 ---
@@ -67,8 +81,9 @@ graph TD
 ```
 src/
 ├── main.rs                 # Entry point — tokio runtime, event loop, terminal setup
-├── app.rs                  # AppState struct, tick handler, shared state management
+├── app.rs                  # AppState struct + Alert enum + collect_alerts()
 ├── ui.rs                   # ratatui layout composition — ประกอบ widget ทั้งหมด
+├── notifier.rs             # Discord webhook sender + TOML config loader + cooldown
 ├── collectors/
 │   ├── mod.rs              # pub use + shared types (CollectorError)
 │   ├── raid.rs             # /proc/mdstat parser → RaidStatus
@@ -78,9 +93,9 @@ src/
     ├── mod.rs              # pub use
     ├── raid_panel.rs       # RAID status widget (Block + Paragraph + Gauge)
     ├── disk_table.rs       # Disk summary table widget (Table + Row + Sparkline)
-    ├── smart_details.rs    # SMART details widget (List/Paragraph)
+    ├── smart_details.rs    # SMART details widget (Paragraph + Scrollbar)
     ├── graph_view.rs       # Graph View widget (Chart + Dataset) — toggle ด้วย g
-    └── sparkline_cell.rs   # Helper: Sparkline + value ภายใน Table Cell
+    └── sparkline_cell.rs   # Helper: Unicode sparkline string สำหรับ Table Cell
 ```
 
 ---
@@ -105,6 +120,9 @@ sequenceDiagram
         Col->>Col: รัน smartctl (3 disks)
         Col->>Col: รัน iostat
         Col->>App: lock + update AppState
+        Col->>App: lock + collect_alerts() → AppState.alerts
+        Col->>Col: process_alerts() — ส่ง Discord (no lock held)
+        Col->>App: lock + update alert_cooldowns
     end
 
     loop ทุก 250ms (render tick)

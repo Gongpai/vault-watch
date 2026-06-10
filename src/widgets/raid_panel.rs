@@ -14,14 +14,16 @@ fn format_eta(minutes: u64) -> String {
     }
 }
 
-use crate::app::{AppState, RaidState};
+use crate::app::{Alert, AppState, RaidState};
 use crate::widgets::sparkline_cell::sparkline;
 
 pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
+    let raid_degraded = state.alerts.iter().any(|a| matches!(a, Alert::RaidDegraded));
+    let border_color = if raid_degraded { Color::Red } else { Color::White };
     let block = Block::default()
         .title(" RAID Array ")
         .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White));
+        .border_style(Style::default().fg(border_color));
 
     let inner = block.inner(area);
     f.render_widget(block, area);

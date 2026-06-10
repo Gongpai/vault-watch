@@ -24,9 +24,9 @@ gantt
 
 | ID | Story / Task | Owner | Estimate (Hrs) | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-09](../user-stories/US-MON-09.md) | **Temperature Color Coding**<br>- เพิ่ม `WARN` suffix เมื่อ temp > 55°C ใน disk table<br>- ตรวจสอบ sparkline + value ใช้สีตาม threshold เดียวกัน<br>- อัปเดต Graph View temp chart Y-axis ที่ 45°C / 55°C | kong | 3 | 🔵 Planned |
-| [US-MON-10](../user-stories/US-MON-10.md) | **SMART Threshold Warnings**<br>- สร้าง `Alert` struct และ `collect_alerts()` function<br>- เพิ่ม alert banner (1–2 rows) ใต้ header บน UI<br>- เพิ่ม `alerts` field ใน `AppState` อัปเดตทุก collector cycle<br>- Highlight border สีแดงบน panel ที่มี disk มีปัญหา | kong | 8 | 🔵 Planned |
-| [US-MON-11](../user-stories/US-MON-11.md) | **Discord Webhook Notifications**<br>- เพิ่ม `reqwest` dependency<br>- สร้าง `src/notifier.rs` — `send_discord_alert()`<br>- สร้าง config struct + TOML parser (`~/.config/hdd-monitor/config.toml`)<br>- Alert cooldown tracker (1 ชั่วโมง per condition)<br>- Graceful fallback เมื่อไม่มี config | kong | 10 | 🔵 Planned |
+| [US-MON-09](../user-stories/US-MON-09.md) | **Temperature Color Coding**<br>- เพิ่ม `WARN` suffix เมื่อ temp > 55°C ใน disk table<br>- ตรวจสอบ sparkline + value ใช้สีตาม threshold เดียวกัน<br>- อัปเดต Graph View temp chart Y-axis ที่ 45°C / 55°C | kong | 3 | ✅ Done |
+| [US-MON-10](../user-stories/US-MON-10.md) | **SMART Threshold Warnings**<br>- สร้าง `Alert` struct และ `collect_alerts()` function<br>- เพิ่ม alert banner (1–2 rows) ใต้ header บน UI<br>- เพิ่ม `alerts` field ใน `AppState` อัปเดตทุก collector cycle<br>- Highlight border สีแดงบน panel ที่มี disk มีปัญหา | kong | 8 | ✅ Done |
+| [US-MON-11](../user-stories/US-MON-11.md) | **Discord Webhook Notifications**<br>- เพิ่ม `reqwest` dependency<br>- สร้าง `src/notifier.rs` — `send_discord_alert()`<br>- สร้าง config struct + TOML parser (`~/.config/hdd-monitor/config.toml`)<br>- Alert cooldown tracker (1 ชั่วโมง per condition)<br>- Graceful fallback เมื่อไม่มี config | kong | 10 | ✅ Done |
 
 ---
 

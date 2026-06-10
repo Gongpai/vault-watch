@@ -16,10 +16,11 @@ use tokio::time;
 
 mod app;
 mod collectors;
+mod notifier;
 mod ui;
 mod widgets;
 
-use app::{AppState, FocusedPanel, ViewMode, HISTORY_SIZE};
+use app::{collect_alerts, AppState, FocusedPanel, ViewMode, HISTORY_SIZE};
 
 const DISK_DEVICES: &[&str] = &["sdc", "sdd", "sde"];
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
@@ -333,6 +334,23 @@ async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
             s.io_stats = iostat_result;
             s.last_updated = std::time::Instant::now();
             s.last_updated_str = chrono::Local::now().format("%H:%M:%S").to_string();
+        }
+
+        // Compute alerts and snapshot cooldowns (single lock, no HTTP yet)
+        let (alerts, cooldowns) = {
+            let mut s = state.lock().await;
+            let alerts = collect_alerts(&s);
+            let cooldowns = s.alert_cooldowns.clone();
+            s.alerts = alerts.clone();
+            (alerts, cooldowns)
+        };
+
+        // Send Discord notifications without holding the lock
+        let updated_cooldowns = notifier::process_alerts(&alerts, &cooldowns).await;
+
+        {
+            let mut s = state.lock().await;
+            s.alert_cooldowns = updated_cooldowns;
         }
 
         tokio::select! {

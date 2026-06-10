@@ -101,7 +101,28 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let x_min = -((max_len.saturating_sub(1)) as f64) * 2.0;
 
-    let chart = Chart::new(datasets)
+    // Threshold reference lines at 45°C (warm) and 55°C (hot)
+    let threshold_warm: Vec<(f64, f64)> = vec![(x_min, 45.0), (0.0, 45.0)];
+    let threshold_hot: Vec<(f64, f64)> = vec![(x_min, 55.0), (0.0, 55.0)];
+    let mut all_datasets: Vec<Dataset> = datasets;
+    all_datasets.push(
+        Dataset::default()
+            .name("45°C")
+            .marker(symbols::Marker::Braille)
+            .graph_type(GraphType::Line)
+            .style(Style::default().fg(Color::Yellow))
+            .data(&threshold_warm),
+    );
+    all_datasets.push(
+        Dataset::default()
+            .name("55°C")
+            .marker(symbols::Marker::Braille)
+            .graph_type(GraphType::Line)
+            .style(Style::default().fg(Color::Red))
+            .data(&threshold_hot),
+    );
+
+    let chart = Chart::new(all_datasets)
         .block(block)
         .x_axis(
             Axis::default()
@@ -113,8 +134,8 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
                 .style(Style::default().fg(Color::DarkGray))
                 .labels(vec![
                     Span::raw("0"),
-                    Span::raw("30"),
-                    Span::raw("60"),
+                    Span::styled("45°", Style::default().fg(Color::Yellow)),
+                    Span::styled("55°", Style::default().fg(Color::Red)),
                     Span::raw("90"),
                 ])
                 .bounds([0.0, 90.0]),

@@ -4,6 +4,31 @@
 
 ---
 
+## [4.0.0] - 2026-06-11
+
+### Implemented (Sprint 03 — Alerts & Notifications)
+
+- **`src/app.rs`** (US-MON-10): เพิ่ม `Alert` enum (`HighTemperature`, `DiskFail`, `GrownDefects`, `RaidDegraded`) พร้อม `.message()` และ `.is_critical()` methods; `pub fn collect_alerts(state: &AppState) -> Vec<Alert>`; เพิ่ม `alerts: Vec<Alert>` และ `alert_cooldowns: HashMap<String, Instant>` ใน `AppState`
+- **`src/notifier.rs`** (US-MON-11): Discord webhook sender — อ่าน `~/.config/hdd-monitor/config.toml` สำหรับ `[discord] webhook_url`; `process_alerts(alerts, cooldowns) -> HashMap` — Discord threshold คือ 60°C (ต่างจาก UI 55°C); cooldown 1 ชั่วโมงต่อ condition key; mutex ถูก release ก่อน HTTP call; graceful when no config
+- **`src/widgets/disk_table.rs`** (US-MON-09): `COL_TEMP` 18→23 — เพิ่ม bold red `" WARN"` span เมื่อ `temp > 55°C`; เพิ่ม alert-based border — unfocused: Red เมื่อมี `DiskFail`, Yellow เมื่อมี `GrownDefects`/`HighTemperature`
+- **`src/widgets/smart_details.rs`** (US-MON-10): เพิ่ม alert-based border เหมือน disk_table.rs
+- **`src/widgets/raid_panel.rs`** (US-MON-10): เพิ่ม Red border เมื่อ `RaidDegraded` alert อยู่ใน `state.alerts`; เปลี่ยน `.style()` → `.border_style()` สำหรับ consistency
+- **`src/widgets/graph_view.rs`** (US-MON-09): เพิ่ม threshold reference lines ที่ 45°C (Yellow) และ 55°C (Red) ใน TempGraph เป็น separate Dataset; Y-axis labels มีสี Yellow=`45°` / Red=`55°`
+- **`src/ui.rs`** (US-MON-10): เพิ่ม `render_alert_banner()` — Red-bordered panel แสดงสูงสุด 2 alerts; height = 0 เมื่อ no alerts, 3 เมื่อ 1 alert, 4 เมื่อ 2+ alerts; render_table_view สร้าง constraints vector แบบ dynamic
+- **`src/main.rs`** (US-MON-10/11): เพิ่ม `mod notifier`; collector_loop เรียก `collect_alerts` → อัปเดต `state.alerts` → `notifier::process_alerts` (no lock held) → อัปเดต `state.alert_cooldowns`
+- **`Cargo.toml`**: เพิ่ม `reqwest = "0.12"` (rustls-tls, no OpenSSL) + `toml = "0.8"`
+
+### Changed
+
+- **`docs/software/00-architecture.md`** v1.0.0 → v1.1.0: เพิ่ม `notifier.rs` ใน module structure; เพิ่ม Notifier+Alert nodes ใน architecture diagram; อัปเดต sequence diagram ใน async data flow
+- **`docs/agile/user-stories/US-MON-09/10/11.md`**: status → ✅ Done, checkboxes ทั้ง AC และ Tech Tasks
+- **`docs/agile/sprint-backlogs/sprint-03.md`**: status ทุก story → ✅ Done
+- **`docs/agile/01-product-backlog.md`** v1.3 → v1.4: US-MON-09/10/11 → ✅ Done
+- **`docs/agile/02-sprint-planning.md`**: Sprint 03 → ✅ Done
+- **`docs/index.md`**: status → Sprint 03 Complete, tech stack เพิ่ม reqwest/toml
+
+---
+
 ## [3.1.0] - 2026-06-11
 
 ### Added (Sprint 03 Planning)

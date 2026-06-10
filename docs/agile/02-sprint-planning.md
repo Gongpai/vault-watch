@@ -10,7 +10,7 @@
 |:---|:---|:---|:---|
 | [sprint-01](./sprint-backlogs/sprint-01.md) | 2026-06-10 → 2026-06-24 | **Core Data Collectors** (RAID parser, SMART parser, iostat parser, TUI foundation) | ✅ Done |
 | [sprint-02](./sprint-backlogs/sprint-02.md) | 2026-06-24 → 2026-07-08 | **Dashboard UI** (RAID panel, Disk table, SMART details, Auto-refresh loop) | ✅ Done |
-| [sprint-03](./sprint-backlogs/sprint-03.md) | 2026-07-08 → 2026-07-22 | **Alerts & Notifications** (Temp color coding, SMART warnings banner, Discord webhook) | 🚧 Active |
+| [sprint-03](./sprint-backlogs/sprint-03.md) | 2026-07-08 → 2026-07-22 | **Alerts & Notifications** (Temp color coding, SMART warnings banner, Discord webhook) | ✅ Done |
 
 ---
 
@@ -30,7 +30,7 @@
 
 ---
 
-### 🏃‍♂️ [Sprint 03: Alerts & Notifications](./sprint-backlogs/sprint-03.md)
+### ✅ [Sprint 03: Alerts & Notifications](./sprint-backlogs/sprint-03.md)
 - **จุดมุ่งหมายหลัก:** เพิ่มระบบแจ้งเตือนให้ dashboard สามารถแจ้งเตือนปัญหาได้ทั้งบน UI (color coding, banner) และ out-of-band (Discord webhook) เพื่อให้ผู้ดูแลระบบรับรู้เหตุการณ์สำคัญแม้ไม่ได้มองหน้าจออยู่
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** disk ที่ร้อนเกิน 55°C แสดง WARN บน UI, Discord ได้รับ message เมื่อ RAID degraded

@@ -5,6 +5,61 @@ use ratatui::layout::Rect;
 
 pub const HISTORY_SIZE: usize = 60;
 
+#[derive(Debug, Clone)]
+pub enum Alert {
+    HighTemperature { device: String, temp: u8 },
+    DiskFail { device: String },
+    GrownDefects { device: String, count: u64 },
+    RaidDegraded,
+}
+
+impl Alert {
+    pub fn message(&self) -> String {
+        match self {
+            Alert::HighTemperature { device, temp } => {
+                format!("⚠  {device}: Temperature {temp}°C exceeds 55°C")
+            }
+            Alert::DiskFail { device } => format!("✗  {device}: SMART health FAIL"),
+            Alert::GrownDefects { device, count } => {
+                format!("⚠  {device}: Grown defects = {count}")
+            }
+            Alert::RaidDegraded => "✗  RAID: Array DEGRADED — disk missing".to_string(),
+        }
+    }
+
+    pub fn is_critical(&self) -> bool {
+        matches!(self, Alert::DiskFail { .. } | Alert::RaidDegraded)
+    }
+}
+
+pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
+    let mut alerts = Vec::new();
+
+    if let Some(ref raid) = state.raid {
+        if raid.state == RaidState::Degraded {
+            alerts.push(Alert::RaidDegraded);
+        }
+    }
+
+    for disk in &state.disks {
+        if !disk.health_ok {
+            alerts.push(Alert::DiskFail { device: disk.device.clone() });
+        }
+        if let Some(t) = disk.temperature_c {
+            if t > 55 {
+                alerts.push(Alert::HighTemperature { device: disk.device.clone(), temp: t });
+            }
+        }
+        if let Some(d) = disk.grown_defects {
+            if d > 0 {
+                alerts.push(Alert::GrownDefects { device: disk.device.clone(), count: d });
+            }
+        }
+    }
+
+    alerts
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum RaidState {
     Active,
@@ -79,6 +134,9 @@ pub struct AppState {
     pub graph_scroll: usize,
 
     pub panel_rects: HashMap<FocusedPanel, Rect>,
+
+    pub alerts: Vec<Alert>,
+    pub alert_cooldowns: HashMap<String, Instant>,
 }
 
 impl AppState {
@@ -110,6 +168,8 @@ impl AppState {
             smart_details_scroll: 0,
             graph_scroll: 0,
             panel_rects: HashMap::new(),
+            alerts: Vec::new(),
+            alert_cooldowns: HashMap::new(),
         }
     }
 }

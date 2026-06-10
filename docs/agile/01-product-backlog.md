@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.3
+**Last Updated:** 2026-06-11 | **Version:** 1.4
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -27,9 +27,9 @@
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-09](./user-stories/US-MON-09.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้อุณหภูมิ disk มีสีบ่งบอกระดับความร้อน<br>**เพื่อให้** เห็นสถานะอันตรายได้ทันทีโดยไม่ต้องอ่านตัวเลข | 1. < 45°C = สีเขียว<br>2. 45–55°C = สีเหลือง<br>3. > 55°C = สีแดง + ข้อความ WARN | **S** | 🚧 Sprint 03 |
-| [US-MON-10](./user-stories/US-MON-10.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** การแจ้งเตือนเมื่อ SMART threshold ถูกละเมิด<br>**เพื่อให้** รู้ทันทีเมื่อ disk มีปัญหาที่อาจนำไปสู่ความเสียหาย | 1. Warning เมื่อ grown defects > 0<br>2. Alert เมื่อ health != OK<br>3. แสดง notification ชัดเจนบน UI | **M** | 🚧 Sprint 03 |
-| [US-MON-11](./user-stories/US-MON-11.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ส่ง alert ไป Discord webhook เมื่อเกิดเหตุการณ์สำคัญ<br>**เพื่อให้** รับการแจ้งเตือนแม้ไม่ได้นั่งดูหน้าจออยู่ | 1. Config webhook URL ผ่าน config file<br>2. Alert เมื่อ RAID degraded<br>3. Alert เมื่อ temp > 60°C<br>4. Alert เมื่อ SMART health != OK | **L** | 🚧 Sprint 03 |
+| [US-MON-09](./user-stories/US-MON-09.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้อุณหภูมิ disk มีสีบ่งบอกระดับความร้อน<br>**เพื่อให้** เห็นสถานะอันตรายได้ทันทีโดยไม่ต้องอ่านตัวเลข | 1. < 45°C = สีเขียว<br>2. 45–55°C = สีเหลือง<br>3. > 55°C = สีแดง + ข้อความ WARN | **S** | ✅ Done |
+| [US-MON-10](./user-stories/US-MON-10.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** การแจ้งเตือนเมื่อ SMART threshold ถูกละเมิด<br>**เพื่อให้** รู้ทันทีเมื่อ disk มีปัญหาที่อาจนำไปสู่ความเสียหาย | 1. Warning เมื่อ grown defects > 0<br>2. Alert เมื่อ health != OK<br>3. แสดง notification ชัดเจนบน UI | **M** | ✅ Done |
+| [US-MON-11](./user-stories/US-MON-11.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ส่ง alert ไป Discord webhook เมื่อเกิดเหตุการณ์สำคัญ<br>**เพื่อให้** รับการแจ้งเตือนแม้ไม่ได้นั่งดูหน้าจออยู่ | 1. Config webhook URL ผ่าน config file<br>2. Alert เมื่อ RAID degraded<br>3. Alert เมื่อ temp > 60°C<br>4. Alert เมื่อ SMART health != OK | **L** | ✅ Done |
 
 ---
 
