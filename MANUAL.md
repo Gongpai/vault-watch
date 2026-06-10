@@ -18,6 +18,8 @@ Per-distro guide for building, installing, and running VaultWatch on each suppor
 - [Privilege Setup](#privilege-setup)
 - [Configuration](#configuration)
 - [Running as a Service](#running-as-a-service)
+- [Reinstall / Update](#reinstall--update)
+- [Uninstall](#uninstall)
 
 ---
 
@@ -383,6 +385,75 @@ sudo rc-service vault-watch status
 ```
 
 Init script: [`contrib/vault-watch.openrc`](contrib/vault-watch.openrc)
+
+---
+
+## Reinstall / Update
+
+ใช้เมื่อต้องการอัพเดทเป็นเวอร์ชั่นใหม่ หรือ rebuild หลังแก้ source code
+
+```bash
+# Pull latest source (if using git)
+git pull
+
+# Rebuild as normal user
+make build
+
+# Overwrite existing binary (install -Dm755 overwrites automatically)
+sudo make install
+```
+
+> ไม่จำเป็นต้องหยุด service ก่อน install — binary จะถูก overwrite และมีผลครั้งถัดไปที่เปิดโปรแกรม
+> ถ้ารันเป็น systemd service ให้ restart หลัง install:
+
+```bash
+# systemd
+sudo systemctl restart vault-watch
+
+# OpenRC
+sudo rc-service vault-watch restart
+```
+
+---
+
+## Uninstall
+
+### Binary only
+
+```bash
+sudo make uninstall
+```
+
+คำสั่งนี้จะลบ:
+- `/usr/local/bin/vault-watch`
+- `/etc/systemd/system/vault-watch.service` (ถ้ามี)
+- `/etc/init.d/vault-watch` (ถ้ามี)
+
+### ลบ config ด้วย (optional)
+
+```bash
+rm -rf ~/.config/hdd-monitor
+```
+
+### ลบ systemd service ก่อน uninstall (แนะนำ)
+
+```bash
+# หยุดและ disable service ก่อน
+sudo systemctl stop vault-watch
+sudo systemctl disable vault-watch
+
+# แล้วค่อย uninstall
+sudo make uninstall
+sudo systemctl daemon-reload
+```
+
+### OpenRC
+
+```bash
+sudo rc-service vault-watch stop
+sudo rc-update del vault-watch default
+sudo make uninstall
+```
 
 ---
 
