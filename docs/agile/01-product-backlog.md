@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-10 | **Version:** 1.1
+**Last Updated:** 2026-06-10 | **Version:** 1.2
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -18,7 +18,8 @@
 | [US-MON-06](./user-stories/US-MON-06.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ตารางสรุปข้อมูล disk แต่ละตัว<br>**เพื่อให้** เห็น Temp, Health, Read MB/s, Write MB/s และ Defects ในแถวเดียว | 1. แสดง table ที่มีคอลัมน์ Disk, Temp, Health, Read, Write, Defects<br>2. Color highlight: WARN สำหรับ temp > 55°C, ERROR สำหรับ health != OK<br>3. Alignment ถูกต้องและไม่ล้น terminal | **M** | 🚧 Planned |
 | [US-MON-07](./user-stories/US-MON-07.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** panel แสดง SMART details แต่ละ disk<br>**เพื่อให้** เห็น serial, power-on hours, non-medium errors และ grown defects อย่างละเอียด | 1. แสดง serial number ต่อ disk<br>2. แสดง power-on hours<br>3. แสดง non-medium errors และ grown defects<br>4. Highlight ค่าที่ไม่ปกติ (defects > 0) | **S** | 🚧 Planned |
 | [US-MON-08](./user-stories/US-MON-08.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้หน้าจอ refresh อัตโนมัติทุก 2 วินาที<br>**เพื่อให้** ข้อมูล RAID, SMART และ throughput อัปเดตต่อเนื่องโดยไม่ต้องกด manual | 1. Collector loop ทำงานทุก 2 วินาที<br>2. Render loop ทำงานทุก 250ms (smooth UI)<br>3. แสดง last updated timestamp<br>4. `r` key force refresh ทันที | **M** | 🚧 Planned |
-| [US-MON-12](./user-stories/US-MON-12.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้ค่าตัวเลข (Temperature, Read/Write MB/s, RAID speed) แสดงเป็น graph<br>**เพื่อให้** เห็น trend และ pattern ได้ทันที ไม่ใช่แค่ค่า snapshot ปัจจุบัน | 1. History buffer เก็บ 60 sample ต่อ metric<br>2. Inline Sparkline ในทุกคอลัมน์ตัวเลขของ disk table<br>3. Full line chart ใน Graph View (Tab toggle)<br>4. Temperature, Throughput, RAID speed charts | **M** | 🚧 Planned |
+| [US-MON-12](./user-stories/US-MON-12.md) | **ในฐานะ** ผู้ดูแลระบบ<br>**ฉันต้องการ** ให้ค่าตัวเลข (Temperature, Read/Write MB/s, RAID speed) แสดงเป็น graph<br>**เพื่อให้** เห็น trend และ pattern ได้ทันที ไม่ใช่แค่ค่า snapshot ปัจจุบัน | 1. History buffer เก็บ 60 sample ต่อ metric<br>2. Inline Sparkline ในทุกคอลัมน์ตัวเลขของ disk table<br>3. Full line chart ใน Graph View (`g` toggle)<br>4. Temperature, Throughput, RAID speed charts | **M** | 🔵 Planned |
+| [US-MON-13](./user-stories/US-MON-13.md) | **ในฐานะ** ผู้ดูแลระบบที่ติดตั้ง HDD มากกว่า 3–5 ลูก<br>**ฉันต้องการ** scroll ภายใน panel ด้วย mouse wheel หรือ keyboard และสลับ focus ระหว่าง panel ด้วย Tab<br>**เพื่อให้** ดูข้อมูล disk ทุกลูกได้แม้หน้าจอ terminal มีพื้นที่จำกัด | 1. `Tab`/`Shift+Tab` สลับ focus panel<br>2. `↑↓`/`jk`/`PgUp`/`PgDn` scroll focused panel<br>3. Mouse wheel scroll panel ที่เมาส์อยู่<br>4. Mouse click โฟกัส panel<br>5. Focused panel แสดง double border<br>6. Scrollbar widget ทุก panel ที่ scroll ได้ | **M** | 🔵 Planned |
 
 ---
 

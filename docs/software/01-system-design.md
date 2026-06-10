@@ -1,6 +1,6 @@
 # HDD Monitor — System Design
 
-**Version:** 1.2.0 | **Last Updated:** 2026-06-10
+**Version:** 1.3.0 | **Last Updated:** 2026-06-10
 
 ---
 
@@ -70,22 +70,42 @@ pub struct AppState {
 
     // History ring buffers สำหรับ graph (key = device name)
     // ใช้ VecDeque เพื่อ push_back O(1) และ pop_front O(1)
-    pub temp_history: HashMap<String, VecDeque<u64>>,   // °C — ใช้ตรงกับ ratatui Sparkline
+    pub temp_history: HashMap<String, VecDeque<u64>>,   // °C
     pub read_history: HashMap<String, VecDeque<u64>>,   // MB/s × 10 (เก็บ 1 decimal)
     pub write_history: HashMap<String, VecDeque<u64>>,  // MB/s × 10
     pub raid_speed_history: VecDeque<u64>,              // MB/s
 
-    // View state
+    // View & navigation state
     pub view_mode: ViewMode,
+    pub focused_panel: FocusedPanel,
+    pub disk_table_scroll: usize,    // index ของ disk แถวแรกที่แสดง
+    pub smart_details_scroll: usize, // index ของ disk แถวแรกที่แสดงใน SMART panel
+    pub graph_scroll: usize,         // scroll ใน Graph View (ถ้า disk มากกว่าที่ chart รองรับ)
+
+    // Rendered panel bounds — อัปเดตทุก frame เพื่อใช้ตรวจจับ mouse click/scroll
+    pub panel_rects: HashMap<FocusedPanel, ratatui::layout::Rect>,
 }
 
 pub enum ViewMode {
     Table,  // default — disk table พร้อม inline sparklines
-    Graph,  // expanded graph panels (toggle ด้วย Tab)
+    Graph,  // expanded chart panels (toggle ด้วย g)
+}
+
+#[derive(Hash, Eq, PartialEq, Clone, Copy)]
+pub enum FocusedPanel {
+    // Table View
+    DiskTable,
+    SmartDetails,
+    // Graph View
+    TempGraph,
+    ThroughputGraph,
+    RaidGraph,
 }
 ```
 
 **History buffer logic:** ทุกครั้งที่ collector อัปเดต ให้ `push_back` ค่าใหม่ และ `pop_front` ถ้า `len() > HISTORY_SIZE`
+
+**Scroll logic:** `disk_table_scroll` คือ index แถวแรกที่แสดง — จำกัดให้ `scroll <= max(0, disk_count - visible_rows)`
 
 ---
 
@@ -189,33 +209,46 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 
 ## 3. UI Layout Specification
 
-มี 2 view modes สลับด้วยปุ่ม `Tab`
+มี 2 view modes สลับด้วยปุ่ม `g`
 
 ---
 
 ### 3.1 Table View (default — `ViewMode::Table`)
 
-ค่าตัวเลขทุกตัว (Temperature, Read MB/s, Write MB/s, RAID speed) แสดงเป็น **inline Sparkline** แสดงประวัติ 2 นาทีที่ผ่านมา ควบคู่กับค่าปัจจุบัน
+ค่าตัวเลขทุกตัว (Temperature, Read MB/s, Write MB/s, RAID speed) แสดงเป็น **inline Sparkline** แสดงประวัติ 2 นาทีที่ผ่านมา ควบคู่กับค่าปัจจุบัน รองรับ **scroll** และ **panel focus** สำหรับ disk จำนวนมาก
+
+**Scenario: 8 disks, terminal แสดง disk table ได้ 5 แถว, focus อยู่ที่ DiskTable:**
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
-│ HDD Monitor    q:quit  r:refresh  Tab:graph                  Last update: 14:32:05   │
+│ HDD Monitor  q:quit  g:graph  Tab:panel  r:refresh              Last: 14:32:05      │
 ├──────────────────────────────────────────────────────────────────────────────────────┤
-│ RAID  md0  REBUILDING  [████░░░░░░░░░░░░░░░░░]  9.3%                                │
-│            Speed  ▁▂▃▄▅▄▃▄▅▆▅▄▅▄▃▄▅▄▅▃  178 MB/s    ETA 8h 16m    Disks 3/3        │
-├──────┬──────────────────────────┬─────────────────────────┬──────────────────┬───────┤
-│ Disk │ Temperature              │ Read MB/s               │ Write MB/s       │Health │
-├──────┼──────────────────────────┼─────────────────────────┼──────────────────┼───────┤
-│ sdc  │ ▃▄▄▅▄▄▃▄▅▄▃▄  50°C      │ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     │ ▁▁▁▁▁▁▁▁  0.0   │  OK   │
-│ sdd  │ ▅▆▆▅▆▅▆▅▅▆▅▆  53°C      │ ████████████ 178.2      │ ▁▁▁▁▁▁▁▁  0.0   │  OK   │
-│ sde  │ ▃▄▃▄▄▃▃▄▃▄▃▄  48°C      │ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     │ ████████ 178.1   │OK ⚠D  │
+│ RAID  md0  REBUILDING  [████░░░░░░░░░░░░░░░░░]  9.3%  Disks 8/8                    │
+│            Speed  ▁▂▃▄▅▄▃▄▅▆▅▄▅▄▃▄▅▄▅▃  178 MB/s    ETA 8h 16m                    │
+╔══════╦══════════════════════════╦═════════════════════════╦══════════╦═══════════════╗
+║ Disk ║ Temperature              ║ Read MB/s               ║Write MB/s║    Health     ║▲
+╠══════╬══════════════════════════╬═════════════════════════╬══════════╬═══════════════╣█
+║ sdc  ║ ▃▄▄▅▄▄▃▄▅▄▃▄  50°C      ║ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     ║▁▁▁▁  0.0║     OK        ║█
+║ sdd  ║ ▅▆▆▅▆▅▆▅▅▆▅▆  53°C      ║ ████████████ 178.2      ║▁▁▁▁  0.0║     OK        ║░
+║ sde  ║ ▃▄▃▄▄▃▃▄▃▄▃▄  48°C      ║ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     ║████ 178.1║  OK  ⚠D:7   ║░
+║ sdf  ║ ▃▄▄▅▄▃▃▄▄▅▃▄  47°C      ║ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     ║▁▁▁▁  0.0║     OK        ║░
+║ sdg  ║ ▄▄▃▄▃▄▄▅▄▃▄▃  49°C      ║ ▁▁▁▁▁▁▁▁▁▁▁▁   0.0     ║▁▁▁▁  0.0║     OK        ║▼
+╚══════╩══════════════════════════╩═════════════════════════╩══════════╩═══════════════╝
+│ ● DiskTable [5/8 — ↑↓:scroll]   ○ SmartDetails                                     │
 ├──────────────────────────────────────────────────────────────────────────────────────┤
-│ SMART DETAILS                                                                        │
-│ sdc  Serial: XXXX000   Power-on: 12345h   NME: 16373                                │
-│ sdd  Serial: YYYY000   Power-on: 12340h   NME: 32025                                │
-│ sde  Serial: ZZZZ000   Power-on: 12338h   Grown defects: 7 ⚠                       │
+│ SMART DETAILS                                                                      ▲ │
+│ sdc  Serial: XXXX000   Power-on: 12345h   NME: 16373                              █ │
+│ sdd  Serial: YYYY000   Power-on: 12340h   NME: 32025                              ░ │
+│ sde  Serial: ZZZZ000   Power-on: 12338h   Grown defects: 7 ⚠                     ▼ │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Visual indicators:**
+- **Focused panel**: double border `╔╦╗╠╬╣╚╩╝` สีสว่าง; unfocused ใช้ single border `┌┬┐├┼┤└┴┘` สีปกติ
+- **Scrollbar**: `ratatui::widgets::Scrollbar` (VerticalRight) ทางขวาของทุก panel ที่ scroll ได้ แสดง `▲ █ ░ ▼`
+- **Status bar**: บรรทัดระหว่าง DiskTable กับ SmartDetails — `● Panel [N/total — hint]` = focused, `○ Panel` = unfocused
+- **Overflow hint**: เมื่อมีแถวซ่อนอยู่ด้านล่างสุด แสดง `↓ 3 more` ที่แถวสุดท้ายของ panel
+- **Mouse support**: scroll wheel บน panel ใดก็ scroll panel นั้น; click โฟกัส panel นั้น
 
 **Sparkline widget:** `ratatui::widgets::Sparkline` ใช้ Unicode block chars `▁▂▃▄▅▆▇█`
 - Temperature column: แสดง 12 sample ล่าสุด (24 วินาที) + ค่าปัจจุบัน + สี
@@ -226,11 +259,11 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 
 ### 3.2 Graph View (`ViewMode::Graph`)
 
-แสดง line chart แบบ full-screen โดยใช้ `ratatui::widgets::Chart` พร้อม axis labels สลับด้วย `Tab`
+แสดง line chart แบบ full-screen โดยใช้ `ratatui::widgets::Chart` พร้อม axis labels สลับด้วย `g` รองรับ scroll ผ่าน `graph_scroll` เมื่อ disk มีมากกว่าที่ chart แสดงได้
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
-│ HDD Monitor    q:quit  r:refresh  Tab:table                  Last update: 14:32:05   │
+│ HDD Monitor    q:quit  r:refresh  g:table  Tab:panel            Last: 14:32:05      │
 ├────────────────────────────────────────┬─────────────────────────────────────────────┤
 │ TEMPERATURE (°C) — last 2 min          │ THROUGHPUT (MB/s) — last 2 min              │
 │                                        │                                             │
@@ -284,6 +317,56 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 - รองรับ dynamic disk count (ไม่ hardcode 3 disks)
 - Disk Table: column widths ยืดหยุ่นตาม terminal width — Sparkline ยืดเต็มช่องที่เหลือ
 - Graph View: left/right panels แบ่ง 50/50 horizontal
+
+---
+
+### 3.5 Keyboard & Mouse Interaction
+
+| Input | Action |
+|:---|:---|
+| `q` | ออกจากโปรแกรม (cleanup terminal) |
+| `r` | Force refresh ทันที |
+| `g` | Toggle Table View ↔ Graph View |
+| `Tab` | ย้าย focus ไปยัง panel ถัดไป (cycle forward) |
+| `Shift+Tab` | ย้าย focus ไปยัง panel ก่อนหน้า (cycle backward) |
+| `↑` / `k` | Scroll focused panel ขึ้น 1 แถว |
+| `↓` / `j` | Scroll focused panel ลง 1 แถว |
+| `PgUp` | Scroll focused panel ขึ้น `visible_rows - 1` แถว |
+| `PgDn` | Scroll focused panel ลง `visible_rows - 1` แถว |
+| `Home` | Scroll focused panel กลับไปแถวแรก |
+| `End` | Scroll focused panel ไปยังแถวสุดท้าย |
+| Mouse wheel up | Scroll panel ที่เมาส์อยู่ขึ้น 3 แถว |
+| Mouse wheel down | Scroll panel ที่เมาส์อยู่ลง 3 แถว |
+| Mouse click | โฟกัส panel ที่ click |
+
+**Panel cycle order (Table View):** `DiskTable` → `SmartDetails` → `DiskTable` → …
+
+**Panel cycle order (Graph View):** `TempGraph` → `ThroughputGraph` → `RaidGraph` → `TempGraph` → …
+
+---
+
+### 3.6 Scroll State Logic
+
+```
+// จำนวนแถวที่แสดงได้ = panel height - header rows - border rows
+let visible_rows = panel_rect.height as usize - 2;
+
+// จำกัด scroll ไม่ให้เกิน
+let max_scroll = disk_count.saturating_sub(visible_rows);
+state.disk_table_scroll = state.disk_table_scroll.min(max_scroll);
+
+// แถวที่แสดง = slice ของ disks[scroll .. scroll + visible_rows]
+```
+
+**Mouse hit-testing:** ทุก frame ที่ render ให้บันทึก `Rect` ของแต่ละ panel ลงใน `panel_rects` จากนั้นเมื่อรับ `MouseEvent` ให้วน loop หา panel ที่ครอบ coordinate ของ cursor
+
+```rust
+fn panel_at(rects: &HashMap<FocusedPanel, Rect>, col: u16, row: u16) -> Option<FocusedPanel> {
+    rects.iter()
+        .find(|(_, r)| col >= r.x && col < r.x + r.width && row >= r.y && row < r.y + r.height)
+        .map(|(panel, _)| *panel)
+}
+```
 
 ---
 

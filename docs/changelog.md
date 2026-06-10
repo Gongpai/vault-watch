@@ -4,6 +4,29 @@
 
 ---
 
+## [1.3.0] - 2026-06-10
+
+### Added
+
+- **[docs/agile/user-stories/US-MON-13.md](agile/user-stories/US-MON-13.md)**: เพิ่ม User Story ใหม่สำหรับ Panel Focus & Scroll — ครอบคลุม `Tab`/`Shift+Tab` panel cycling, keyboard scroll (`↑↓`, `jk`, `PgUp`, `PgDn`, `Home`, `End`), mouse wheel scroll, mouse click focus, double border สำหรับ focused panel, `Scrollbar` widget, status bar focus indicator, mouse hit-testing ผ่าน `panel_rects`
+
+### Changed
+
+- **[docs/software/01-system-design.md](software/01-system-design.md)** v1.2.0 → v1.3.0:
+  - Section 3 header: แก้ไข "สลับด้วยปุ่ม `Tab`" → `g` (Tab สงวนไว้สำหรับ panel focus)
+  - Section 3.1 Table View: ออกแบบใหม่ mockup แสดง 8 disks พร้อม focused panel (double border), scrollbar (`▲ █ ░ ▼`), status bar (`● DiskTable [5/8 — ↑↓:scroll] ○ SmartDetails`), overflow hint (`↓ N more`)
+  - Section 3.2 Graph View: อัปเดต title bar แสดง `Tab:panel`, เพิ่มหมายเหตุ `graph_scroll`
+  - Section 3.5 เพิ่มใหม่: Keyboard & Mouse Interaction — ตารางทุก shortcut รวม `Tab`, scroll keys, mouse events
+  - Section 3.6 เพิ่มใหม่: Scroll State Logic — pseudocode clamp, slice pattern, mouse hit-testing function
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.1 → v1.2: เพิ่ม US-MON-13 ใน Must Have section; อัปเดต US-MON-12 toggle key จาก `Tab` เป็น `g`
+- **[docs/agile/sprint-backlogs/sprint-02.md](agile/sprint-backlogs/sprint-02.md)**: เพิ่ม US-MON-13 ใน committed stories (8 hrs); อัปเดต US-MON-12 toggle key จาก `Tab` เป็น `g`
+
+### Fixed
+
+- **[docs/software/01-system-design.md](software/01-system-design.md)**: แก้ไข `Tab:graph` / `Tab:table` ใน title bar mockups → `g:graph` / `g:table` เพื่อหลีกเลี่ยง key conflict กับ panel focus
+
+---
+
 ## [1.2.0] - 2026-06-10
 
 ### Added
