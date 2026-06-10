@@ -22,7 +22,7 @@
 3. [ ] ทุกครั้งที่ collector รัน ค่าใหม่ถูก push ต่อท้าย และค่าเก่าสุดถูกตัดออกอัตโนมัติเมื่อ buffer เต็ม
 4. [ ] ค่า speed เก็บเป็น `u64` หน่วย MB/s × 10 เพื่อรองรับ 1 decimal ใน sparkline
 
-### gle View — Inline Sparklines
+### Table View — Inline Sparklines
 5. [ ] คอลัมน์ Temperature ใน disk table แสดง Sparkline 12 sample ล่าสุด + ค่าปัจจุบัน (°C)
 6. [ ] คอลัมน์ Read MB/s แสดง Sparkline 12 sample ล่าสุด + ค่าปัจจุบัน
 7. [ ] คอลัมน์ Write MB/s แสดง Sparkline 12 sample ล่าสุด + ค่าปัจจุบัน
@@ -30,7 +30,7 @@
 9. [ ] Sparkline ใช้สีตาม color scheme: Temperature มีสี Green/Yellow/Red ตาม threshold
 
 ### Graph View — Full Chart
-10. [ ] กด `g` สลับจาก gle View เป็น Graph View และกลับ
+10. [ ] กด `g` สลับจาก Table View เป็น Graph View และกลับ
 11. [ ] Graph View แสดง Temperature chart (left) และ Throughput chart (right) พร้อม axis labels
 12. [ ] Temperature chart แสดง line ต่อ disk พร้อม Y axis เป็น °C และ X axis เป็นวินาที
 13. [ ] Throughput chart แสดง Read (solid) และ Write (dashed style) ต่อ disk
@@ -68,5 +68,5 @@
 - Backlog: [01-product-backlog.md](../01-product-backlog.md)
 - System Design (AppState + Layout): [../../software/01-system-design.md](../../software/01-system-design.md)
 - Sprint: [../sprint-backlogs/sprint-02.md](../sprint-backlogs/sprint-02.md)
-- US-MON-06 (Disk gle): [US-MON-06.md](./US-MON-06.md)
+- US-MON-06 (Disk Table): [US-MON-06.md](./US-MON-06.md)
 - US-MON-05 (RAID Panel): [US-MON-05.md](./US-MON-05.md)

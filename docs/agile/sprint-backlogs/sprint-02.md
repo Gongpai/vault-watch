@@ -43,5 +43,5 @@ gantt
 - ข้อมูล RAID, SMART, throughput ตรงกับ manual run ของ tools แต่ละตัว
 - หน้าจออัปเดตทุก 2 วินาทีโดยไม่ flicker
 - `q` ออกจากโปรแกรมสะอาด, `r` refresh ทันที
-- รองรับ terminal ขนาด 80×24 หรือใหญ่กว่า
+- รองรับ terminal ขนาด **100×28** (Table View) หรือ **110×30** (Graph View) หรือใหญ่กว่า
 - `cargo clippy` และ `cargo test` ผ่านสะอาด

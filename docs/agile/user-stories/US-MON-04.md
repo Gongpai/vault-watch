@@ -18,10 +18,10 @@
 
 1. [ ] ตั้งค่า `Cargo.toml` ด้วย dependencies ที่จำเป็น (ratatui, crossterm, tokio, serde, regex)
 2. [ ] Terminal เข้า raw mode เมื่อเริ่ม และออก raw mode เมื่อ quit หรือ panic
-3. [ ] `AppState` struct มี fields ครบ: `raid`, `disks`, `io_stats`, `last_updated`, `disk_devices`
+3. [ ] `AppState` struct มี fields ครบ: `raid`, `disks`, `io_stats`, `last_updated`, `disk_devices`, `temp_history`, `read_history`, `write_history`, `raid_speed_history`, `view_mode`, `focused_panel`, `disk_table_scroll`, `smart_details_scroll`, `graph_scroll`, `panel_rects`
 4. [ ] `Arc<Mutex<AppState>>` share ระหว่าง collector task และ render task ได้
 5. [ ] กด `q` หรือ `Ctrl+C` → ออกจากโปรแกรมสะอาด terminal mode ถูก restore
-6. [ ] กด `r` → set flag `force_refresh = true` เพื่อให้ collector รัน cycle ใหม่ทันที
+6. [ ] กด `r` → เรียก `refresh_notify.notify_one()` บน `Arc<tokio::sync::Notify>` ที่แชร์กับ collector task เพื่อปลุก collector ทันทีโดยไม่รอ 2s (ไม่ใช้ flag ใน AppState)
 7. [ ] Placeholder UI (กล่องว่าง + ข้อความ "Loading...") แสดงได้ก่อนข้อมูลพร้อม
 
 ---
@@ -33,6 +33,7 @@
 - [ ] สร้าง `src/main.rs` — tokio runtime, terminal setup, render loop, event loop
 - [ ] สร้าง `src/ui.rs` — placeholder `draw()` function ที่รับ `&AppState`
 - [ ] สร้าง `src/collectors/mod.rs` — module declarations
+- [ ] สร้าง `Arc<tokio::sync::Notify>` สำหรับ force refresh และส่งไปยัง collector task
 - [ ] ทดสอบ: รัน binary, เห็นหน้าจอ, กด `q` ออกได้สะอาด
 
 ---

@@ -32,9 +32,9 @@ pub enum RaidState {
 ```rust
 pub struct DiskInfo {
     pub device: String,            // "sdc"
-    pub serial: String,            // "XXXX000000"
+    pub serial: Option<String>,     // "XXXX000000" — None เมื่อ smartctl ไม่ตอบสนอง
     pub temperature_c: Option<u8>, // 53
-    pub health_ok: bool,           // true = PASSED
+    pub health_ok: bool,           // true = PASSED; default false เมื่อ smartctl ไม่ตอบสนอง (safe default)
     pub power_on_hours: Option<u64>,
     pub grown_defects: Option<u64>,
     pub non_medium_errors: Option<u64>,
@@ -43,7 +43,7 @@ pub struct DiskInfo {
 }
 ```
 
-### 1.3 IoStats — จาก `iostat -d -k`
+### 1.3 IoStats — จาก `iostat -d -k -y 1 1`
 
 ```rust
 pub struct IoStats {
@@ -101,6 +101,19 @@ pub enum FocusedPanel {
     ThroughputGraph,
     RaidGraph,
 }
+```
+
+**Force refresh:** ไม่มี `force_refresh` field ใน AppState — ใช้ `Arc<tokio::sync::Notify>` แยกต่างหาก ส่งเป็น parameter ไปยัง collector task เมื่อกด `r` event loop เรียก `notify.notify_one()` → collector ถูกปลุกออกจาก `sleep` ทันที
+
+```rust
+// ใน main.rs
+let refresh_notify = Arc::new(tokio::sync::Notify::new());
+// ใน collector loop
+tokio::select! {
+    _ = tokio::time::sleep(Duration::from_secs(2)) => {}
+    _ = refresh_notify.notified() => {}
+}
+// collect data...
 ```
 
 **Per-device data model:** `disk_devices` คือ master list — ทุก collection ใช้ device name เดียวกันเป็น key:

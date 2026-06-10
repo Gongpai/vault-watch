@@ -20,6 +20,8 @@
 | Disk Summary Table Panel UI | 🚧 Sprint 02 | [US-MON-06](./agile/user-stories/US-MON-06.md) |
 | SMART Details Panel UI | 🚧 Sprint 02 | [US-MON-07](./agile/user-stories/US-MON-07.md) |
 | Auto-Refresh Async Loop | 🚧 Sprint 02 | [US-MON-08](./agile/user-stories/US-MON-08.md) |
+| History Buffer & Graph UI | 🔵 Sprint 02 | [US-MON-12](./agile/user-stories/US-MON-12.md) |
+| Panel Focus & Scroll | 🔵 Sprint 02 | [US-MON-13](./agile/user-stories/US-MON-13.md) |
 | Temperature Color Coding | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
 | SMART Threshold Warnings | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
 | Discord Webhook Notifications | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |

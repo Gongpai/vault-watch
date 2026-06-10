@@ -30,7 +30,7 @@ gantt
 | [US-MON-04](../user-stories/US-MON-04.md) | **TUI Foundation**<br>- ตั้งค่า Cargo.toml dependencies<br>- สร้าง tokio runtime, crossterm terminal setup<br>- สร้าง `AppState` struct และ `Arc<Mutex<>>` sharing<br>- Keyboard handler: `q` quit, `r` refresh | kong | 8 | 🚧 Planned |
 | [US-MON-01](../user-stories/US-MON-01.md) | **RAID Status Parser**<br>- อ่าน `/proc/mdstat` ด้วย `tokio::fs::read_to_string`<br>- Parse array name, state, disk count<br>- Parse rebuild %, speed, ETA ด้วย regex<br>- Handle active / rebuilding / degraded / no-array | kong | 6 | 🚧 Planned |
 | [US-MON-02](../user-stories/US-MON-02.md) | **SMART Data Collector**<br>- รัน `smartctl -a -d scsi /dev/sdX` ด้วย `tokio::process::Command`<br>- Parse temperature, health, serial<br>- Parse power-on hours, grown defects, non-medium errors<br>- Handle sudo, timeout, disk not found | kong | 8 | 🚧 Planned |
-| [US-MON-03](../user-stories/US-MON-03.md) | **iostat Collector**<br>- รัน `iostat -d -k sdc sdd sde` ด้วย async process<br>- Parse Read/Write kB/s → MB/s per device<br>- Handle iostat ไม่ติดตั้ง | kong | 4 | 🚧 Planned |
+| [US-MON-03](../user-stories/US-MON-03.md) | **iostat Collector**<br>- รัน `iostat -d -k -y 1 1 sdc sdd sde` ด้วย async process<br>- Parse Read/Write kB/s → MB/s per device<br>- Handle iostat ไม่ติดตั้ง | kong | 4 | 🚧 Planned |
 
 ---
 

@@ -4,6 +4,37 @@
 
 ---
 
+## [1.4.0] - 2026-06-10
+
+### Fixed (contradictions & ambiguities audit)
+
+- **[docs/software/01-system-design.md](software/01-system-design.md)** v1.3.0 → v1.4.0:
+  - `DiskInfo.serial`: เปลี่ยนจาก `String` → `Option<String>` (None เมื่อ smartctl ไม่ตอบสนอง สอดคล้องกับ optional fields อื่น)
+  - `DiskInfo.health_ok`: เพิ่ม comment ว่า default `false` เมื่อ error คือ safe default
+  - Section 1.3 header: แก้จาก `iostat -d -k` → `iostat -d -k -y 1 1`
+  - เพิ่ม `force_refresh` design note: ใช้ `Arc<tokio::sync::Notify>` แทน field ใน AppState พร้อม code snippet `tokio::select!`
+- **[docs/software/00-architecture.md](software/00-architecture.md)**:
+  - Mermaid diagram: แก้ `iostat -d -k sdc sdd sde` → `iostat -d -k -y 1 1 sdc sdd sde`
+  - Module structure: เพิ่ม `graph_view.rs` และ `sparkline_cell.rs` ใน `src/widgets/`
+- **[docs/agile/user-stories/US-MON-04.md](agile/user-stories/US-MON-04.md)**:
+  - criterion #3: อัปเดต AppState fields ให้ครบทุก field รวม history maps, scroll state, view mode, panel_rects
+  - criterion #6: เปลี่ยนจาก `force_refresh = true` → `refresh_notify.notify_one()` บน `Arc<Notify>`
+  - Technical tasks: เพิ่ม task สร้าง `Arc<Notify>`
+- **[docs/agile/user-stories/US-MON-07.md](agile/user-stories/US-MON-07.md)**:
+  - criterion #6: เปลี่ยนจาก "Panel height ยืดตามจำนวน disk" → fixed height + scroll (สอดคล้องกับ US-MON-13)
+- **[docs/agile/user-stories/US-MON-08.md](agile/user-stories/US-MON-08.md)**:
+  - Technical tasks: เปลี่ยนจาก `watch`/`Mutex` flag → `Arc<tokio::sync::Notify>`
+- **[docs/agile/user-stories/US-MON-12.md](agile/user-stories/US-MON-12.md)**:
+  - แก้ text corruption 3 จุด: "gle View" → "Table View", "Disk gle" → "Disk Table" (เกิดจากการ replace Tab→g ที่ทำลายคำว่า "Table")
+- **[docs/agile/sprint-backlogs/sprint-01.md](agile/sprint-backlogs/sprint-01.md)**:
+  - แก้ iostat command จาก `iostat -d -k` → `iostat -d -k -y 1 1`
+- **[docs/agile/sprint-backlogs/sprint-02.md](agile/sprint-backlogs/sprint-02.md)**:
+  - DoD terminal size: แก้จาก `80×24` → `100×28 (Table) / 110×30 (Graph)` ให้ตรงกับ system-design
+- **[docs/index.md](index.md)**:
+  - เพิ่ม US-MON-12 (History Buffer & Graph UI) และ US-MON-13 (Panel Focus & Scroll) ในตาราง status
+
+---
+
 ## [1.3.0] - 2026-06-10
 
 ### Added

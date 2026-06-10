@@ -15,7 +15,7 @@ graph TD
     subgraph System ["Ubuntu Server — HPE ProLiant DL560 Gen8"]
         mdstat["/proc/mdstat"]
         smartctl["smartctl -a -d scsi /dev/sdX"]
-        iostat["iostat -d -k sdc sdd sde"]
+        iostat["iostat -d -k -y 1 1 sdc sdd sde"]
     end
 
     subgraph Collectors ["Async Collectors (tokio tasks)"]
@@ -76,9 +76,11 @@ src/
 │   └── iostat.rs           # iostat runner + output parser → Vec<IoStats>
 └── widgets/
     ├── mod.rs              # pub use
-    ├── raid_panel.rs       # RAID status widget (Block + Paragraph)
-    ├── disk_table.rs       # Disk summary table widget (Table + Row)
-    └── smart_details.rs    # SMART details widget (List)
+    ├── raid_panel.rs       # RAID status widget (Block + Paragraph + Gauge)
+    ├── disk_table.rs       # Disk summary table widget (Table + Row + Sparkline)
+    ├── smart_details.rs    # SMART details widget (List/Paragraph)
+    ├── graph_view.rs       # Graph View widget (Chart + Dataset) — toggle ด้วย g
+    └── sparkline_cell.rs   # Helper: Sparkline + value ภายใน Table Cell
 ```
 
 ---

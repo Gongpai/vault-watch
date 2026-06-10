@@ -21,7 +21,7 @@
 3. [ ] Non-medium errors > 1000 → highlight สีเหลือง
 4. [ ] Grown defects > 0 → highlight สีแดง พร้อมข้อความ WARN
 5. [ ] กรณีข้อมูลไม่มี (None): แสดง `--`
-6. [ ] Panel height ยืดตามจำนวน disk
+6. [ ] Panel มี fixed height ตามสัดส่วน terminal (ไม่ขยายตามจำนวน disk) — รองรับ scroll เมื่อ disk มีมากกว่าพื้นที่ที่แสดงได้ (US-MON-13)
 
 ---
 
