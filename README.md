@@ -25,7 +25,7 @@ sudo make install
 sudo vault-watch
 ```
 
-For all other distros (Fedora, Arch, openSUSE, Alpine) see **[Manual.md](Manual.md)**.
+For all other distros (Fedora, Arch, openSUSE, Alpine) see **[Manual.md](MANUAL.md)**.
 
 ---
 
@@ -78,7 +78,7 @@ Alerts fire for: disk SMART FAIL · RAID degraded · temperature > 60°C. 1-hour
 
 | File | Contents |
 |:-----|:---------|
-| [Manual.md](Manual.md) | Full install guide — all distros, privilege setup, service config |
+| [MANUAL.md](MANUAL.md) | Full install guide — all distros, privilege setup, service config |
 | [contrib/config.example.toml](contrib/config.example.toml) | Annotated config file with all options |
 | [docs/](docs/) | Architecture, system design, sprint docs |
 
