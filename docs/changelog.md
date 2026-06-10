@@ -4,6 +4,24 @@
 
 ---
 
+## [2.0.0] - 2026-06-10
+
+### Implemented (Sprint 01 — Core Data Collectors)
+
+- **`src/collectors/raid.rs`** (US-MON-01): อ่าน `/proc/mdstat` ด้วย `tokio::fs::read_to_string`, parse ด้วย `LazyLock<Regex>` — ตรวจจับ array name, state (Active/Rebuilding/Degraded/Unknown), disk count `[N/M]`, rebuild %, speed K/sec÷1024→MB/s, ETA `ceil(min)`. 5 unit tests (active, rebuilding, degraded, no-array, inactive)
+- **`src/collectors/smart.rs`** (US-MON-02): รัน `sudo smartctl -a -d scsi /dev/sdX` ด้วย `tokio::process::Command`, parse 8 fields ด้วย `LazyLock<Regex>`. ใช้ `futures::future::join_all` สำหรับ concurrent collection — รักษา device order. Error fallback คืน `DiskInfo` ที่มีค่า `None`/`false` ทุก optional field. 3 unit tests
+- **`src/collectors/iostat.rs`** (US-MON-03): รัน `iostat -d -k -y 1 1 <devices>`, parse แบบ line-splitting (ไม่ใช้ regex). Block-detection logic ใช้ block สุดท้ายที่มี `Device` header — รองรับ kernel เก่าที่ ignore `-y`. 3 unit tests
+- **`src/main.rs`** — `collector_loop` (US-MON-08 partial): แทนที่ placeholder ด้วย `tokio::join!` รัน 3 collectors พร้อมกัน, push ผลลัพธ์ลง `AppState` history buffers (`temp_history`, `read_history`×10, `write_history`×10, `raid_speed_history`) พร้อม pop_front เมื่อ len > `HISTORY_SIZE`
+- **`Cargo.toml`**: เพิ่ม `futures = "0.3"`
+- **`src/collectors/mod.rs`**: เปิด `pub mod raid; pub mod smart; pub mod iostat;`
+
+### Fixed (code-review findings)
+
+- **`src/collectors/raid.rs`**: `inactive` array เดิมรายงาน `Active` เพราะ `0 < 0 = false` — แก้โดย capture `(active|inactive)` และ return `RaidState::Unknown` เมื่อ inactive
+- **`src/main.rs`**: `raid_speed_history` เดิม skip push เมื่อไม่มี rebuild ทำให้ graph time-axis ผิด — แก้โดย push `0` เสมอเมื่อ `rebuild_speed_mb = None`
+
+---
+
 ## [1.4.0] - 2026-06-10
 
 ### Fixed (contradictions & ambiguities audit)

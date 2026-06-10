@@ -228,13 +228,11 @@ async fn collector_loop(state: Arc<Mutex<AppState>>, notify: Arc<Notify>) {
                     }
                 }
             }
-            if let Some(ref raid) = raid_result {
-                if let Some(speed) = raid.rebuild_speed_mb {
-                    s.raid_speed_history.push_back(speed);
-                    if s.raid_speed_history.len() > HISTORY_SIZE {
-                        s.raid_speed_history.pop_front();
-                    }
-                }
+            // Push 0 when no rebuild active — keeps time-series alignment intact for the graph
+            let raid_speed = raid_result.as_ref().and_then(|r| r.rebuild_speed_mb).unwrap_or(0);
+            s.raid_speed_history.push_back(raid_speed);
+            if s.raid_speed_history.len() > HISTORY_SIZE {
+                s.raid_speed_history.pop_front();
             }
 
             s.raid = raid_result;

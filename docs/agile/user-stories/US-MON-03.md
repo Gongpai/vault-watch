@@ -1,6 +1,6 @@
 # User Story: US-MON-03 — Disk Throughput Collector
 
-**Status:** 🚧 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 01](../sprint-backlogs/sprint-01.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -27,12 +27,12 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/collectors/iostat.rs`
-- [ ] สร้าง `struct IoStats` ตาม spec ใน [System Design](../../software/01-system-design.md)
-- [ ] Implement `async fn collect(devices: &[String]) -> Vec<IoStats>`
-- [ ] ใช้ command args: `["iostat", "-d", "-k", "-y", "1", "1", ...devices]`
-- [ ] Parse output ด้วย line-by-line splitting (ไม่ต้องใช้ regex)
-- [ ] เขียน unit tests ด้วย mock iostat output (ทั้งกรณี `-y` ทำงาน และ fallback)
+- [x] สร้าง `src/collectors/iostat.rs`
+- [x] สร้าง `struct IoStats` ตาม spec ใน [System Design](../../software/01-system-design.md)
+- [x] Implement `async fn collect(devices: &[String]) -> Vec<IoStats>`
+- [x] ใช้ command args: `["iostat", "-d", "-k", "-y", "1", "1", ...devices]`
+- [x] Parse output ด้วย line-by-line splitting (ไม่ต้องใช้ regex)
+- [x] เขียน unit tests ด้วย mock iostat output (ทั้งกรณี `-y` ทำงาน และ fallback)
 
 ---
 

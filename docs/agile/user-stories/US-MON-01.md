@@ -1,6 +1,6 @@
 # User Story: US-MON-01 — RAID Status Parser
 
-**Status:** 🚧 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 01](../sprint-backlogs/sprint-01.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -29,11 +29,11 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/collectors/raid.rs`
-- [ ] สร้าง `struct RaidStatus` ตาม spec ใน [System Design](../../software/01-system-design.md)
-- [ ] ใช้ `tokio::fs::read_to_string("/proc/mdstat")` สำหรับ async read
-- [ ] สร้าง regex patterns สำหรับแต่ละ field (ดู patterns ใน System Design Section 2.1)
-- [ ] เขียน unit tests ด้วย mock `/proc/mdstat` content (active, rebuilding, degraded, no-array)
+- [x] สร้าง `src/collectors/raid.rs`
+- [x] สร้าง `struct RaidStatus` ตาม spec ใน [System Design](../../software/01-system-design.md)
+- [x] ใช้ `tokio::fs::read_to_string("/proc/mdstat")` สำหรับ async read
+- [x] สร้าง regex patterns สำหรับแต่ละ field (ดู patterns ใน System Design Section 2.1)
+- [x] เขียน unit tests ด้วย mock `/proc/mdstat` content (active, rebuilding, degraded, no-array)
 
 ---
 

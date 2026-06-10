@@ -6,7 +6,7 @@ use tokio::fs;
 use crate::app::{RaidState, RaidStatus};
 
 static ARRAY_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^(\w+)\s*:\s*(?:active|inactive)\s+\w+").unwrap());
+    LazyLock::new(|| Regex::new(r"^(\w+)\s*:\s*(active|inactive)\s+\w+").unwrap());
 static DISK_COUNT_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\[(\d+)/(\d+)\]").unwrap());
 static REBUILD_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -29,6 +29,7 @@ fn parse_mdstat(content: &str) -> Option<RaidStatus> {
     while i < lines.len() {
         if let Some(caps) = ARRAY_RE.captures(lines[i]) {
             let name = caps[1].to_string();
+            let is_active_status = &caps[2] == "active";
             let mut active_disks = 0u8;
             let mut total_disks = 0u8;
             let mut rebuild_pct = None;
@@ -60,7 +61,9 @@ fn parse_mdstat(content: &str) -> Option<RaidStatus> {
                 i += 1;
             }
 
-            let state = if has_rebuild {
+            let state = if !is_active_status {
+                RaidState::Unknown
+            } else if has_rebuild {
                 RaidState::Rebuilding
             } else if active_disks < total_disks {
                 RaidState::Degraded
@@ -146,8 +149,21 @@ unused devices: <none>
         assert_eq!(r.total_disks, 3);
     }
 
+    const MDSTAT_INACTIVE: &str = "Personalities : [raid10]
+md0 : inactive sdc[0](S) sdd[1](S) sde[2](S)
+
+unused devices: <none>
+";
+
     #[test]
     fn test_no_array() {
         assert!(parse_mdstat(MDSTAT_NO_ARRAY).is_none());
+    }
+
+    #[test]
+    fn test_inactive() {
+        let r = parse_mdstat(MDSTAT_INACTIVE).unwrap();
+        assert_eq!(r.name, "md0");
+        assert_eq!(r.state, RaidState::Unknown);
     }
 }

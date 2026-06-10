@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 01 Active
+**Status:** Sprint 01 Complete — Sprint 02 Active
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, regex
 **Last Updated:** 2026-06-10 | **Target Platform:** Ubuntu Server 24.04
@@ -12,10 +12,10 @@
 
 | Area | Status | Source |
 | :--- | :--- | :--- |
-| RAID Status Parser (`/proc/mdstat`) | 🚧 Sprint 01 | [US-MON-01](./agile/user-stories/US-MON-01.md), [System Design](./software/01-system-design.md) |
-| SMART Data Collector (`smartctl`) | 🚧 Sprint 01 | [US-MON-02](./agile/user-stories/US-MON-02.md), [System Design](./software/01-system-design.md) |
-| Disk Throughput Collector (`iostat`) | 🚧 Sprint 01 | [US-MON-03](./agile/user-stories/US-MON-03.md), [System Design](./software/01-system-design.md) |
-| TUI Application Foundation | 🚧 Sprint 01 | [US-MON-04](./agile/user-stories/US-MON-04.md), [Architecture](./software/00-architecture.md) |
+| RAID Status Parser (`/proc/mdstat`) | ✅ Done | [US-MON-01](./agile/user-stories/US-MON-01.md), [System Design](./software/01-system-design.md) |
+| SMART Data Collector (`smartctl`) | ✅ Done | [US-MON-02](./agile/user-stories/US-MON-02.md), [System Design](./software/01-system-design.md) |
+| Disk Throughput Collector (`iostat`) | ✅ Done | [US-MON-03](./agile/user-stories/US-MON-03.md), [System Design](./software/01-system-design.md) |
+| TUI Application Foundation | ✅ Done | [US-MON-04](./agile/user-stories/US-MON-04.md), [Architecture](./software/00-architecture.md) |
 | RAID Status Panel UI | 🚧 Sprint 02 | [US-MON-05](./agile/user-stories/US-MON-05.md) |
 | Disk Summary Table Panel UI | 🚧 Sprint 02 | [US-MON-06](./agile/user-stories/US-MON-06.md) |
 | SMART Details Panel UI | 🚧 Sprint 02 | [US-MON-07](./agile/user-stories/US-MON-07.md) |

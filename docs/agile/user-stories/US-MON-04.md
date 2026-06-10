@@ -1,6 +1,6 @@
 # User Story: US-MON-04 — TUI Application Foundation
 
-**Status:** 🚧 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 01](../sprint-backlogs/sprint-01.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -28,13 +28,13 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] อัปเดต `Cargo.toml` เพิ่ม dependencies ทั้งหมด
-- [ ] สร้าง `src/app.rs` — `AppState` struct + constructor
-- [ ] สร้าง `src/main.rs` — tokio runtime, terminal setup, render loop, event loop
-- [ ] สร้าง `src/ui.rs` — placeholder `draw()` function ที่รับ `&AppState`
-- [ ] สร้าง `src/collectors/mod.rs` — module declarations
-- [ ] สร้าง `Arc<tokio::sync::Notify>` สำหรับ force refresh และส่งไปยัง collector task
-- [ ] ทดสอบ: รัน binary, เห็นหน้าจอ, กด `q` ออกได้สะอาด
+- [x] อัปเดต `Cargo.toml` เพิ่ม dependencies ทั้งหมด
+- [x] สร้าง `src/app.rs` — `AppState` struct + constructor
+- [x] สร้าง `src/main.rs` — tokio runtime, terminal setup, render loop, event loop
+- [x] สร้าง `src/ui.rs` — placeholder `draw()` function ที่รับ `&AppState`
+- [x] สร้าง `src/collectors/mod.rs` — module declarations
+- [x] สร้าง `Arc<tokio::sync::Notify>` สำหรับ force refresh และส่งไปยัง collector task
+- [x] ทดสอบ: รัน binary, เห็นหน้าจอ, กด `q` ออกได้สะอาด
 
 ---
 

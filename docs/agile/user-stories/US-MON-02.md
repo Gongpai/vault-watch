@@ -1,6 +1,6 @@
 # User Story: US-MON-02 — SMART Data Collector
 
-**Status:** 🚧 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 01](../sprint-backlogs/sprint-01.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -33,13 +33,13 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/collectors/smart.rs`
-- [ ] สร้าง `struct DiskInfo` ตาม spec ใน [System Design](../../software/01-system-design.md)
-- [ ] Implement `async fn collect_all(devices: &[String]) -> Vec<DiskInfo>`
-- [ ] ใช้ `tokio::process::Command::new("sudo").args(["smartctl", "-a", "-d", "scsi", device])` 
-- [ ] สร้าง regex patterns ตาม System Design Section 2.2
-- [ ] ใช้ `futures::future::join_all` สำหรับ concurrent collection
-- [ ] เขียน unit tests ด้วย mock smartctl output
+- [x] สร้าง `src/collectors/smart.rs`
+- [x] สร้าง `struct DiskInfo` ตาม spec ใน [System Design](../../software/01-system-design.md)
+- [x] Implement `async fn collect_all(devices: &[String]) -> Vec<DiskInfo>`
+- [x] ใช้ `tokio::process::Command::new("sudo").args(["smartctl", "-a", "-d", "scsi", device])` 
+- [x] สร้าง regex patterns ตาม System Design Section 2.2
+- [x] ใช้ `futures::future::join_all` สำหรับ concurrent collection
+- [x] เขียน unit tests ด้วย mock smartctl output
 
 ---
 
