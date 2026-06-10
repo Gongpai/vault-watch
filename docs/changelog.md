@@ -4,6 +4,23 @@
 
 ---
 
+## [3.1.0] - 2026-06-11
+
+### Added (Sprint 03 Planning)
+
+- **[docs/agile/sprint-backlogs/sprint-03.md](agile/sprint-backlogs/sprint-03.md)**: สร้าง Sprint 03 backlog — Alerts & Notifications (US-MON-09/10/11), timeline 2026-07-08 → 2026-07-22, Gantt chart, DoD และ known risks
+- **[docs/agile/user-stories/US-MON-09.md](agile/user-stories/US-MON-09.md)**: เพิ่ม Technical Tasks section และ sprint reference
+- **[docs/agile/user-stories/US-MON-10.md](agile/user-stories/US-MON-10.md)**: เพิ่ม Technical Tasks section (Alert struct, collect_alerts(), banner, AppState field) และ sprint reference
+- **[docs/agile/user-stories/US-MON-11.md](agile/user-stories/US-MON-11.md)**: เพิ่ม sprint reference
+
+### Changed
+
+- **[docs/agile/02-sprint-planning.md](agile/02-sprint-planning.md)** v1.0 → v1.1: Sprint 01/02 → ✅ Done, เพิ่ม Sprint 03 Active
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.2 → v1.3: US-MON-09/10/11 → 🚧 Sprint 03
+- **[docs/index.md](index.md)**: status → Sprint 03 Active, อัปเดต status matrix และลิงก์ sprint-03
+
+---
+
 ## [3.0.0] - 2026-06-11
 
 ### Implemented (Sprint 02 — Dashboard UI)

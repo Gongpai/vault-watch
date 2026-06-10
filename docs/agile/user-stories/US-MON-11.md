@@ -1,7 +1,7 @@
 # User Story: US-MON-11 — Discord Webhook Notifications
 
-**Status:** 🔵 Planned
-**Sprint:** TBD
+**Status:** 🚧 Sprint 03
+**Sprint:** [Sprint 03](../sprint-backlogs/sprint-03.md)
 **Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
 
 ---
@@ -38,3 +38,4 @@
 
 - Backlog: [01-product-backlog.md](../01-product-backlog.md)
 - US-MON-10 (Threshold Warnings): [US-MON-10.md](./US-MON-10.md)
+- Sprint: [../sprint-backlogs/sprint-03.md](../sprint-backlogs/sprint-03.md)

@@ -1,7 +1,7 @@
 # User Story: US-MON-10 — SMART Threshold Warnings
 
-**Status:** 🔵 Planned
-**Sprint:** TBD
+**Status:** 🚧 Sprint 03
+**Sprint:** [Sprint 03](../sprint-backlogs/sprint-03.md)
 **Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
 
 ---
@@ -24,7 +24,18 @@
 
 ---
 
+## 🛠 Technical Tasks
+
+- [ ] สร้าง `fn collect_alerts(state: &AppState) -> Vec<Alert>` — ตรวจสอบ conditions ทั้งหมด
+- [ ] สร้าง `Alert` enum/struct ใน `src/app.rs` (`HighTemp`, `DiskFail`, `GrownDefects`)
+- [ ] อัปเดต `ui.rs` — เพิ่ม alert banner ใต้ header (1–2 rows) แสดงเฉพาะเมื่อมี alert
+- [ ] เพิ่ม `alerts: Vec<Alert>` ใน `AppState` และอัปเดตใน `collector_loop` ทุกรอบ
+- [ ] Highlight border สีแดงบน panel ที่มี disk มีปัญหา
+
+---
+
 ## 🔗 Related Files
 
 - Backlog: [01-product-backlog.md](../01-product-backlog.md)
 - US-MON-09 (Color Coding): [US-MON-09.md](./US-MON-09.md)
+- Sprint: [../sprint-backlogs/sprint-03.md](../sprint-backlogs/sprint-03.md)

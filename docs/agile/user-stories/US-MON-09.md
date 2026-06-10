@@ -1,7 +1,7 @@
 # User Story: US-MON-09 — Temperature Color Coding
 
-**Status:** 🔵 Planned
-**Sprint:** TBD
+**Status:** 🚧 Sprint 03
+**Sprint:** [Sprint 03](../sprint-backlogs/sprint-03.md)
 **Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
 
 ---
@@ -23,7 +23,16 @@
 
 ---
 
+## 🛠 Technical Tasks
+
+- [ ] อัปเดต `disk_table.rs` — เพิ่ม `" WARN"` suffix ใน temperature value cell เมื่อ > 55°C
+- [ ] ตรวจสอบว่า sparkline สี และ value สีใช้ threshold เดียวกัน (Green/Yellow/Red)
+- [ ] อัปเดต Graph View temp chart — เพิ่ม Y-axis threshold lines หรือ labels ที่ 45°C และ 55°C
+
+---
+
 ## 🔗 Related Files
 
 - Backlog: [01-product-backlog.md](../01-product-backlog.md)
 - US-MON-06 (Disk Table): [US-MON-06.md](./US-MON-06.md)
+- Sprint: [../sprint-backlogs/sprint-03.md](../sprint-backlogs/sprint-03.md)

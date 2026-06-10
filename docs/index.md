@@ -1,10 +1,10 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 02 Complete — MVP Done
+**Status:** Sprint 03 Active — Alerts & Notifications
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, regex
-**Last Updated:** 2026-06-10 | **Target Platform:** Ubuntu Server 24.04
+**Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu Server 24.04
 
 ---
 
@@ -22,9 +22,9 @@
 | Auto-Refresh Async Loop | ✅ Done | [US-MON-08](./agile/user-stories/US-MON-08.md) |
 | History Buffer & Graph UI | ✅ Done | [US-MON-12](./agile/user-stories/US-MON-12.md) |
 | Panel Focus & Scroll | ✅ Done | [US-MON-13](./agile/user-stories/US-MON-13.md) |
-| Temperature Color Coding | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
-| SMART Threshold Warnings | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
-| Discord Webhook Notifications | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
+| Temperature Color Coding | 🚧 Sprint 03 | [US-MON-09](./agile/user-stories/US-MON-09.md) |
+| SMART Threshold Warnings | 🚧 Sprint 03 | [US-MON-10](./agile/user-stories/US-MON-10.md) |
+| Discord Webhook Notifications | 🚧 Sprint 03 | [US-MON-11](./agile/user-stories/US-MON-11.md) |
 
 ---
 
@@ -41,6 +41,7 @@
 - [02-sprint-planning.md](./agile/02-sprint-planning.md) - Sprint roadmap และแผนการดำเนินงาน
 - [sprint-01.md](./agile/sprint-backlogs/sprint-01.md) - Sprint 01 details (Core Data Collectors + TUI Foundation)
 - [sprint-02.md](./agile/sprint-backlogs/sprint-02.md) - Sprint 02 details (Dashboard Panels + Auto-Refresh)
+- [sprint-03.md](./agile/sprint-backlogs/sprint-03.md) - Sprint 03 details (Alerts & Notifications)
 
 ---
 
