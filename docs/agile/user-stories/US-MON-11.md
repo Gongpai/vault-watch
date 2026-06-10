@@ -1,0 +1,40 @@
+# User Story: US-MON-11 — Discord Webhook Notifications
+
+**Status:** 🔵 Planned
+**Sprint:** TBD
+**Epic:** [Should Have — Future Enhancements](../01-product-backlog.md)
+
+---
+
+## 📖 Description
+
+**ในฐานะ** ผู้ดูแลระบบที่ไม่ได้นั่งดูหน้าจออยู่ตลอดเวลา
+**ฉันต้องการ** ให้โปรแกรมส่ง alert ไปยัง Discord webhook อัตโนมัติเมื่อเกิดเหตุการณ์สำคัญ
+**เพื่อให้** รับการแจ้งเตือนบนมือถือทันทีโดยไม่ต้อง SSH เข้าไปตรวจสอบ
+
+---
+
+## ✅ Acceptance Criteria
+
+1. [ ] อ่าน webhook URL จาก config file (เช่น `~/.config/hdd-monitor/config.toml`)
+2. [ ] ส่ง alert เมื่อ RAID state เปลี่ยนเป็น `Degraded`
+3. [ ] ส่ง alert เมื่อ temperature > 60°C
+4. [ ] ส่ง alert เมื่อ `health_ok == false`
+5. [ ] ไม่ส่ง alert ซ้ำภายใน 1 ชั่วโมงสำหรับ condition เดิม (cooldown)
+6. [ ] โปรแกรมทำงานได้ปกติถ้าไม่มี config file (Discord เป็น optional)
+
+---
+
+## 🛠 Technical Tasks
+
+- [ ] เพิ่ม dependency `reqwest` สำหรับ HTTP client
+- [ ] สร้าง `src/notifier.rs` — `async fn send_discord_alert(webhook_url: &str, message: &str)`
+- [ ] สร้าง config struct และ TOML parser
+- [ ] สร้าง alert cooldown tracker ใน AppState
+
+---
+
+## 🔗 Related Files
+
+- Backlog: [01-product-backlog.md](../01-product-backlog.md)
+- US-MON-10 (Threshold Warnings): [US-MON-10.md](./US-MON-10.md)
