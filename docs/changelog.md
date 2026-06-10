@@ -4,6 +4,28 @@
 
 ---
 
+## [3.0.0] - 2026-06-11
+
+### Implemented (Sprint 02 — Dashboard UI)
+
+- **`src/widgets/sparkline_cell.rs`** (US-MON-12): Unicode block char helper `sparkline(history, width)` — normalises history slice to `▁▂▃▄▅▆▇█` string of given width, right-aligned with space padding. 4 unit tests (empty, all-zero, padding, max-block)
+- **`src/widgets/raid_panel.rs`** (US-MON-05): `render(f, area, state)` — left col shows array name/state badge (Green/Yellow/Red/DarkGray)/disk count; right col shows `Gauge` progress bar + ETA label when rebuilding, inline sparkline of `raid_speed_history` on bottom row
+- **`src/widgets/disk_table.rs`** (US-MON-06/12/13): Scrollable `Table` with columns Disk(5)+Temp(22)+Read(22)+Write(22)+Health(10) — each numeric column contains Unicode sparkline + value; temperature color-coded (Green/<45, Yellow/45–55, Red/>55); `D:N` defect indicator in Health column; `Scrollbar` widget when content overflows; `↓ N more` overflow hint; `BorderType::Double`+Cyan when focused; stores `panel_rects` each frame for mouse hit-testing
+- **`src/widgets/smart_details.rs`** (US-MON-07/13): Scrollable `Paragraph` with header + one row per disk showing serial(20)/hours(7)/NME(6 — Yellow when >1000)/Defects(7 — Red+⚠ when >0); `Scrollbar` widget; double border when focused; stores `panel_rects`
+- **`src/widgets/graph_view.rs`** (US-MON-12): Graph View with 3 `Chart` widgets — left column 65% TempGraph + 35% RaidGraph, right column ThroughputGraph; Braille marker line graphs; per-disk color array `[Cyan,Yellow,Green,Magenta,Blue,Red]`; X-axis `-(n-1)*2s` to `0`
+- **`src/widgets/mod.rs`**: เปิด 5 modules (disk_table, graph_view, raid_panel, smart_details, sparkline_cell)
+- **`src/ui.rs`** (US-MON-05/06/07/08): Replaced placeholder `draw()` with full orchestration — Table View layout (header 1 + RAID 4 + DiskTable fill + status_bar 1 + SmartDetails 7); Graph View layout (header 1 + graphs fill); terminal size guard shows resize message when below 100×28 (Table) or 110×30 (Graph); `render_status_bar` shows `●/○ DiskTable [N/total — ↑↓:scroll]` / `○/● SmartDetails`
+- **`src/main.rs`** (US-MON-08/13): Added `EnableMouseCapture`/`DisableMouseCapture`; `draw(f, &mut state_guard)`; `PgUp`/`PgDn` (±5 rows), `Home`/`End` key handlers; `handle_mouse` for `ScrollUp`/`ScrollDown` (±3 rows on panel under cursor) and `Left Click` (focus panel under cursor); `panel_at()` hit-test helper; `chrono::Local::now().format("%H:%M:%S")` written to `last_updated_str` in `collector_loop`
+- **`src/app.rs`**: เพิ่ม `last_updated_str: String` field (initialized `"--:--:--"`)
+- **`Cargo.toml`**: เพิ่ม `chrono = "0.4"`
+
+### Fixed (clippy findings)
+
+- **`src/collectors/iostat.rs`**: `.filter(..).last()` on `DoubleEndedIterator` → `.rfind(..)` (clippy::filter_next)
+- **`src/main.rs`**: collapsible match for key event guard; collapsible if for `temp_history` push (clippy::collapsible_match / collapsible_if)
+
+---
+
 ## [2.0.0] - 2026-06-10
 
 ### Implemented (Sprint 01 — Core Data Collectors)

@@ -1,6 +1,6 @@
 # User Story: US-MON-12 — History Buffer & Graph UI
 
-**Status:** 🔵 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 02](../sprint-backlogs/sprint-02.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -41,15 +41,15 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] เพิ่ม `temp_history`, `read_history`, `write_history`, `raid_speed_history` ใน `AppState`
-- [ ] เพิ่ม `ViewMode` enum และ `view_mode` field ใน `AppState`
-- [ ] อัปเดต collector loop ให้ `push_back` ค่าใหม่และ `pop_front` เมื่อเกิน `HISTORY_SIZE`
-- [ ] สร้าง `src/widgets/sparkline_cell.rs` — helper สำหรับ render `Sparkline` + value ภายใน table Cell
-- [ ] อัปเดต `disk_table.rs` เปลี่ยนคอลัมน์ Temp/Read/Write จาก plain text เป็น Sparkline cell
-- [ ] อัปเดต `raid_panel.rs` เพิ่ม Sparkline rebuild speed ใต้ progress bar
-- [ ] สร้าง `src/widgets/graph_view.rs` — render `Chart` สำหรับ temperature และ throughput
-- [ ] อัปเดต keyboard handler ให้ `g` toggle `view_mode`
-- [ ] อัปเดต `ui.rs` ให้เรียก `graph_view` หรือ `disk_table` ตาม `view_mode`
+- [x] เพิ่ม `temp_history`, `read_history`, `write_history`, `raid_speed_history` ใน `AppState`
+- [x] เพิ่ม `ViewMode` enum และ `view_mode` field ใน `AppState`
+- [x] อัปเดต collector loop ให้ `push_back` ค่าใหม่และ `pop_front` เมื่อเกิน `HISTORY_SIZE`
+- [x] สร้าง `src/widgets/sparkline_cell.rs` — helper สำหรับ render `Sparkline` + value ภายใน table Cell
+- [x] อัปเดต `disk_table.rs` เปลี่ยนคอลัมน์ Temp/Read/Write จาก plain text เป็น Sparkline cell
+- [x] อัปเดต `raid_panel.rs` เพิ่ม Sparkline rebuild speed ใต้ progress bar
+- [x] สร้าง `src/widgets/graph_view.rs` — render `Chart` สำหรับ temperature และ throughput
+- [x] อัปเดต keyboard handler ให้ `g` toggle `view_mode`
+- [x] อัปเดต `ui.rs` ให้เรียก `graph_view` หรือ `disk_table` ตาม `view_mode`
 
 ---
 

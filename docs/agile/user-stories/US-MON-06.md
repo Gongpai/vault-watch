@@ -1,6 +1,6 @@
 # User Story: US-MON-06 — Disk Summary Table
 
-**Status:** 🔵 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 02](../sprint-backlogs/sprint-02.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -29,12 +29,12 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/widgets/disk_table.rs`
-- [ ] Implement `fn render_disk_table(f: &mut Frame, area: Rect, state: &AppState)`
-- [ ] ใช้ `ratatui::widgets::{Table, Row, Cell}` 
-- [ ] Merge ข้อมูลจาก `state.disks` (DiskInfo) กับ `state.io_stats` (IoStats) ตาม device name
-- [ ] สร้าง helper function `temp_color(temp: u8) -> Color` สำหรับ color threshold
-- [ ] กำหนด column widths: Disk(6), Temp(8), Health(8), Read(10), Write(10), Defects(8)
+- [x] สร้าง `src/widgets/disk_table.rs`
+- [x] Implement `fn render_disk_table(f: &mut Frame, area: Rect, state: &AppState)`
+- [x] ใช้ `ratatui::widgets::{Table, Row, Cell}` 
+- [x] Merge ข้อมูลจาก `state.disks` (DiskInfo) กับ `state.io_stats` (IoStats) ตาม device name
+- [x] สร้าง helper function `temp_color(temp: u8) -> Color` สำหรับ color threshold
+- [x] กำหนด column widths: Disk(6), Temp(8), Health(8), Read(10), Write(10), Defects(8)
 
 ---
 

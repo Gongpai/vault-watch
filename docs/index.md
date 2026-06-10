@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 01 Complete — Sprint 02 Active
+**Status:** Sprint 02 Complete — MVP Done
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, regex
 **Last Updated:** 2026-06-10 | **Target Platform:** Ubuntu Server 24.04
@@ -16,12 +16,12 @@
 | SMART Data Collector (`smartctl`) | ✅ Done | [US-MON-02](./agile/user-stories/US-MON-02.md), [System Design](./software/01-system-design.md) |
 | Disk Throughput Collector (`iostat`) | ✅ Done | [US-MON-03](./agile/user-stories/US-MON-03.md), [System Design](./software/01-system-design.md) |
 | TUI Application Foundation | ✅ Done | [US-MON-04](./agile/user-stories/US-MON-04.md), [Architecture](./software/00-architecture.md) |
-| RAID Status Panel UI | 🚧 Sprint 02 | [US-MON-05](./agile/user-stories/US-MON-05.md) |
-| Disk Summary Table Panel UI | 🚧 Sprint 02 | [US-MON-06](./agile/user-stories/US-MON-06.md) |
-| SMART Details Panel UI | 🚧 Sprint 02 | [US-MON-07](./agile/user-stories/US-MON-07.md) |
-| Auto-Refresh Async Loop | 🚧 Sprint 02 | [US-MON-08](./agile/user-stories/US-MON-08.md) |
-| History Buffer & Graph UI | 🔵 Sprint 02 | [US-MON-12](./agile/user-stories/US-MON-12.md) |
-| Panel Focus & Scroll | 🔵 Sprint 02 | [US-MON-13](./agile/user-stories/US-MON-13.md) |
+| RAID Status Panel UI | ✅ Done | [US-MON-05](./agile/user-stories/US-MON-05.md) |
+| Disk Summary Table Panel UI | ✅ Done | [US-MON-06](./agile/user-stories/US-MON-06.md) |
+| SMART Details Panel UI | ✅ Done | [US-MON-07](./agile/user-stories/US-MON-07.md) |
+| Auto-Refresh Async Loop | ✅ Done | [US-MON-08](./agile/user-stories/US-MON-08.md) |
+| History Buffer & Graph UI | ✅ Done | [US-MON-12](./agile/user-stories/US-MON-12.md) |
+| Panel Focus & Scroll | ✅ Done | [US-MON-13](./agile/user-stories/US-MON-13.md) |
 | Temperature Color Coding | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
 | SMART Threshold Warnings | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |
 | Discord Webhook Notifications | 🔵 Planned | [Product Backlog](./agile/01-product-backlog.md) |

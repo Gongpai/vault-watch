@@ -26,12 +26,12 @@ gantt
 
 | ID | Story / Task | Owner | Estimate (Hrs) | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-05](../user-stories/US-MON-05.md) | **RAID Status Panel**<br>- สร้าง `raid_panel.rs` widget<br>- แสดง array name, state, disk count<br>- Progress bar rebuild %<br>- แสดง speed และ ETA | kong | 6 | 🔵 Planned |
-| [US-MON-06](../user-stories/US-MON-06.md) | **Disk Summary Table**<br>- สร้าง `disk_table.rs` widget<br>- Table: Disk, Temp, Health, Read, Write, Defects<br>- Color coding ตาม threshold<br>- Merge ข้อมูลจาก `DiskInfo` + `IoStats` | kong | 8 | 🔵 Planned |
-| [US-MON-07](../user-stories/US-MON-07.md) | **SMART Details Panel**<br>- สร้าง `smart_details.rs` widget<br>- List view: serial, hours, errors per disk<br>- Highlight ค่าที่ผิดปกติ | kong | 4 | 🔵 Planned |
-| [US-MON-08](../user-stories/US-MON-08.md) | **Auto-Refresh Loop**<br>- Collector loop ทุก 2 วินาที<br>- Render loop ทุก 250ms<br>- Last updated timestamp<br>- `r` key force refresh | kong | 4 | 🔵 Planned |
-| [US-MON-12](../user-stories/US-MON-12.md) | **History Buffer & Graph UI**<br>- เพิ่ม history ring buffers ใน AppState (VecDeque × 60 samples)<br>- Inline Sparkline ในคอลัมน์ Temp/Read/Write ของ disk table<br>- Sparkline RAID rebuild speed ใน RAID panel<br>- Full Chart view (Graph View) toggle ด้วย `g` | kong | 10 | 🔵 Planned |
-| [US-MON-13](../user-stories/US-MON-13.md) | **Panel Focus & Scroll**<br>- `Tab`/`Shift+Tab` สลับ focus ระหว่าง panel<br>- `↑↓`/`jk`/`PgUp`/`PgDn`/`Home`/`End` scroll focused panel<br>- Mouse wheel scroll panel ที่เมาส์อยู่, click โฟกัส panel<br>- Double border สำหรับ focused panel<br>- `Scrollbar` widget ทุก panel<br>- Status bar แสดง focus indicator<br>- Mouse hit-testing ผ่าน `panel_rects` | kong | 8 | 🔵 Planned |
+| [US-MON-05](../user-stories/US-MON-05.md) | **RAID Status Panel**<br>- สร้าง `raid_panel.rs` widget<br>- แสดง array name, state, disk count<br>- Progress bar rebuild %<br>- แสดง speed และ ETA | kong | 6 | ✅ Done |
+| [US-MON-06](../user-stories/US-MON-06.md) | **Disk Summary Table**<br>- สร้าง `disk_table.rs` widget<br>- Table: Disk, Temp, Health, Read, Write, Defects<br>- Color coding ตาม threshold<br>- Merge ข้อมูลจาก `DiskInfo` + `IoStats` | kong | 8 | ✅ Done |
+| [US-MON-07](../user-stories/US-MON-07.md) | **SMART Details Panel**<br>- สร้าง `smart_details.rs` widget<br>- List view: serial, hours, errors per disk<br>- Highlight ค่าที่ผิดปกติ | kong | 4 | ✅ Done |
+| [US-MON-08](../user-stories/US-MON-08.md) | **Auto-Refresh Loop**<br>- Collector loop ทุก 2 วินาที<br>- Render loop ทุก 250ms<br>- Last updated timestamp<br>- `r` key force refresh | kong | 4 | ✅ Done |
+| [US-MON-12](../user-stories/US-MON-12.md) | **History Buffer & Graph UI**<br>- เพิ่ม history ring buffers ใน AppState (VecDeque × 60 samples)<br>- Inline Sparkline ในคอลัมน์ Temp/Read/Write ของ disk table<br>- Sparkline RAID rebuild speed ใน RAID panel<br>- Full Chart view (Graph View) toggle ด้วย `g` | kong | 10 | ✅ Done |
+| [US-MON-13](../user-stories/US-MON-13.md) | **Panel Focus & Scroll**<br>- `Tab`/`Shift+Tab` สลับ focus ระหว่าง panel<br>- `↑↓`/`jk`/`PgUp`/`PgDn`/`Home`/`End` scroll focused panel<br>- Mouse wheel scroll panel ที่เมาส์อยู่, click โฟกัส panel<br>- Double border สำหรับ focused panel<br>- `Scrollbar` widget ทุก panel<br>- Status bar แสดง focus indicator<br>- Mouse hit-testing ผ่าน `panel_rects` | kong | 8 | ✅ Done |
 
 ---
 

@@ -1,6 +1,6 @@
 # User Story: US-MON-13 — Panel Focus & Scroll
 
-**Status:** 🔵 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 02](../sprint-backlogs/sprint-02.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -48,17 +48,17 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] เพิ่ม `focused_panel: FocusedPanel`, `disk_table_scroll: usize`, `smart_details_scroll: usize`, `graph_scroll: usize` ใน `AppState` (ทำใน US-MON-04 หรือ US-MON-13)
-- [ ] เพิ่ม `panel_rects: HashMap<FocusedPanel, ratatui::layout::Rect>` ใน `AppState`
-- [ ] เพิ่ม `FocusedPanel` enum พร้อม `#[derive(Hash, Eq, PartialEq, Clone, Copy)]`
-- [ ] สร้าง `fn panel_at(rects, col, row) -> Option<FocusedPanel>` สำหรับ mouse hit-testing
-- [ ] อัปเดต keyboard handler รับ `Tab`, `Shift+Tab`, `↑`, `↓`, `k`, `j`, `PgUp`, `PgDn`, `Home`, `End`
-- [ ] เพิ่ม `EnableMouseCapture` ใน terminal setup และ handle `MouseEvent::ScrollUp/Down/Click`
-- [ ] อัปเดต `disk_table.rs` บันทึก `Rect` ลง `panel_rects` ทุก frame และ render double border เมื่อ focused
-- [ ] อัปเดต `smart_details.rs` เช่นเดียวกัน
-- [ ] เพิ่ม `Scrollbar` widget ทางขวาของทุก panel ที่ scroll ได้
-- [ ] เพิ่ม overflow indicator (`↓ N more`) ที่แถวสุดท้ายของ panel เมื่อมี content ซ่อนอยู่
-- [ ] เพิ่ม status bar บรรทัดระหว่าง DiskTable กับ SmartDetails แสดง focus state
+- [x] เพิ่ม `focused_panel: FocusedPanel`, `disk_table_scroll: usize`, `smart_details_scroll: usize`, `graph_scroll: usize` ใน `AppState` (ทำใน US-MON-04 หรือ US-MON-13)
+- [x] เพิ่ม `panel_rects: HashMap<FocusedPanel, ratatui::layout::Rect>` ใน `AppState`
+- [x] เพิ่ม `FocusedPanel` enum พร้อม `#[derive(Hash, Eq, PartialEq, Clone, Copy)]`
+- [x] สร้าง `fn panel_at(rects, col, row) -> Option<FocusedPanel>` สำหรับ mouse hit-testing
+- [x] อัปเดต keyboard handler รับ `Tab`, `Shift+Tab`, `↑`, `↓`, `k`, `j`, `PgUp`, `PgDn`, `Home`, `End`
+- [x] เพิ่ม `EnableMouseCapture` ใน terminal setup และ handle `MouseEvent::ScrollUp/Down/Click`
+- [x] อัปเดต `disk_table.rs` บันทึก `Rect` ลง `panel_rects` ทุก frame และ render double border เมื่อ focused
+- [x] อัปเดต `smart_details.rs` เช่นเดียวกัน
+- [x] เพิ่ม `Scrollbar` widget ทางขวาของทุก panel ที่ scroll ได้
+- [x] เพิ่ม overflow indicator (`↓ N more`) ที่แถวสุดท้ายของ panel เมื่อมี content ซ่อนอยู่
+- [x] เพิ่ม status bar บรรทัดระหว่าง DiskTable กับ SmartDetails แสดง focus state
 
 ---
 

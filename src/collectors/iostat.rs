@@ -42,8 +42,7 @@ fn parse_iostat_output(output: &str, devices: &[String]) -> Vec<IoStats> {
     // Use the last block that contains a "Device" header line
     let block = match all_blocks
         .iter()
-        .filter(|b| b.iter().any(|l| l.trim_start().starts_with("Device")))
-        .last()
+        .rfind(|b| b.iter().any(|l| l.trim_start().starts_with("Device")))
     {
         Some(b) => b,
         None => return Vec::new(),

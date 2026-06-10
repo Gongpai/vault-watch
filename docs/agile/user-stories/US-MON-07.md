@@ -1,6 +1,6 @@
 # User Story: US-MON-07 — SMART Details Panel
 
-**Status:** 🔵 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 02](../sprint-backlogs/sprint-02.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -27,10 +27,10 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/widgets/smart_details.rs`
-- [ ] Implement `fn render_smart_details(f: &mut Frame, area: Rect, state: &AppState)`
-- [ ] ใช้ `ratatui::widgets::{Block, List, ListItem}` หรือ `Paragraph` 
-- [ ] Format แต่ละ disk เป็น `Line` ที่มี `Span` หลายสี
+- [x] สร้าง `src/widgets/smart_details.rs`
+- [x] Implement `fn render_smart_details(f: &mut Frame, area: Rect, state: &AppState)`
+- [x] ใช้ `ratatui::widgets::{Block, List, ListItem}` หรือ `Paragraph` 
+- [x] Format แต่ละ disk เป็น `Line` ที่มี `Span` หลายสี
 
 ---
 

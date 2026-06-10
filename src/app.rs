@@ -64,6 +64,7 @@ pub struct AppState {
     pub disks: Vec<DiskInfo>,
     pub io_stats: Vec<IoStats>,
     pub last_updated: Instant,
+    pub last_updated_str: String,
     pub disk_devices: Vec<String>,
 
     pub temp_history: HashMap<String, VecDeque<u64>>,
@@ -97,6 +98,7 @@ impl AppState {
             disks: Vec::new(),
             io_stats: Vec::new(),
             last_updated: Instant::now(),
+            last_updated_str: "--:--:--".to_string(),
             disk_devices,
             temp_history,
             read_history,

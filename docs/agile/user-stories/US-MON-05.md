@@ -1,6 +1,6 @@
 # User Story: US-MON-05 — RAID Status Panel
 
-**Status:** 🔵 Planned
+**Status:** ✅ Done
 **Sprint:** [Sprint 02](../sprint-backlogs/sprint-02.md)
 **Epic:** [Must Have — MVP Scope](../01-product-backlog.md)
 
@@ -29,11 +29,11 @@
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `src/widgets/raid_panel.rs`
-- [ ] Implement `fn render_raid_panel(f: &mut Frame, area: Rect, state: &AppState)`
-- [ ] ใช้ `ratatui::widgets::{Block, Paragraph, Gauge}` สำหรับ progress bar
-- [ ] Color mapping: `RaidState::Active` → Green, `Rebuilding` → Yellow, `Degraded` → Red
-- [ ] Format ETA: แปลงนาที → `Xh Ym` string
+- [x] สร้าง `src/widgets/raid_panel.rs`
+- [x] Implement `fn render_raid_panel(f: &mut Frame, area: Rect, state: &AppState)`
+- [x] ใช้ `ratatui::widgets::{Block, Paragraph, Gauge}` สำหรับ progress bar
+- [x] Color mapping: `RaidState::Active` → Green, `Rebuilding` → Yellow, `Degraded` → Red
+- [x] Format ETA: แปลงนาที → `Xh Ym` string
 
 ---
 
