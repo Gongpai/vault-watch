@@ -1,6 +1,6 @@
 # Sprint Planning & Roadmap
 
-**Last Updated:** 2026-06-11 | **Version:** 1.4
+**Last Updated:** 2026-06-11 | **Version:** 1.5
 
 ยินดีต้อนรับสู่แผนการดำเนินงาน HDD Monitor สำหรับขั้นตอนการพัฒนาต้นแบบ (MVP Development)
 
@@ -13,6 +13,7 @@
 | [sprint-03](./sprint-backlogs/sprint-03.md) | 2026-07-08 → 2026-07-22 | **Alerts & Notifications** (Temp color coding, SMART warnings banner, Discord webhook) | ✅ Done |
 | [sprint-04](./sprint-backlogs/sprint-04.md) | 2026-07-22 → 2026-08-05 | **Cross-Distribution Support** (sudo config, dependency check, musl build, README) | ✅ Done |
 | [sprint-05](./sprint-backlogs/sprint-05.md) | 2026-08-05 → 2026-08-19 | **Device Discovery** (auto-detect `sd*` from `/sys/block/`, config override) | ✅ Done |
+| [sprint-06](./sprint-backlogs/sprint-06.md) | 2026-08-19 → 2026-09-02 | **Graph View Improvements** (temp legend, Read/Write split, conditional multi-array RAID graph) | 🟡 Planned |
 
 ---
 
@@ -50,3 +51,10 @@
 - **จุดมุ่งหมายหลัก:** ลบ `const DISK_DEVICES` hardcode ออกจาก source code และแทนที่ด้วย auto-detect จาก `/sys/block/sd*` พร้อม config override ผ่าน `[system] devices = [...]`
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** รัน VaultWatch บน machine ที่มี disk เป็น `sda`, `sdb` (ไม่ใช่ `sdc`) แล้วเห็น device ปรากฏถูกต้องโดยไม่ต้องแก้ code
+
+---
+
+### 🟡 [Sprint 06: Graph View Improvements](./sprint-backlogs/sprint-06.md)
+- **จุดมุ่งหมายหลัก:** ทำให้ Graph view อ่านได้จริงเมื่อมีหลาย disk / หลาย array — เพิ่ม legend ให้ Temperature graph, แยก Throughput เป็นช่อง Read/Write เพื่อแยกสีต่อ device ได้, และเปลี่ยน RAID Rebuild graph ให้แสดงเฉพาะตอนมี rebuild พร้อมรองรับหลาย array แยกสีเส้นต่อ array
+- **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
+- **การประเมินผล:** ดู Graph view แล้วบอกได้ทันทีว่าเส้นไหนคือ disk/array ตัวไหนทุก chart; ไม่มี rebuild → ไม่เห็น panel ว่าง; มี rebuild 2 arrays พร้อมกัน → เห็นสองเส้นแยกสีพร้อมชื่อ

@@ -4,6 +4,25 @@
 
 ---
 
+## [0.6.1] - 2026-06-11
+
+### Added (Sprint 06 Planning — Graph View Improvements)
+
+จาก feedback การใช้งาน Graph view จริง: temp graph ไม่มี legend บอกว่าเส้นไหนคือ disk ไหน, เส้น Write ทุก disk เป็นสีเทาแยกไม่ออก, และช่อง RAID Rebuild ว่างเปล่ากินพื้นที่ตอนไม่มี rebuild
+
+- **[docs/agile/sprint-backlogs/sprint-06.md](agile/sprint-backlogs/sprint-06.md)**: สร้าง Sprint 06 backlog — Graph View Improvements (US-MON-20/21/22), timeline 2026-08-19 → 2026-09-02, target layout, implementation order, DoD, carry-over จาก Sprint 05 known gaps และ known risks
+- **[docs/agile/user-stories/US-MON-20.md](agile/user-stories/US-MON-20.md)**: Temperature Graph Per-Device Legend — แก้ ratatui auto-hide legend (`hidden_legend_constraints`) + เอา threshold lines ออกจาก legend
+- **[docs/agile/user-stories/US-MON-21.md](agile/user-stories/US-MON-21.md)**: Split Throughput เป็น Read/Write สองช่อง — แยกสีต่อ device ได้ทั้งสองทิศ, `FocusedPanel::ReadGraph`/`WriteGraph`
+- **[docs/agile/user-stories/US-MON-22.md](agile/user-stories/US-MON-22.md)**: RAID Rebuild Graph แสดงเฉพาะตอน rebuild + multi-array — parse ทุก `mdN`, history ต่อ array, เส้นแยกสี + legend ชื่อ array, hide delay
+
+### Changed
+
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.8 → v1.9: เพิ่ม section "🟠 Graph View Improvements (Sprint 06)" พร้อม US-MON-20/21/22
+- **[docs/agile/02-sprint-planning.md](agile/02-sprint-planning.md)** v1.4 → v1.5: เพิ่ม Sprint 06 row + section details
+- **[docs/index.md](index.md)**: status → Sprint 06 Planned, เพิ่ม US-MON-20/21/22 ใน status matrix + sprint-06 link
+
+---
+
 ## [0.6.0] - 2026-06-11
 
 ### Implemented (Sprint 05 — Device Discovery & UX)
