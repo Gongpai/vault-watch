@@ -251,14 +251,6 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
             .background_color(Color::Reset)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
-                ctx.draw(&CanvasLine {
-                    x1: x_min, y1: 45.0, x2: 0.0, y2: 45.0,
-                    color: Color::Yellow,
-                });
-                ctx.draw(&CanvasLine {
-                    x1: x_min, y1: 55.0, x2: 0.0, y2: 55.0,
-                    color: Color::Red,
-                });
                 for (i, pts) in data.iter().enumerate() {
                     draw_line_series(ctx, pts, DISK_COLORS[i % DISK_COLORS.len()]);
                 }
@@ -282,9 +274,11 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         y_col,
         &[
             (90.0, Color::Gray,    "90"),
-            (55.0, Color::Red,     "55°"),
-            (45.0, Color::Yellow,  "45°"),
-            (0.0,  Color::DarkGray, "0"),
+            (60.0, Color::DarkGray, "60"),
+            (50.0, Color::DarkGray, "50"),
+            (40.0, Color::DarkGray, "40"),
+            (30.0, Color::DarkGray, "30"),
+            (0.0,  Color::DarkGray,  "0"),
         ],
         0.0,
         90.0,

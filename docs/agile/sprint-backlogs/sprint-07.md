@@ -28,10 +28,10 @@
 ┌ Temperature (°C) ──────────────────┐ ┌ Read (MB/s) ───────────────────────┐
 │ 90 │████████████████████░░░░░░░░░░ │ │200│                         ┌─────┐ │
 │    │████████████████████████░░░░░  │ │   │  [dark bg #0A0D14]      │█ sda│ │
-│55° │████████████████░░░░░░░░░░░░░  │ │   │                         │█ sdb│ │
-│    │████████████████████████░░░░░░ │ │100│ ⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿          └─────┘ │
-│45° │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │   │                                 │
-│    │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │  0│                                 │
+│ 60 │████████████████░░░░░░░░░░░░░  │ │   │                         │█ sdb│ │
+│ 50 │████████████████████████░░░░░░ │ │100│ ⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿          └─────┘ │
+│ 40 │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │   │                                 │
+│ 30 │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │  0│                                 │
 │  0 │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ ├ Write (MB/s) ──────────────────────┤
 │    │  [zone colors per 30/40/50/60] │ │   │  [dark bg #0A0D14]              │
 │    │  ┌──────┐                      │ │   │                                 │
@@ -94,7 +94,7 @@ inner area (หลัง block.inner()):
 - [x] `make build` ผ่านไม่มี error/warning (`cargo clippy` clean)
 - [x] Temperature graph แสดง 5 zone background colors แยกตามช่วงอุณหภูมิ
 - [x] เส้น device braille lines ทับบน zone background ได้ — foreground color ไม่ถูกบัง
-- [x] เส้น threshold 45°C (yellow) / 55°C (red) ยังแสดงบน Temperature graph
+- [x] ไม่มี threshold lines บน Temperature graph — zone background ทำหน้าที่แทน
 - [x] Read, Write, RAID graphs แสดง dark background `#0A0D14`
 - [x] Y-axis labels แสดงตรงตำแหน่งถูกต้องทุก panel
 - [x] Legend overlay (top-right, black bg) แสดงบนทุก panel, อ่านได้ชัดเจน

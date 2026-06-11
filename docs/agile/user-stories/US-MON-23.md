@@ -30,9 +30,9 @@
    - `60–90°C` → `#270034` (dark purple — อันตราย)
 2. **I/O และ RAID graphs** — solid dark background `#0A0D14` เหมือนกันทั้งสาม panel
 3. **เส้น graph อ่านได้** — braille lines แสดงบน zone background ได้โดย foreground สีของแต่ละ device ไม่ถูกบัง
-4. **Threshold lines** — เส้น 45°C (yellow) และ 55°C (red) บน Temperature graph ยังแสดงอยู่
+4. **ไม่มี threshold lines** — zone background บอก zone อยู่แล้ว ไม่ต้องการเส้น 45°/55° เพิ่มอีก
 5. **Y-axis labels** — แสดงตรงตำแหน่งถูกต้องในคอลัมน์ซ้ายของแต่ละ panel:
-   - Temperature: `0`, `45°`, `55°`, `90` (แต่ละสีตาม threshold)
+   - Temperature: zone boundaries `0`, `30`, `40`, `50`, `60`, `90`
    - Read/Write: `0`, `100`, `200`
    - RAID: `0`, `mid`, `max` (dynamic)
 6. **Legend overlay** — legend ยังคงอยู่มุมขวาบน, background สีดำ, อ่านได้ชัดเจนบนทุก zone color
