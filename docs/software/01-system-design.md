@@ -62,18 +62,18 @@ use std::collections::{HashMap, VecDeque};
 pub const HISTORY_SIZE: usize = 60;
 
 pub struct AppState {
-    pub raid: Option<RaidStatus>,
+    pub raids: Vec<RaidStatus>,  // all mdN arrays; empty when no RAID detected
     pub disks: Vec<DiskInfo>,    // one DiskInfo per device; matched to disk_devices by DiskInfo.device
     pub io_stats: Vec<IoStats>,  // one IoStats per device; matched to disk_devices by IoStats.device
     pub last_updated: std::time::Instant,
-    pub disk_devices: Vec<String>, // master device list ["sdc", "sdd", "sde"] — key ที่ใช้ link ทุก collection
+    pub disk_devices: Vec<String>, // master device list — auto-detected from /sys/block/sd* or config override
 
     // History ring buffers สำหรับ graph — key = device name (ตรงกับ disk_devices)
     // ใช้ VecDeque เพื่อ push_back O(1) และ pop_front O(1)
     pub temp_history: HashMap<String, VecDeque<u64>>,   // °C per device
     pub read_history: HashMap<String, VecDeque<u64>>,   // MB/s × 10 per device (เก็บ 1 decimal)
     pub write_history: HashMap<String, VecDeque<u64>>,  // MB/s × 10 per device
-    pub raid_speed_history: VecDeque<u64>,              // MB/s (RAID-level ไม่ใช่ per device)
+    pub raid_speed_history: HashMap<String, VecDeque<u64>>, // MB/s × 10 per array (key = array name)
 
     // View & navigation state
     pub view_mode: ViewMode,
@@ -98,8 +98,9 @@ pub enum FocusedPanel {
     SmartDetails,
     // Graph View
     TempGraph,
-    ThroughputGraph,
     RaidGraph,
+    ReadGraph,
+    WriteGraph,
 }
 ```
 
@@ -368,7 +369,7 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 
 **Panel cycle order (Table View):** `DiskTable` → `SmartDetails` → `DiskTable` → …
 
-**Panel cycle order (Graph View):** `TempGraph` → `ThroughputGraph` → `RaidGraph` → `TempGraph` → …
+**Panel cycle order (Graph View):** `TempGraph` → `RaidGraph` → `ReadGraph` → `WriteGraph` → `TempGraph` → … (RaidGraph ถูกข้ามเมื่อไม่มี rebuild)
 
 ---
 
