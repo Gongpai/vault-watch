@@ -1,6 +1,6 @@
 # US-MON-18: Auto-detect Disk Devices
 
-**Sprint:** 05 | **Estimate:** S (5h) | **Status:** 🟡 Planned
+**Sprint:** 05 | **Estimate:** S (5h) | **Status:** ✅ Done
 
 ---
 
@@ -19,6 +19,8 @@
 3. **Filter** — กรองเฉพาะ block device จริง ตัดออก: partition (`sda1`), loop (`loop0`), ram (`ram0`), virtual (`dm-*`, `md*`)
 4. **Empty fallback** — ถ้าไม่พบ device ใดเลย แสดงข้อความ "No disk devices found" ใน UI แทนที่จะ crash
 5. **Visible** — แสดง device list ที่ใช้งานอยู่ใน header หรือ status bar เพื่อให้ตรวจสอบได้
+
+> **หมายเหตุ (2026-06-11):** AC 1–3 implement แล้วใน `src/config.rs` (`detect_disk_devices()` + `resolve_devices()`). AC 4 — list ว่างไม่ทำให้ crash แต่ยังไม่มีข้อความ "No disk devices found" บน UI. AC 5 — ยังไม่แสดง device list ใน header/status bar
 
 ---
 

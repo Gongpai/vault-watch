@@ -25,10 +25,10 @@ gantt
 
 | ID | Story / Task | Owner | Estimate (Hrs) | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-14](../user-stories/US-MON-14.md) | **Configurable smartctl Privilege Escalation**<br>- สร้าง `src/config.rs` รวม `[system]` + `[discord]`<br>- Auto-detect root via `/proc/self/status`<br>- อัปเดต `smart.rs` ให้รับ cmd จาก config<br>- Refactor `notifier.rs` → ใช้ shared `config.rs` | kong | 8 | 🔵 Planned |
-| [US-MON-15](../user-stories/US-MON-15.md) | **Startup Dependency Check**<br>- `check_dependencies()` ทดสอบ `smartctl --version` + `iostat -V`<br>- `detect_distro()` จาก `/etc/os-release`<br>- Error screen widget แสดง install command ตาม distro<br>- Degraded mode เมื่อ tool ขาดบางส่วน | kong | 5 | 🔵 Planned |
-| [US-MON-16](../user-stories/US-MON-16.md) | **Static Binary & Alpine/Docker Support**<br>- `Makefile` (build / build-static / install / install-service)<br>- `.cargo/config.toml` สำหรับ musl target<br>- `contrib/vault-watch.service` (systemd)<br>- `contrib/vault-watch.openrc` (Alpine OpenRC) | kong | 3 | 🔵 Planned |
-| [US-MON-17](../user-stories/US-MON-17.md) | **Cross-Distribution Installation Guide**<br>- `README.md` per-distro setup sections<br>- `contrib/config.example.toml` annotated<br>- Privilege setup guide (sudo/doas/setcap)<br>- Troubleshooting section | kong | 4 | 🔵 Planned |
+| [US-MON-14](../user-stories/US-MON-14.md) | **Configurable smartctl Privilege Escalation**<br>- สร้าง `src/config.rs` รวม `[system]` + `[discord]`<br>- Auto-detect root via `/proc/self/status`<br>- อัปเดต `smart.rs` ให้รับ cmd จาก config<br>- Refactor `notifier.rs` → ใช้ shared `config.rs` | kong | 8 | ✅ Done |
+| [US-MON-15](../user-stories/US-MON-15.md) | **Startup Dependency Check**<br>- `check_dependencies()` ทดสอบ `smartctl --version` + `iostat -V`<br>- `detect_distro()` จาก `/etc/os-release`<br>- Error screen widget แสดง install command ตาม distro<br>- Degraded mode เมื่อ tool ขาดบางส่วน | kong | 5 | ✅ Done |
+| [US-MON-16](../user-stories/US-MON-16.md) | **Static Binary & Alpine/Docker Support**<br>- `Makefile` (build / build-static / install / install-service)<br>- `.cargo/config.toml` สำหรับ musl target<br>- `contrib/vault-watch.service` (systemd)<br>- `contrib/vault-watch.openrc` (Alpine OpenRC) | kong | 3 | ✅ Done |
+| [US-MON-17](../user-stories/US-MON-17.md) | **Cross-Distribution Installation Guide**<br>- `README.md` per-distro setup sections<br>- `contrib/config.example.toml` annotated<br>- Privilege setup guide (sudo/doas/setcap)<br>- Troubleshooting section | kong | 4 | ✅ Done |
 
 ---
 

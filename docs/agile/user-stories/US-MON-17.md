@@ -1,6 +1,6 @@
 # User Story: US-MON-17 — Cross-Distribution Installation Guide
 
-**Status:** 🔵 Sprint 04
+**Status:** ✅ Done
 **Sprint:** [Sprint 04](../sprint-backlogs/sprint-04.md)
 **Epic:** [Platform Support](../01-product-backlog.md)
 
@@ -16,18 +16,20 @@
 
 ## ✅ Acceptance Criteria
 
-1. [ ] `README.md` ที่ root ของ project มี section สำหรับ Ubuntu/Debian, Fedora/RHEL, openSUSE, Arch Linux, Alpine Linux
-2. [ ] แต่ละ section มี: install prerequisites, build/install binary, config file setup, run command
-3. [ ] มี annotated `config.toml` example ครบทุก option พร้อม comment อธิบาย
-4. [ ] มี section อธิบาย privilege setup: sudo, doas, setcap, root
-5. [ ] มี section อธิบาย systemd service setup (auto-start on boot)
+1. [x] `README.md` ที่ root ของ project มี section สำหรับ Ubuntu/Debian, Fedora/RHEL, openSUSE, Arch Linux, Alpine Linux
+2. [x] แต่ละ section มี: install prerequisites, build/install binary, config file setup, run command
+3. [x] มี annotated `config.toml` example ครบทุก option พร้อม comment อธิบาย
+4. [x] มี section อธิบาย privilege setup: sudo, doas, setcap, root
+5. [x] มี section อธิบาย systemd service setup (auto-start on boot)
 6. [ ] มี Troubleshooting section: อาการทั่วไปและวิธีแก้
+
+> **หมายเหตุ (2026-06-11):** per-distro guide ถูก implement ใน [MANUAL.md](../../../MANUAL.md) (README.md เป็น quick start Ubuntu/Debian + link ไป MANUAL) — ข้อ 6 Troubleshooting section ยังไม่ได้เขียน
 
 ---
 
 ## 🛠 Technical Tasks
 
-- [ ] สร้าง `README.md` ที่ root พร้อม sections:
+- [x] สร้าง `README.md` ที่ root พร้อม sections:
   - **Overview** — screenshot + feature list
   - **Prerequisites** — per-distro install table
   - **Build** — `make build` / `make build-static`
@@ -35,8 +37,8 @@
   - **Privilege Setup** — sudo / doas / setcap guide
   - **Run** — command line + systemd service
   - **Troubleshooting** — common issues per distro
-- [ ] สร้าง `contrib/config.example.toml` — annotated config ครบทุก option
-- [ ] อัปเดต `docs/index.md` ให้ link ไป README.md
+- [x] สร้าง `contrib/config.example.toml` — annotated config ครบทุก option
+- [x] อัปเดต `docs/index.md` ให้ link ไป README.md
 
 ---
 

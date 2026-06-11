@@ -1,6 +1,6 @@
 # Sprint Planning & Roadmap
 
-**Last Updated:** 2026-06-11 | **Version:** 1.3
+**Last Updated:** 2026-06-11 | **Version:** 1.4
 
 ยินดีต้อนรับสู่แผนการดำเนินงาน HDD Monitor สำหรับขั้นตอนการพัฒนาต้นแบบ (MVP Development)
 
@@ -11,8 +11,8 @@
 | [sprint-01](./sprint-backlogs/sprint-01.md) | 2026-06-10 → 2026-06-24 | **Core Data Collectors** (RAID parser, SMART parser, iostat parser, TUI foundation) | ✅ Done |
 | [sprint-02](./sprint-backlogs/sprint-02.md) | 2026-06-24 → 2026-07-08 | **Dashboard UI** (RAID panel, Disk table, SMART details, Auto-refresh loop) | ✅ Done |
 | [sprint-03](./sprint-backlogs/sprint-03.md) | 2026-07-08 → 2026-07-22 | **Alerts & Notifications** (Temp color coding, SMART warnings banner, Discord webhook) | ✅ Done |
-| [sprint-04](./sprint-backlogs/sprint-04.md) | 2026-07-22 → 2026-08-05 | **Cross-Distribution Support** (sudo config, dependency check, musl build, README) | 🔵 Planned |
-| [sprint-05](./sprint-backlogs/sprint-05.md) | 2026-08-05 → 2026-08-19 | **Device Discovery** (auto-detect `sd*` from `/sys/block/`, config override) | 🟡 Planned |
+| [sprint-04](./sprint-backlogs/sprint-04.md) | 2026-07-22 → 2026-08-05 | **Cross-Distribution Support** (sudo config, dependency check, musl build, README) | ✅ Done |
+| [sprint-05](./sprint-backlogs/sprint-05.md) | 2026-08-05 → 2026-08-19 | **Device Discovery** (auto-detect `sd*` from `/sys/block/`, config override) | ✅ Done |
 
 ---
 
@@ -39,14 +39,14 @@
 
 ---
 
-### 🔵 [Sprint 04: Cross-Distribution Support](./sprint-backlogs/sprint-04.md)
+### ✅ [Sprint 04: Cross-Distribution Support](./sprint-backlogs/sprint-04.md)
 - **จุดมุ่งหมายหลัก:** ให้ VaultWatch รันได้บน Ubuntu/Debian, Fedora, openSUSE, Arch Linux, Alpine Linux และ Docker โดยไม่ต้อง patch code — แก้ `sudo` hardcode, เพิ่ม dependency check, musl static build และ installation docs ครบทุก distro
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** รัน `make build-static` บน Ubuntu แล้วนำ binary ไปรันบน Alpine Docker ได้ทันที, ผู้ใช้ใหม่ที่ไม่มี smartmontools เห็น error screen พร้อม install command ถูกต้องตาม distro
 
 ---
 
-### 🟡 [Sprint 05: Device Discovery](./sprint-backlogs/sprint-05.md)
+### ✅ [Sprint 05: Device Discovery](./sprint-backlogs/sprint-05.md)
 - **จุดมุ่งหมายหลัก:** ลบ `const DISK_DEVICES` hardcode ออกจาก source code และแทนที่ด้วย auto-detect จาก `/sys/block/sd*` พร้อม config override ผ่าน `[system] devices = [...]`
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** รัน VaultWatch บน machine ที่มี disk เป็น `sda`, `sdb` (ไม่ใช่ `sdc`) แล้วเห็น device ปรากฏถูกต้องโดยไม่ต้องแก้ code

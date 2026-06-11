@@ -1,6 +1,6 @@
 # User Story: US-MON-15 — Startup Dependency Check
 
-**Status:** 🔵 Sprint 04
+**Status:** ✅ Done
 **Sprint:** [Sprint 04](../sprint-backlogs/sprint-04.md)
 **Epic:** [Platform Support](../01-product-backlog.md)
 
@@ -16,22 +16,22 @@
 
 ## ✅ Acceptance Criteria
 
-1. [ ] ตรวจสอบ `smartctl` และ `iostat` ก่อนเข้า collector loop (ตอน startup)
-2. [ ] ถ้าไม่พบ tool ใดก็ตาม → แสดง error panel แทน normal UI พร้อมระบุว่าขาด tool อะไร
-3. [ ] Error panel แสดง install command ที่ถูกต้องตาม distro ที่ detect ได้จาก `/etc/os-release`
-4. [ ] Detect ได้อย่างน้อย: Ubuntu/Debian, Fedora/RHEL, Arch, openSUSE, Alpine
-5. [ ] ถ้า detect distro ไม่ได้ → แสดง generic install hint (`smartmontools`, `sysstat`)
-6. [ ] `smartctl` ขาดแต่ `iostat` มี → Degraded mode (SMART columns แสดง `N/A`, throughput ยังทำงาน)
-7. [ ] โปรแกรม exit gracefully เมื่อ user กด `q` จาก error panel
+1. [x] ตรวจสอบ `smartctl` และ `iostat` ก่อนเข้า collector loop (ตอน startup)
+2. [x] ถ้าไม่พบ tool ใดก็ตาม → แสดง error panel แทน normal UI พร้อมระบุว่าขาด tool อะไร
+3. [x] Error panel แสดง install command ที่ถูกต้องตาม distro ที่ detect ได้จาก `/etc/os-release`
+4. [x] Detect ได้อย่างน้อย: Ubuntu/Debian, Fedora/RHEL, Arch, openSUSE, Alpine
+5. [x] ถ้า detect distro ไม่ได้ → แสดง generic install hint (`smartmontools`, `sysstat`)
+6. [x] `smartctl` ขาดแต่ `iostat` มี → Degraded mode (SMART columns แสดง `N/A`, throughput ยังทำงาน)
+7. [x] โปรแกรม exit gracefully เมื่อ user กด `q` จาก error panel
 
 ---
 
 ## 🛠 Technical Tasks
 
-- [ ] เพิ่ม `fn check_dependencies(config: &Config) -> Vec<DependencyError>` ใน `src/collectors/mod.rs`
+- [x] เพิ่ม `fn check_dependencies(config: &Config) -> Vec<DependencyError>` ใน `src/collectors/mod.rs`
   - ทดสอบด้วย `Command::new(smartctl_cmd).arg("--version").output()`
   - ทดสอบด้วย `Command::new("iostat").arg("-V").output()`
-- [ ] เพิ่ม `fn detect_distro() -> Distro` — parse `/etc/os-release` field `ID`
+- [x] เพิ่ม `fn detect_distro() -> Distro` — parse `/etc/os-release` field `ID`
   ```
   ubuntu/debian → "apt install smartmontools sysstat"
   fedora/rhel/centos → "dnf install smartmontools sysstat"
@@ -40,8 +40,8 @@
   alpine → "apk add smartmontools sysstat"
   _ → generic package names
   ```
-- [ ] อัปเดต `main.rs` — run dependency check ก่อน loop, ถ้ามี hard error → render error screen แล้วรอ `q`
-- [ ] สร้าง `src/widgets/error_screen.rs` — full-screen error panel แสดง tool ที่ขาด + install command
+- [x] อัปเดต `main.rs` — run dependency check ก่อน loop, ถ้ามี hard error → render error screen แล้วรอ `q`
+- [x] สร้าง `src/widgets/error_screen.rs` — full-screen error panel แสดง tool ที่ขาด + install command
 - [ ] Unit test: `detect_distro()` กับ sample `/etc/os-release` content
 
 ---

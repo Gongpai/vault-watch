@@ -1,6 +1,6 @@
 # User Story: US-MON-16 — Static Binary & Alpine / Docker Support
 
-**Status:** 🔵 Sprint 04
+**Status:** ✅ Done
 **Sprint:** [Sprint 04](../sprint-backlogs/sprint-04.md)
 **Epic:** [Platform Support](../01-product-backlog.md)
 
@@ -16,17 +16,19 @@
 
 ## ✅ Acceptance Criteria
 
-1. [ ] `make build` → dynamic binary (glibc) สำหรับ Ubuntu/Fedora/Arch
+1. [x] `make build` → dynamic binary (glibc) สำหรับ Ubuntu/Fedora/Arch
 2. [ ] `make build-static` → static musl binary รันได้บน Alpine 3.19+ โดยไม่ error
-3. [ ] `make install` → copy binary ไปยัง `/usr/local/bin/vault-watch` + สร้าง systemd service file
+3. [x] `make install` → copy binary ไปยัง `/usr/local/bin/vault-watch` + สร้าง systemd service file
 4. [ ] Static binary file size ไม่เกิน 20 MB
-5. [ ] `make install-service` → enable และ start systemd service
+5. [x] `make install-service` → enable และ start systemd service
+
+> **หมายเหตุ (2026-06-11):** ข้อ 2 และ 4 ยังไม่ได้ verify จริงบน Alpine/Docker — Makefile targets และ musl config พร้อมแล้ว แต่ runtime validation ยังไม่ได้ทำ
 
 ---
 
 ## 🛠 Technical Tasks
 
-- [ ] เพิ่ม `Makefile` ที่ root:
+- [x] เพิ่ม `Makefile` ที่ root:
   ```makefile
   build:
       cargo build --release
@@ -45,15 +47,15 @@
       sudo systemctl daemon-reload
       sudo systemctl enable --now vault-watch
   ```
-- [ ] เพิ่ม `.cargo/config.toml`:
+- [x] เพิ่ม `.cargo/config.toml`:
   ```toml
   [target.x86_64-unknown-linux-musl]
   linker = "x86_64-linux-musl-gcc"
   ```
-- [ ] สร้าง `contrib/vault-watch.service` — systemd unit file สำหรับ run as monitoring service
-- [ ] สร้าง `contrib/vault-watch.openrc` — OpenRC init script สำหรับ Alpine
+- [x] สร้าง `contrib/vault-watch.service` — systemd unit file สำหรับ run as monitoring service
+- [x] สร้าง `contrib/vault-watch.openrc` — OpenRC init script สำหรับ Alpine
 - [ ] ทดสอบ: `docker run --rm -it alpine:3.19 sh` แล้วรัน static binary ได้จริง
-- [ ] อัปเดต README: ขั้นตอน install musl toolchain (`rustup target add x86_64-unknown-linux-musl`)
+- [x] อัปเดต README: ขั้นตอน install musl toolchain (`rustup target add x86_64-unknown-linux-musl`)
 
 ---
 

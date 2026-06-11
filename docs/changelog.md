@@ -4,6 +4,61 @@
 
 ---
 
+## [0.6.0] - 2026-06-11
+
+### Implemented (Sprint 05 — Device Discovery & UX)
+
+- **`src/config.rs`** (US-MON-18): เพิ่ม `detect_disk_devices()` — อ่าน `/sys/block` กรองเฉพาะ `sd*` entries (partition ไม่ปรากฏที่ระดับ `/sys/block` จึงไม่ต้อง filter เพิ่ม) + sort; เพิ่ม `resolve_devices(config)` — `[system] devices = [...]` override มาก่อน auto-detect; เพิ่ม `devices: Option<Vec<String>>` ใน `SystemConfig`
+- **`src/main.rs`** (US-MON-18): ลบ device list hardcode — ใช้ `config::resolve_devices(&cfg)` ตอน startup
+- **`src/ui.rs`** (US-MON-19): เพิ่ม `render_key_bar(f, area, state)` — nano-style hint bar (key = `fg(Black) bg(Cyan)` invert, action = `fg(DarkGray)`); context-aware: `g` label สลับ Graph/Table ตาม view mode, `Home/End Jump` เฉพาะ Table view; เพิ่ม `Constraint::Length(1)` ท้าย layout ทั้ง Table และ Graph view; header เหลือแค่ title + last update (ไม่มี shortcut ซ้ำ)
+- **`contrib/config.example.toml`**: เพิ่ม `devices` option พร้อม comment
+
+### Known Gaps (ยกมา Sprint หน้า)
+
+- US-MON-18 AC4/AC5: ยังไม่มีข้อความ "No disk devices found" บน UI เมื่อ detect ไม่เจอ device (ไม่ crash แต่เงียบ) และยังไม่แสดง active device list ใน header/status bar
+- US-MON-17 AC6: MANUAL.md ยังไม่มี Troubleshooting section
+- US-MON-16: static binary ยังไม่ได้ทดสอบจริงบน Alpine/Docker
+- `config.rs` ยังไม่มี unit tests (`smartctl_base_cmd`, `detect_distro`)
+- `DiskInfo.read_errors`/`write_errors` ถูก parse แต่ไม่แสดงบน UI (dead_code warning)
+
+### Changed (doc status sync)
+
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v1.7 → v1.8: US-MON-14/15/16/17/18/19 → ✅ Done
+- **[docs/agile/02-sprint-planning.md](agile/02-sprint-planning.md)** v1.3 → v1.4: Sprint 04/05 → ✅ Done
+- **[docs/agile/sprint-backlogs/sprint-04.md](agile/sprint-backlogs/sprint-04.md)**: story statuses → ✅ Done
+- **[docs/agile/sprint-backlogs/sprint-05.md](agile/sprint-backlogs/sprint-05.md)**: status → ✅ Done, DoD checkboxes ติ๊กตามที่ verify ได้จริง (เหลือ runtime test ต่าง machine + empty-device warning)
+- **[docs/agile/user-stories/US-MON-14…19.md](agile/user-stories/)**: status → ✅ Done, AC/Tech Task checkboxes ติ๊กตาม code จริง พร้อมหมายเหตุข้อที่ยังไม่ครบ
+- **[docs/index.md](index.md)**: status → Sprint 05 Complete, status matrix → ✅ Done ทั้งหมด, เพิ่มลิงก์ README.md/MANUAL.md ใน Resources
+- **MANUAL.md**: เพิ่ม Reinstall/Update + Uninstall sections; แก้ install path สำหรับ openSUSE (`sudo` secure_path → แนะนำ `/usr/bin`)
+
+---
+
+## [0.5.1] - 2026-06-11
+
+### Added (Sprint 05 Planning)
+
+- **[docs/agile/sprint-backlogs/sprint-05.md](agile/sprint-backlogs/sprint-05.md)**: สร้าง Sprint 05 backlog — Device Discovery & UX (US-MON-18/19), timeline 2026-08-05 → 2026-08-19, implementation plan, auto-detect logic, DoD และ known risks
+- **[docs/agile/user-stories/US-MON-18.md](agile/user-stories/US-MON-18.md)**: Auto-detect Disk Devices — `/sys/block` scan, config override, empty fallback
+- **[docs/agile/user-stories/US-MON-19.md](agile/user-stories/US-MON-19.md)**: Key Hint Bar (nano-style) — context-aware shortcuts bar
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** → v1.7: เพิ่ม section "🟣 Device Discovery (Sprint 05)"
+
+---
+
+## [0.5.0] - 2026-06-11
+
+### Implemented (Sprint 04 — Cross-Distribution Support)
+
+- **`src/config.rs`** (US-MON-14/15): shared `Config` struct (`[system]` + `[discord]`); `smartctl_base_cmd()` — root auto-detect via `/proc/self/status` Uid (root → no prefix, non-root → `sudo`), override ด้วย `smartctl_prefix` (`"doas"` / `""` สำหรับ setcap), `smartctl_path`/`iostat_path` overrides; `detect_distro()` parse `/etc/os-release` (Ubuntu/Debian, Fedora/RHEL+clones, Arch+derivatives, openSUSE, Alpine); `check_dependencies()` ทดสอบ `smartctl --version` + `iostat -V` → `Vec<DepError>` พร้อม per-distro install hint
+- **`src/widgets/error_screen.rs`** (US-MON-15): banner แสดง tool ที่ขาด + install command ตาม distro — degraded mode (UI ยังทำงาน)
+- **`src/collectors/smart.rs` / `iostat.rs`** (US-MON-14): รับ program/args จาก config แทน hardcode `sudo smartctl` / `iostat`
+- **`src/notifier.rs`**: refactor → ใช้ shared `config.rs` (Discord config ย้ายไป `Config.discord`)
+- **`src/main.rs`** (US-MON-15): `load_config()` → dependency check ก่อน collector loop → เก็บผลใน `AppState.dep_errors`
+- **`Makefile`** (US-MON-16): targets `build` / `build-static` (musl) / `install` / `install-static` / `install-service` (systemd หรือ OpenRC ตามระบบ) / `uninstall` / `clean`; **`.cargo/config.toml`**: musl linker; **`contrib/vault-watch.service`** + **`contrib/vault-watch.openrc`**
+- **`README.md`** + **`MANUAL.md`** (US-MON-17): README = quick start Ubuntu/Debian + shortcuts + config; MANUAL = per-distro install guide ครบ 5 distro + Privilege Setup (sudo/doas/setcap/root) + Running as a Service; **`contrib/config.example.toml`** annotated ครบทุก option
+- **`LICENSE`**: MIT (Kongphai Wutthichaiya)
+
+---
+
 ## [0.4.1] - 2026-06-11
 
 ### Added (Sprint 04 Planning)

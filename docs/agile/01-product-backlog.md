@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.7
+**Last Updated:** 2026-06-11 | **Version:** 1.8
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -37,8 +37,8 @@
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-18](./user-stories/US-MON-18.md) | **ในฐานะ** ผู้ดูแลระบบที่มี disk setup ต่างจาก `sdc/sdd/sde`<br>**ฉันต้องการ** ให้ VaultWatch ค้นหา disk device อัตโนมัติ<br>**เพื่อให้** รันได้ทันทีโดยไม่ต้อง hardcode ชื่อ device | 1. Auto-detect `sd*` จาก `/sys/block/`<br>2. Config override `devices = [...]` ใน `[system]`<br>3. Filter: ตัด loop, ram, dm-*, md* ออก<br>4. Empty fallback — แสดง warning แทน crash<br>5. แสดง device list ที่ใช้งานใน UI | **S** | 🟡 Planned |
-| [US-MON-19](./user-stories/US-MON-19.md) | **ในฐานะ** ผู้ใช้ที่ไม่คุ้นเคยกับ keyboard shortcuts<br>**ฉันต้องการ** แถบแสดง keyboard shortcuts ที่ด้านล่างสุดของหน้าจอ<br>**เพื่อให้** รู้ว่ากดปุ่มไหนได้บ้างโดยไม่ต้องจำหรืออ่าน README | 1. Key bar ด้านล่างสุดตลอดเวลา<br>2. Context-aware ตาม view/panel<br>3. nano-style: key invert bg, action gray<br>4. ไม่ล้น terminal แคบ<br>5. ลบ shortcuts ซ้ำออกจาก header | **S** | 🟡 Planned |
+| [US-MON-18](./user-stories/US-MON-18.md) | **ในฐานะ** ผู้ดูแลระบบที่มี disk setup ต่างจาก `sdc/sdd/sde`<br>**ฉันต้องการ** ให้ VaultWatch ค้นหา disk device อัตโนมัติ<br>**เพื่อให้** รันได้ทันทีโดยไม่ต้อง hardcode ชื่อ device | 1. Auto-detect `sd*` จาก `/sys/block/`<br>2. Config override `devices = [...]` ใน `[system]`<br>3. Filter: ตัด loop, ram, dm-*, md* ออก<br>4. Empty fallback — แสดง warning แทน crash<br>5. แสดง device list ที่ใช้งานใน UI | **S** | ✅ Done |
+| [US-MON-19](./user-stories/US-MON-19.md) | **ในฐานะ** ผู้ใช้ที่ไม่คุ้นเคยกับ keyboard shortcuts<br>**ฉันต้องการ** แถบแสดง keyboard shortcuts ที่ด้านล่างสุดของหน้าจอ<br>**เพื่อให้** รู้ว่ากดปุ่มไหนได้บ้างโดยไม่ต้องจำหรืออ่าน README | 1. Key bar ด้านล่างสุดตลอดเวลา<br>2. Context-aware ตาม view/panel<br>3. nano-style: key invert bg, action gray<br>4. ไม่ล้น terminal แคบ<br>5. ลบ shortcuts ซ้ำออกจาก header | **S** | ✅ Done |
 
 ---
 
@@ -46,10 +46,10 @@
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-14](./user-stories/US-MON-14.md) | **ในฐานะ** ผู้ใช้ Alpine/root/doas<br>**ฉันต้องการ** ให้ smartctl ทำงานโดยไม่ต้องใช้ `sudo` แบบ hardcode<br>**เพื่อให้** VaultWatch รันได้บน setup ที่ไม่มี `sudo` | 1. Auto-detect root → ไม่ใช้ prefix<br>2. Config `smartctl_prefix` สำหรับ doas/custom<br>3. Default behavior เดิมบน non-root | **M** | 🔵 Sprint 04 |
-| [US-MON-15](./user-stories/US-MON-15.md) | **ในฐานะ** ผู้ใช้ใหม่<br>**ฉันต้องการ** ให้โปรแกรมแจ้งเตือนเมื่อ external tool ขาด<br>**เพื่อให้** รู้ว่าต้อง install อะไรทันที แทนที่จะเห็น `"--"` ทุกช่อง | 1. ตรวจสอบ smartctl + iostat ตอน startup<br>2. Error screen พร้อม install command ตาม distro<br>3. Degraded mode เมื่อ tool ขาดบางส่วน | **S** | 🔵 Sprint 04 |
-| [US-MON-16](./user-stories/US-MON-16.md) | **ในฐานะ** ผู้ใช้ Alpine/Docker<br>**ฉันต้องการ** static binary ที่รันได้โดยไม่ต้องพึ่ง glibc<br>**เพื่อให้** ใช้งานบน Alpine หรือ minimal container ได้ | 1. `make build-static` → musl binary<br>2. รันบน Alpine 3.19+ ได้จริง<br>3. Systemd + OpenRC service files | **S** | 🔵 Sprint 04 |
-| [US-MON-17](./user-stories/US-MON-17.md) | **ในฐานะ** ผู้ใช้ทุก distro<br>**ฉันต้องการ** คู่มือติดตั้ง per-distro ที่ครบถ้วน<br>**เพื่อให้** ติดตั้งได้ภายใน 5 นาทีโดยไม่ต้องค้นหาเพิ่ม | 1. README.md ครบ 5 distro<br>2. Annotated config.toml example<br>3. Privilege + systemd setup guide | **M** | 🔵 Sprint 04 |
+| [US-MON-14](./user-stories/US-MON-14.md) | **ในฐานะ** ผู้ใช้ Alpine/root/doas<br>**ฉันต้องการ** ให้ smartctl ทำงานโดยไม่ต้องใช้ `sudo` แบบ hardcode<br>**เพื่อให้** VaultWatch รันได้บน setup ที่ไม่มี `sudo` | 1. Auto-detect root → ไม่ใช้ prefix<br>2. Config `smartctl_prefix` สำหรับ doas/custom<br>3. Default behavior เดิมบน non-root | **M** | ✅ Done |
+| [US-MON-15](./user-stories/US-MON-15.md) | **ในฐานะ** ผู้ใช้ใหม่<br>**ฉันต้องการ** ให้โปรแกรมแจ้งเตือนเมื่อ external tool ขาด<br>**เพื่อให้** รู้ว่าต้อง install อะไรทันที แทนที่จะเห็น `"--"` ทุกช่อง | 1. ตรวจสอบ smartctl + iostat ตอน startup<br>2. Error screen พร้อม install command ตาม distro<br>3. Degraded mode เมื่อ tool ขาดบางส่วน | **S** | ✅ Done |
+| [US-MON-16](./user-stories/US-MON-16.md) | **ในฐานะ** ผู้ใช้ Alpine/Docker<br>**ฉันต้องการ** static binary ที่รันได้โดยไม่ต้องพึ่ง glibc<br>**เพื่อให้** ใช้งานบน Alpine หรือ minimal container ได้ | 1. `make build-static` → musl binary<br>2. รันบน Alpine 3.19+ ได้จริง<br>3. Systemd + OpenRC service files | **S** | ✅ Done |
+| [US-MON-17](./user-stories/US-MON-17.md) | **ในฐานะ** ผู้ใช้ทุก distro<br>**ฉันต้องการ** คู่มือติดตั้ง per-distro ที่ครบถ้วน<br>**เพื่อให้** ติดตั้งได้ภายใน 5 นาทีโดยไม่ต้องค้นหาเพิ่ม | 1. README.md ครบ 5 distro<br>2. Annotated config.toml example<br>3. Privilege + systemd setup guide | **M** | ✅ Done |
 
 ---
 

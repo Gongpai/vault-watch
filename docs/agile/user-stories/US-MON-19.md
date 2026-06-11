@@ -1,6 +1,6 @@
 # US-MON-19: Key Hint Bar (nano-style)
 
-**Sprint:** 05 | **Estimate:** S (3h) | **Status:** 🟡 Planned
+**Sprint:** 05 | **Estimate:** S (3h) | **Status:** ✅ Done
 
 ---
 

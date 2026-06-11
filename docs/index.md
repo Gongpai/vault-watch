@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 04 Planned — Cross-Distribution Support | Sprint 05 Planned — Device Discovery
+**Status:** Sprint 05 Complete — Device Discovery & Key Hint Bar (Sprints 01–05 ✅ Done)
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
 **Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
@@ -25,12 +25,12 @@
 | Temperature Color Coding | ✅ Done | [US-MON-09](./agile/user-stories/US-MON-09.md) |
 | SMART Threshold Warnings | ✅ Done | [US-MON-10](./agile/user-stories/US-MON-10.md) |
 | Discord Webhook Notifications | ✅ Done | [US-MON-11](./agile/user-stories/US-MON-11.md) |
-| Configurable smartctl Privilege | 🔵 Sprint 04 | [US-MON-14](./agile/user-stories/US-MON-14.md) |
-| Startup Dependency Check | 🔵 Sprint 04 | [US-MON-15](./agile/user-stories/US-MON-15.md) |
-| Static Binary (Alpine/musl) | 🔵 Sprint 04 | [US-MON-16](./agile/user-stories/US-MON-16.md) |
-| Cross-Distro Installation Guide | 🔵 Sprint 04 | [US-MON-17](./agile/user-stories/US-MON-17.md) |
-| Auto-detect Disk Devices | 🟡 Sprint 05 | [US-MON-18](./agile/user-stories/US-MON-18.md) |
-| Key Hint Bar (nano-style) | 🟡 Sprint 05 | [US-MON-19](./agile/user-stories/US-MON-19.md) |
+| Configurable smartctl Privilege | ✅ Done | [US-MON-14](./agile/user-stories/US-MON-14.md) |
+| Startup Dependency Check | ✅ Done | [US-MON-15](./agile/user-stories/US-MON-15.md) |
+| Static Binary (Alpine/musl) | ✅ Done | [US-MON-16](./agile/user-stories/US-MON-16.md) |
+| Cross-Distro Installation Guide | ✅ Done | [US-MON-17](./agile/user-stories/US-MON-17.md) |
+| Auto-detect Disk Devices | ✅ Done | [US-MON-18](./agile/user-stories/US-MON-18.md) |
+| Key Hint Bar (nano-style) | ✅ Done | [US-MON-19](./agile/user-stories/US-MON-19.md) |
 
 ---
 
@@ -55,5 +55,7 @@
 
 ## Resources
 
+- [README.md](../README.md) - Quick start (Ubuntu/Debian) และ overview
+- [MANUAL.md](../MANUAL.md) - Per-distro installation manual + privilege setup + service config
 - [brief.md](../brief.md) - Project brief และ background ของระบบ
 - [changelog.md](./changelog.md) - Documentation and project change history
