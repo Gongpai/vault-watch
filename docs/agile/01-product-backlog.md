@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 2.0
+**Last Updated:** 2026-06-11 | **Version:** 2.1
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -39,6 +39,14 @@
 |:---|:---|:---|:---|:---|
 | [US-MON-18](./user-stories/US-MON-18.md) | **ในฐานะ** ผู้ดูแลระบบที่มี disk setup ต่างจาก `sdc/sdd/sde`<br>**ฉันต้องการ** ให้ VaultWatch ค้นหา disk device อัตโนมัติ<br>**เพื่อให้** รันได้ทันทีโดยไม่ต้อง hardcode ชื่อ device | 1. Auto-detect `sd*` จาก `/sys/block/`<br>2. Config override `devices = [...]` ใน `[system]`<br>3. Filter: ตัด loop, ram, dm-*, md* ออก<br>4. Empty fallback — แสดง warning แทน crash<br>5. แสดง device list ที่ใช้งานใน UI | **S** | ✅ Done |
 | [US-MON-19](./user-stories/US-MON-19.md) | **ในฐานะ** ผู้ใช้ที่ไม่คุ้นเคยกับ keyboard shortcuts<br>**ฉันต้องการ** แถบแสดง keyboard shortcuts ที่ด้านล่างสุดของหน้าจอ<br>**เพื่อให้** รู้ว่ากดปุ่มไหนได้บ้างโดยไม่ต้องจำหรืออ่าน README | 1. Key bar ด้านล่างสุดตลอดเวลา<br>2. Context-aware ตาม view/panel<br>3. nano-style: key invert bg, action gray<br>4. ไม่ล้น terminal แคบ<br>5. ลบ shortcuts ซ้ำออกจาก header | **S** | ✅ Done |
+
+---
+
+## 🟠 Canvas Graph Redesign (Sprint 07)
+
+| ID | User Story | Acceptance Criteria | Estimate | Status |
+|:---|:---|:---|:---|:---|
+| [US-MON-23](./user-stories/US-MON-23.md) | **ในฐานะ** ผู้ดูแลระบบที่ดู Graph view เป็นประจำ<br>**ฉันต้องการ** ให้ graph ทุกช่องมี background สีตาม theme — Temperature ใช้สีโซนตามระดับความร้อน, Read/Write/RAID ใช้ dark background เดียวกัน<br>**เพื่อให้** อ่านค่าได้ง่ายขึ้นและ Graph view มี visual style ที่สอดคล้องกันทั้งหมด | 1. Temperature: 5 zone colors (0°/30°/40°/50°/60°/90°)<br>2. Read/Write/RAID: dark bg `#0A0D14`<br>3. Braille lines ทับ zone bg ได้ชัด<br>4. Threshold lines 45°/55° ยังแสดงอยู่<br>5. Y-axis labels + legend overlay ครบทุก panel<br>6. Focus/Tab/RAID conditional ไม่ regression | **M** | ✅ Done |
 
 ---
 
