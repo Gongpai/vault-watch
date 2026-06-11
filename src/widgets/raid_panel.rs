@@ -18,17 +18,35 @@ use crate::app::{Alert, AppState, RaidState};
 use crate::widgets::sparkline_cell::sparkline;
 
 pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
-    let raid_degraded = state.alerts.iter().any(|a| matches!(a, Alert::RaidDegraded));
+    let raid_degraded = state
+        .alerts
+        .iter()
+        .any(|a| matches!(a, Alert::RaidDegraded { .. }));
     let border_color = if raid_degraded { Color::Red } else { Color::White };
+
+    // Prefer the array that needs attention: rebuilding first, then degraded,
+    // then the first one. Title shows how many others exist.
+    let raid = state
+        .raids
+        .iter()
+        .find(|r| r.state == RaidState::Rebuilding)
+        .or_else(|| state.raids.iter().find(|r| r.state == RaidState::Degraded))
+        .or_else(|| state.raids.first());
+
+    let title = match (raid, state.raids.len()) {
+        (Some(r), n) if n > 1 => format!(" RAID Array {} (+{} more) ", r.name, n - 1),
+        _ => " RAID Array ".to_string(),
+    };
+
     let block = Block::default()
-        .title(" RAID Array ")
+        .title(title)
         .borders(Borders::ALL)
         .border_style(Style::default().fg(border_color));
 
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    let Some(ref raid) = state.raid else {
+    let Some(raid) = raid else {
         let p = Paragraph::new(Line::from(Span::styled(
             " No RAID array detected",
             Style::default().fg(Color::DarkGray),
@@ -121,7 +139,11 @@ pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
 
     // RAID rebuild-speed sparkline row — capped at 20 samples per spec
     let spk_width = (right_rows[1].width as usize).min(20);
-    let spk_data: Vec<u64> = state.raid_speed_history.iter().copied().collect();
+    let spk_data: Vec<u64> = state
+        .raid_speed_history
+        .get(&raid.name)
+        .map(|h| h.iter().copied().collect())
+        .unwrap_or_default();
     let spk_str = sparkline(&spk_data, spk_width);
     let spk_p = Paragraph::new(Line::from(Span::styled(
         spk_str,

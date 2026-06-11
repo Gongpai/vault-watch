@@ -18,20 +18,42 @@ const DISK_COLORS: [Color; 6] = [
     Color::Red,
 ];
 
+// Allow the legend up to half the panel — ratatui's default of ¼ hides it as
+// soon as a handful of named datasets don't fit (US-MON-20).
+const LEGEND_CONSTRAINTS: (Constraint, Constraint) =
+    (Constraint::Ratio(1, 2), Constraint::Ratio(1, 2));
+
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let cols = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(area);
 
-    let left_rows = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(65), Constraint::Percentage(35)])
-        .split(cols[0]);
+    // RAID graph only occupies space while a rebuild is running (or its
+    // history is still draining); otherwise temperature gets the full column.
+    if state.raid_graph_visible() {
+        let left_rows = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(65), Constraint::Percentage(35)])
+            .split(cols[0]);
 
-    render_temp_graph(f, left_rows[0], state);
-    render_raid_graph(f, left_rows[1], state);
-    render_throughput_graph(f, cols[1], state);
+        render_temp_graph(f, left_rows[0], state);
+        render_raid_graph(f, left_rows[1], state);
+    } else {
+        if state.focused_panel == FocusedPanel::RaidGraph {
+            state.focused_panel = FocusedPanel::TempGraph;
+        }
+        state.panel_rects.remove(&FocusedPanel::RaidGraph);
+        render_temp_graph(f, cols[0], state);
+    }
+
+    let right_rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(cols[1]);
+
+    render_io_graph(f, right_rows[0], state, FocusedPanel::ReadGraph, " Read (MB/s) ");
+    render_io_graph(f, right_rows[1], state, FocusedPanel::WriteGraph, " Write (MB/s) ");
 }
 
 fn history_to_points(history: &std::collections::VecDeque<u64>, scale: f64) -> Vec<(f64, f64)> {
@@ -101,13 +123,14 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let x_min = -((max_len.saturating_sub(1)) as f64) * 2.0;
 
-    // Threshold reference lines at 45°C (warm) and 55°C (hot)
+    // Threshold reference lines at 45°C (warm) and 55°C (hot).
+    // Unnamed on purpose: named datasets enter the legend, and the extra rows
+    // can push it past ratatui's height limit, hiding the device legend.
     let threshold_warm: Vec<(f64, f64)> = vec![(x_min, 45.0), (0.0, 45.0)];
     let threshold_hot: Vec<(f64, f64)> = vec![(x_min, 55.0), (0.0, 55.0)];
     let mut all_datasets: Vec<Dataset> = datasets;
     all_datasets.push(
         Dataset::default()
-            .name("45°C")
             .marker(symbols::Marker::Braille)
             .graph_type(GraphType::Line)
             .style(Style::default().fg(Color::Yellow))
@@ -115,7 +138,6 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     );
     all_datasets.push(
         Dataset::default()
-            .name("55°C")
             .marker(symbols::Marker::Braille)
             .graph_type(GraphType::Line)
             .style(Style::default().fg(Color::Red))
@@ -124,6 +146,7 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let chart = Chart::new(all_datasets)
         .block(block)
+        .hidden_legend_constraints(LEGEND_CONSTRAINTS)
         .x_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
@@ -160,29 +183,50 @@ fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         .border_type(border_type)
         .border_style(Style::default().fg(border_color));
 
-    // raid_speed_history is stored ×10 (same scale as read/write history)
-    let raid_data = history_to_points(&state.raid_speed_history, 10.0);
+    // One line per array, sorted by name so colors stay stable across frames.
+    // Histories are stored ×10 (same scale as read/write history).
+    let mut names: Vec<&String> = state.raid_speed_history.keys().collect();
+    names.sort();
+
+    let datasets_data: Vec<Vec<(f64, f64)>> = names
+        .iter()
+        .map(|name| history_to_points(&state.raid_speed_history[*name], 10.0))
+        .collect();
+
+    let datasets: Vec<Dataset> = names
+        .iter()
+        .enumerate()
+        .zip(datasets_data.iter())
+        .map(|((i, name), data)| {
+            Dataset::default()
+                .name(name.as_str())
+                .marker(symbols::Marker::Braille)
+                .graph_type(GraphType::Line)
+                .style(Style::default().fg(DISK_COLORS[i % DISK_COLORS.len()]))
+                .data(data)
+        })
+        .collect();
+
     let max_val = state
         .raid_speed_history
-        .iter()
-        .copied()
+        .values()
+        .flat_map(|h| h.iter().copied())
         .max()
         .unwrap_or(1000) as f64
         / 10.0;
     let y_max = (max_val * 1.2).max(100.0);
 
-    let max_len = state.raid_speed_history.len().max(1);
+    let max_len = state
+        .raid_speed_history
+        .values()
+        .map(|h| h.len())
+        .max()
+        .unwrap_or(1);
     let x_min = -((max_len.saturating_sub(1)) as f64) * 2.0;
-
-    let datasets = vec![Dataset::default()
-        .name("rebuild")
-        .marker(symbols::Marker::Braille)
-        .graph_type(GraphType::Line)
-        .style(Style::default().fg(Color::Yellow))
-        .data(&raid_data)];
 
     let chart = Chart::new(datasets)
         .block(block)
+        .hidden_legend_constraints(LEGEND_CONSTRAINTS)
         .x_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))
@@ -198,9 +242,17 @@ fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     f.render_widget(chart, area);
 }
 
-fn render_throughput_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
-    let focused = state.focused_panel == FocusedPanel::ThroughputGraph;
-    state.panel_rects.insert(FocusedPanel::ThroughputGraph, area);
+/// Shared renderer for the Read and Write charts — same per-device colors in
+/// both panels, same fixed Y scale so they can be compared at a glance.
+fn render_io_graph(
+    f: &mut Frame,
+    area: Rect,
+    state: &mut AppState,
+    panel: FocusedPanel,
+    title: &str,
+) {
+    let focused = state.focused_panel == panel;
+    state.panel_rects.insert(panel, area);
 
     let (border_type, border_color) = if focused {
         (BorderType::Double, Color::Cyan)
@@ -209,17 +261,21 @@ fn render_throughput_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     };
 
     let block = Block::default()
-        .title(" Throughput (MB/s) ")
+        .title(title)
         .borders(Borders::ALL)
         .border_type(border_type)
         .border_style(Style::default().fg(border_color));
 
-    // Read series (solid) + Write series (dimmed) per disk
-    let read_data: Vec<Vec<(f64, f64)>> = state
+    let history = match panel {
+        FocusedPanel::ReadGraph => &state.read_history,
+        _ => &state.write_history,
+    };
+
+    let datasets_data: Vec<Vec<(f64, f64)>> = state
         .disk_devices
         .iter()
         .map(|dev| {
-            if let Some(hist) = state.read_history.get(dev) {
+            if let Some(hist) = history.get(dev) {
                 history_to_points(hist, 10.0)
             } else {
                 vec![]
@@ -227,44 +283,25 @@ fn render_throughput_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         })
         .collect();
 
-    let write_data: Vec<Vec<(f64, f64)>> = state
+    let datasets: Vec<Dataset> = state
         .disk_devices
         .iter()
-        .map(|dev| {
-            if let Some(hist) = state.write_history.get(dev) {
-                history_to_points(hist, 10.0)
-            } else {
-                vec![]
-            }
+        .enumerate()
+        .zip(datasets_data.iter())
+        .map(|((i, dev), data)| {
+            Dataset::default()
+                .name(dev.as_str())
+                .marker(symbols::Marker::Braille)
+                .graph_type(GraphType::Line)
+                .style(Style::default().fg(DISK_COLORS[i % DISK_COLORS.len()]))
+                .data(data)
         })
         .collect();
-
-    let mut datasets: Vec<Dataset> = Vec::new();
-
-    for (i, dev) in state.disk_devices.iter().enumerate() {
-        let color = DISK_COLORS[i % DISK_COLORS.len()];
-        datasets.push(
-            Dataset::default()
-                .name(format!("{} R", dev))
-                .marker(symbols::Marker::Braille)
-                .graph_type(GraphType::Line)
-                .style(Style::default().fg(color))
-                .data(&read_data[i]),
-        );
-        datasets.push(
-            Dataset::default()
-                .name(format!("{} W", dev))
-                .marker(symbols::Marker::Braille)
-                .graph_type(GraphType::Line)
-                .style(Style::default().fg(Color::DarkGray))
-                .data(&write_data[i]),
-        );
-    }
 
     let max_len = state
         .disk_devices
         .iter()
-        .filter_map(|d| state.read_history.get(d))
+        .filter_map(|d| history.get(d))
         .map(|h| h.len())
         .max()
         .unwrap_or(1);
@@ -273,6 +310,7 @@ fn render_throughput_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let chart = Chart::new(datasets)
         .block(block)
+        .hidden_legend_constraints(LEGEND_CONSTRAINTS)
         .x_axis(
             Axis::default()
                 .style(Style::default().fg(Color::DarkGray))

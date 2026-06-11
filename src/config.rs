@@ -80,7 +80,7 @@ pub fn smartctl_base_cmd(config: &Config) -> (String, Vec<String>) {
 
     match explicit_prefix {
         // Empty string = explicit "no prefix" (setcap / root already)
-        Some(p) if p.is_empty() => (path, vec![]),
+        Some("") => (path, vec![]),
         Some(p) => (p.to_string(), vec![path]),
         None => {
             if is_running_as_root() {
@@ -121,10 +121,10 @@ fn detect_disk_devices() -> Vec<String> {
 
 /// Return the device list to monitor: config override takes precedence over auto-detect.
 pub fn resolve_devices(config: &Config) -> Vec<String> {
-    if let Some(devs) = config.system.as_ref().and_then(|s| s.devices.as_ref()) {
-        if !devs.is_empty() {
-            return devs.clone();
-        }
+    if let Some(devs) = config.system.as_ref().and_then(|s| s.devices.as_ref())
+        && !devs.is_empty()
+    {
+        return devs.clone();
     }
     detect_disk_devices()
 }

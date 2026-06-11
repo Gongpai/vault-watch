@@ -17,12 +17,15 @@ static SPEED_RE: LazyLock<Regex> =
 static FINISH_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"finish=([\d.]+)min").unwrap());
 
-pub async fn collect() -> Option<RaidStatus> {
-    let content = fs::read_to_string("/proc/mdstat").await.ok()?;
-    parse_mdstat(&content)
+pub async fn collect() -> Vec<RaidStatus> {
+    match fs::read_to_string("/proc/mdstat").await {
+        Ok(content) => parse_mdstat(&content),
+        Err(_) => Vec::new(),
+    }
 }
 
-fn parse_mdstat(content: &str) -> Option<RaidStatus> {
+fn parse_mdstat(content: &str) -> Vec<RaidStatus> {
+    let mut arrays = Vec::new();
     let lines: Vec<&str> = content.lines().collect();
     let mut i = 0;
 
@@ -71,7 +74,7 @@ fn parse_mdstat(content: &str) -> Option<RaidStatus> {
                 RaidState::Active
             };
 
-            return Some(RaidStatus {
+            arrays.push(RaidStatus {
                 name,
                 state,
                 rebuild_pct,
@@ -84,7 +87,7 @@ fn parse_mdstat(content: &str) -> Option<RaidStatus> {
         i += 1;
     }
 
-    None
+    arrays
 }
 
 #[cfg(test)]
@@ -117,9 +120,22 @@ unused devices: <none>
 unused devices: <none>
 ";
 
+    const MDSTAT_TWO_ARRAYS: &str = "Personalities : [raid10] [raid1]
+md0 : active raid10 sdc[0] sdd[1] sde[2]
+      11718504448 blocks super 1.2 512K chunks 2 near-copies [3/3] [UUU]
+      [==>..................]  resync =  9.3% (1090263040/11718504448) finish=60.5min speed=178031K/sec
+
+md1 : active raid1 sda[0] sdb[1]
+      976630464 blocks super 1.2 [2/2] [UU]
+
+unused devices: <none>
+";
+
     #[test]
     fn test_active() {
-        let r = parse_mdstat(MDSTAT_ACTIVE).unwrap();
+        let arrays = parse_mdstat(MDSTAT_ACTIVE);
+        assert_eq!(arrays.len(), 1);
+        let r = &arrays[0];
         assert_eq!(r.name, "md0");
         assert_eq!(r.state, RaidState::Active);
         assert_eq!(r.active_disks, 3);
@@ -131,7 +147,8 @@ unused devices: <none>
 
     #[test]
     fn test_rebuilding() {
-        let r = parse_mdstat(MDSTAT_REBUILDING).unwrap();
+        let arrays = parse_mdstat(MDSTAT_REBUILDING);
+        let r = &arrays[0];
         assert_eq!(r.name, "md0");
         assert_eq!(r.state, RaidState::Rebuilding);
         assert!((r.rebuild_pct.unwrap() - 9.3).abs() < 0.01);
@@ -143,7 +160,8 @@ unused devices: <none>
 
     #[test]
     fn test_degraded() {
-        let r = parse_mdstat(MDSTAT_DEGRADED).unwrap();
+        let arrays = parse_mdstat(MDSTAT_DEGRADED);
+        let r = &arrays[0];
         assert_eq!(r.state, RaidState::Degraded);
         assert_eq!(r.active_disks, 2);
         assert_eq!(r.total_disks, 3);
@@ -157,13 +175,27 @@ unused devices: <none>
 
     #[test]
     fn test_no_array() {
-        assert!(parse_mdstat(MDSTAT_NO_ARRAY).is_none());
+        assert!(parse_mdstat(MDSTAT_NO_ARRAY).is_empty());
     }
 
     #[test]
     fn test_inactive() {
-        let r = parse_mdstat(MDSTAT_INACTIVE).unwrap();
+        let arrays = parse_mdstat(MDSTAT_INACTIVE);
+        let r = &arrays[0];
         assert_eq!(r.name, "md0");
         assert_eq!(r.state, RaidState::Unknown);
+    }
+
+    #[test]
+    fn test_two_arrays() {
+        let arrays = parse_mdstat(MDSTAT_TWO_ARRAYS);
+        assert_eq!(arrays.len(), 2);
+        assert_eq!(arrays[0].name, "md0");
+        assert_eq!(arrays[0].state, RaidState::Rebuilding);
+        assert_eq!(arrays[0].rebuild_speed_mb.unwrap(), 173);
+        assert_eq!(arrays[1].name, "md1");
+        assert_eq!(arrays[1].state, RaidState::Active);
+        assert_eq!(arrays[1].active_disks, 2);
+        assert!(arrays[1].rebuild_pct.is_none());
     }
 }

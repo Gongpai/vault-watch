@@ -1,6 +1,6 @@
 # US-MON-21: Split Throughput Graph เป็น Read / Write สองช่อง
 
-**Sprint:** 06 | **Estimate:** S (4h) | **Status:** 🟡 Planned
+**Sprint:** 06 | **Estimate:** S (4h) | **Status:** ✅ Done
 
 ---
 

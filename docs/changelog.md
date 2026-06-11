@@ -4,6 +4,32 @@
 
 ---
 
+## [0.7.0] - 2026-06-11
+
+### Implemented (Sprint 06 — Graph View Improvements)
+
+- **`src/widgets/graph_view.rs`** (US-MON-20): Temp graph legend แสดงได้แล้ว — threshold lines 45°/55° เป็น unnamed datasets (ratatui นับเฉพาะ dataset ที่มี name เข้า legend) + `hidden_legend_constraints` ขยายจาก default ¼ → ½ ของ panel (`LEGEND_CONSTRAINTS` const ใช้ร่วมทุก chart); root cause: 7 ชื่อ dataset (5 disks + 2 thresholds) เกิน ¼ height ทำให้ ratatui ซ่อน legend ทั้งอัน
+- **`src/widgets/graph_view.rs`** (US-MON-21): แตก `render_throughput_graph()` → `render_io_graph()` shared renderer — คอลัมน์ขวาแยกเป็น Read (บน) / Write (ล่าง) 50/50, สีต่อ device จาก `DISK_COLORS` ตรงกันทั้งสองช่อง, legend ชื่อ device (ไม่มี R/W suffix), Y-axis 0–200 เท่ากันทั้งคู่
+- **`src/widgets/graph_view.rs`** (US-MON-22): RAID graph แสดงเฉพาะเมื่อ `raid_graph_visible()` — ไม่มี rebuild → Temperature เต็มคอลัมน์ซ้าย; เส้นแยกสีต่อ array (sort ชื่อให้สีคงที่) + legend ชื่อ array; focus ที่ค้างบน RaidGraph ตอนซ่อนถูกย้ายไป TempGraph + ลบ panel_rect กัน mouse hit-test ค้าง
+- **`src/collectors/raid.rs`** (US-MON-22): `collect()/parse_mdstat()` → `Vec<RaidStatus>` — parse ทุก `mdN` block ไม่ใช่แค่ตัวแรก; เพิ่ม `test_two_arrays` (md0 rebuilding + md1 active), อัปเดต tests เดิมทั้ง 5 ตัว
+- **`src/app.rs`** (US-MON-22): `raid: Option<RaidStatus>` → `raids: Vec<RaidStatus>`; `raid_speed_history` → `HashMap<String, VecDeque<u64>>` per array; เพิ่ม `raid_graph_visible()` (rebuilding หรือ history ยังมีค่า non-zero = hide delay กัน layout กระพริบ); `Alert::RaidDegraded` → `{ array: String }` ระบุชื่อ array ใน message; `FocusedPanel::ThroughputGraph` → `ReadGraph` + `WriteGraph`
+- **`src/main.rs`**: Tab/BackTab cycle ใน Graph view ครอบ 4 panels — RaidGraph เข้า cycle เฉพาะตอน visible; collector_loop push speed ต่อ array (array ไม่ rebuild push 0 รักษา time axis, array ที่หายจาก mdstat ไหล 0 จน history ว่างแล้วถูก drop)
+- **`src/widgets/raid_panel.rs`** (US-MON-22): เลือก array ที่ rebuilding ก่อน → degraded → ตัวแรก; title แสดง `(+N more)` เมื่อมีหลาย array; sparkline ใช้ history ของ array ที่แสดง
+- **`src/notifier.rs`**: cooldown key `raid_degraded_{array}` แยกต่อ array
+
+### Fixed (carry-over + clippy)
+
+- **`src/widgets/smart_details.rs`**: แสดง `RdErr:` / `WrErr:` ต่อ disk (Yellow เมื่อ > 0) — ลบ dead_code warning ของ `read_errors`/`write_errors` (carry-over จาก Sprint 05)
+- **`src/app.rs`, `src/config.rs`**: เก็บ clippy warnings เก่าทั้งหมด (collapsible_if ×3 → let-chains, redundant_guards → `Some("")`) — `cargo clippy` สะอาด 100%
+
+### Verified
+
+- `cargo test` 16 passed (รวม `test_two_arrays`), `cargo clippy` ไม่มี warning
+- Smoke test ใน pty (120×35): เปิด app → toggle Graph view → Tab → quit ออกสะอาด; frame capture ยืนยัน Temperature เต็มคอลัมน์ซ้าย (ไม่มี rebuild) + Read/Write แยกสองช่อง
+- ยังต้อง verify บนเครื่องจริง (HPE server): legend device names บนจอที่มี `sd*` disks และ RAID graph ตอน rebuild จริง
+
+---
+
 ## [0.6.1] - 2026-06-11
 
 ### Added (Sprint 06 Planning — Graph View Improvements)

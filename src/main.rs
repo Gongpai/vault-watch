@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::io;
 use std::sync::Arc;
 use std::time::Duration;
@@ -135,9 +136,11 @@ async fn handle_key(
                     _ => FocusedPanel::DiskTable,
                 }
             } else {
+                // RAID graph participates in the cycle only while visible
                 match s.focused_panel {
-                    FocusedPanel::TempGraph => FocusedPanel::ThroughputGraph,
-                    FocusedPanel::ThroughputGraph => FocusedPanel::RaidGraph,
+                    FocusedPanel::TempGraph => FocusedPanel::ReadGraph,
+                    FocusedPanel::ReadGraph => FocusedPanel::WriteGraph,
+                    FocusedPanel::WriteGraph if s.raid_graph_visible() => FocusedPanel::RaidGraph,
                     _ => FocusedPanel::TempGraph,
                 }
             };
@@ -152,9 +155,11 @@ async fn handle_key(
                 }
             } else {
                 match s.focused_panel {
-                    FocusedPanel::ThroughputGraph => FocusedPanel::TempGraph,
-                    FocusedPanel::RaidGraph => FocusedPanel::ThroughputGraph,
-                    _ => FocusedPanel::RaidGraph,
+                    FocusedPanel::ReadGraph => FocusedPanel::TempGraph,
+                    FocusedPanel::WriteGraph => FocusedPanel::ReadGraph,
+                    FocusedPanel::RaidGraph => FocusedPanel::WriteGraph,
+                    _ if s.raid_graph_visible() => FocusedPanel::RaidGraph,
+                    _ => FocusedPanel::WriteGraph,
                 }
             };
         }
@@ -338,14 +343,34 @@ async fn collector_loop(
                     }
                 }
             }
-            // Store ×10 for consistency with read/write history (supports 0.1 MB/s precision)
-            let raid_speed = raid_result.as_ref().and_then(|r| r.rebuild_speed_mb).unwrap_or(0) * 10;
-            s.raid_speed_history.push_back(raid_speed);
-            if s.raid_speed_history.len() > HISTORY_SIZE {
-                s.raid_speed_history.pop_front();
+            // Per-array rebuild speed, stored ×10 for consistency with
+            // read/write history (supports 0.1 MB/s precision). Arrays without
+            // an active rebuild push 0 so every line shares the same time axis.
+            for raid in &raid_result {
+                let speed = raid.rebuild_speed_mb.unwrap_or(0) * 10;
+                let buf = s
+                    .raid_speed_history
+                    .entry(raid.name.clone())
+                    .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
+                buf.push_back(speed);
+                if buf.len() > HISTORY_SIZE {
+                    buf.pop_front();
+                }
             }
+            // Arrays that vanished from mdstat (stopped) keep flowing zeros
+            // until their history drains, then get dropped.
+            let current: Vec<String> = raid_result.iter().map(|r| r.name.clone()).collect();
+            s.raid_speed_history.retain(|name, buf| {
+                if !current.contains(name) {
+                    buf.push_back(0);
+                    if buf.len() > HISTORY_SIZE {
+                        buf.pop_front();
+                    }
+                }
+                current.contains(name) || buf.iter().any(|&v| v > 0)
+            });
 
-            s.raid = raid_result;
+            s.raids = raid_result;
             s.disks = disks_result;
             s.io_stats = iostat_result;
             s.last_updated = std::time::Instant::now();

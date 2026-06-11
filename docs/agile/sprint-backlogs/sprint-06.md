@@ -1,6 +1,6 @@
 # Sprint 06 — Graph View Improvements
 
-**Version:** 0.7.0 | **Duration:** 2026-08-19 → 2026-09-02 | **Status:** 🟡 Planned
+**Version:** 0.7.0 | **Duration:** 2026-08-19 → 2026-09-02 | **Status:** ✅ Done
 
 ---
 
@@ -55,23 +55,25 @@ US-MON-22 แตะ `RaidStatus` ที่ US-MON-21 ไม่เกี่ยว
 ## Definition of Done
 
 **ทั่วไป:**
-- [ ] `make build` ผ่านไม่มี error/warning ใหม่
-- [ ] `cargo test` ผ่านทั้งหมด (รวม test ใหม่ของ multi-array parser)
+- [x] `make build` ผ่านไม่มี error/warning ใหม่
+- [x] `cargo test` ผ่านทั้งหมด (รวม test ใหม่ของ multi-array parser)
 
 **US-MON-20:**
 - [ ] Temp graph มี legend device ครบที่มุมขวาบน (จอ 110×30 ขึ้นไป)
-- [ ] เส้น threshold 45°/55° ไม่โผล่ใน legend
+- [x] เส้น threshold 45°/55° ไม่โผล่ใน legend
 
 **US-MON-21:**
-- [ ] Read กับ Write แยกคนละ panel — สีต่อ device ตรงกันทั้งสองช่อง
-- [ ] Tab / mouse focus ครอบคลุม panel ใหม่ครบ
-- [ ] Y-axis สองช่องใช้ scale เดียวกัน
+- [x] Read กับ Write แยกคนละ panel — สีต่อ device ตรงกันทั้งสองช่อง
+- [x] Tab / mouse focus ครอบคลุม panel ใหม่ครบ
+- [x] Y-axis สองช่องใช้ scale เดียวกัน
 
 **US-MON-22:**
-- [ ] ไม่มี rebuild → ไม่เห็นช่อง RAID, Temp เต็มคอลัมน์ซ้าย
+- [x] ไม่มี rebuild → ไม่เห็นช่อง RAID, Temp เต็มคอลัมน์ซ้าย
 - [ ] มี rebuild → ช่อง RAID โผล่พร้อมเส้นแยกสีต่อ array + legend ชื่อ array
-- [ ] `/proc/mdstat` ที่มี 2+ arrays parse ครบทุกตัว (unit test)
-- [ ] Table view RAID panel ยังทำงานปกติ
+- [x] `/proc/mdstat` ที่มี 2+ arrays parse ครบทุกตัว (unit test)
+- [x] Table view RAID panel ยังทำงานปกติ
+
+> **หมายเหตุ (2026-06-11):** ข้อที่ยังไม่ติ๊กต้อง verify บนเครื่องจริงที่มี `sd*` disks + mdadm rebuild (เครื่อง dev เป็น NVMe ไม่มี smartctl) — logic ผ่าน unit test และ smoke test ใน pty แล้ว (conditional layout + Read/Write split แสดงถูกต้อง)
 
 ---
 
@@ -79,10 +81,10 @@ US-MON-22 แตะ `RaidStatus` ที่ US-MON-21 ไม่เกี่ยว
 
 จาก Known Gaps ใน [changelog 0.6.0](../../changelog.md):
 
-- US-MON-18 AC4/AC5 — ข้อความ "No disk devices found" + แสดง active device list บน UI
-- US-MON-17 AC6 — Troubleshooting section ใน MANUAL.md
-- Unit tests สำหรับ `config.rs` (`smartctl_base_cmd`, `detect_distro`)
-- แสดง `read_errors`/`write_errors` ใน SMART details (ลบ dead_code warning)
+- [ ] US-MON-18 AC4/AC5 — ข้อความ "No disk devices found" + แสดง active device list บน UI
+- [ ] US-MON-17 AC6 — Troubleshooting section ใน MANUAL.md
+- [ ] Unit tests สำหรับ `config.rs` (`smartctl_base_cmd`, `detect_distro`)
+- [x] แสดง `read_errors`/`write_errors` ใน SMART details (ลบ dead_code warning) — ✅ ทำแล้วใน sprint นี้ พร้อมเก็บ clippy warnings เก่าทั้งหมด (clippy สะอาด 100%)
 
 ---
 

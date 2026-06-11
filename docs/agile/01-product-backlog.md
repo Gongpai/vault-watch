@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 1.9
+**Last Updated:** 2026-06-11 | **Version:** 2.0
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -46,9 +46,9 @@
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-20](./user-stories/US-MON-20.md) | **ในฐานะ** ผู้ดูแลระบบที่ดู Graph view<br>**ฉันต้องการ** legend บอกว่าเส้น temperature แต่ละสีคือ disk ไหน (แบบเดียวกับ Throughput)<br>**เพื่อให้** รู้ว่า disk ไหนร้อนเท่าไหร่โดยไม่ต้องเดาจากสี | 1. Legend device ที่มุมขวาบนของ Temp graph<br>2. แสดงครบทุก device (≥ 5 disks)<br>3. เส้น threshold 45°/55° ไม่อยู่ใน legend<br>4. ไม่บังเส้น graph ที่จอ 110×30 | **S** | 🟡 Planned |
-| [US-MON-21](./user-stories/US-MON-21.md) | **ในฐานะ** ผู้ดูแลระบบที่ดู throughput หลาย disk<br>**ฉันต้องการ** แยก Throughput เป็นช่อง Read และ Write โดยแยกสีต่อ device<br>**เพื่อให้** รู้ว่าเส้น Write เป็นของ disk ไหน (ตอนนี้ Write ทุกตัวสีเทาเหมือนกัน) | 1. คอลัมน์ขวาแยกเป็น Read panel + Write panel<br>2. สีต่อ device ตรงกันทั้งสองช่อง<br>3. Legend ต่อช่อง<br>4. Tab/mouse focus ครอบ panel ใหม่<br>5. Y-axis สองช่อง scale เดียวกัน | **S** | 🟡 Planned |
-| [US-MON-22](./user-stories/US-MON-22.md) | **ในฐานะ** ผู้ดูแลระบบที่มี mdadm array หลายชุด<br>**ฉันต้องการ** ช่อง RAID Rebuild แสดงเฉพาะตอนมี rebuild และแยกเส้นสีต่อ array<br>**เพื่อให้** ไม่เสียพื้นที่จอ และเห็นความเร็ว rebuild แต่ละ array แยกกัน | 1. Panel แสดงเฉพาะเมื่อมี rebuild (Temp ขยายเต็มเมื่อไม่มี)<br>2. Parse ทุก `mdN` ใน `/proc/mdstat`<br>3. เส้นแยกสีต่อ array + legend ชื่อ array<br>4. History แยก key ต่อ array<br>5. Table view RAID panel ไม่พัง<br>6. Hide delay กัน layout กระพริบ | **M** | 🟡 Planned |
+| [US-MON-20](./user-stories/US-MON-20.md) | **ในฐานะ** ผู้ดูแลระบบที่ดู Graph view<br>**ฉันต้องการ** legend บอกว่าเส้น temperature แต่ละสีคือ disk ไหน (แบบเดียวกับ Throughput)<br>**เพื่อให้** รู้ว่า disk ไหนร้อนเท่าไหร่โดยไม่ต้องเดาจากสี | 1. Legend device ที่มุมขวาบนของ Temp graph<br>2. แสดงครบทุก device (≥ 5 disks)<br>3. เส้น threshold 45°/55° ไม่อยู่ใน legend<br>4. ไม่บังเส้น graph ที่จอ 110×30 | **S** | ✅ Done |
+| [US-MON-21](./user-stories/US-MON-21.md) | **ในฐานะ** ผู้ดูแลระบบที่ดู throughput หลาย disk<br>**ฉันต้องการ** แยก Throughput เป็นช่อง Read และ Write โดยแยกสีต่อ device<br>**เพื่อให้** รู้ว่าเส้น Write เป็นของ disk ไหน (ตอนนี้ Write ทุกตัวสีเทาเหมือนกัน) | 1. คอลัมน์ขวาแยกเป็น Read panel + Write panel<br>2. สีต่อ device ตรงกันทั้งสองช่อง<br>3. Legend ต่อช่อง<br>4. Tab/mouse focus ครอบ panel ใหม่<br>5. Y-axis สองช่อง scale เดียวกัน | **S** | ✅ Done |
+| [US-MON-22](./user-stories/US-MON-22.md) | **ในฐานะ** ผู้ดูแลระบบที่มี mdadm array หลายชุด<br>**ฉันต้องการ** ช่อง RAID Rebuild แสดงเฉพาะตอนมี rebuild และแยกเส้นสีต่อ array<br>**เพื่อให้** ไม่เสียพื้นที่จอ และเห็นความเร็ว rebuild แต่ละ array แยกกัน | 1. Panel แสดงเฉพาะเมื่อมี rebuild (Temp ขยายเต็มเมื่อไม่มี)<br>2. Parse ทุก `mdN` ใน `/proc/mdstat`<br>3. เส้นแยกสีต่อ array + legend ชื่อ array<br>4. History แยก key ต่อ array<br>5. Table view RAID panel ไม่พัง<br>6. Hide delay กัน layout กระพริบ | **M** | ✅ Done |
 
 ---
 

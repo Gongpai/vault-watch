@@ -60,6 +60,14 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
             None => (format!("{:>7}", "--"), Color::White),
         };
 
+        let rw_err = |v: Option<u64>| match v {
+            Some(n) if n > 0 => (format!("{:>5}", n), Color::Yellow),
+            Some(n) => (format!("{:>5}", n), Color::White),
+            None => (format!("{:>5}", "--"), Color::White),
+        };
+        let (rerr_str, rerr_color) = rw_err(disk.read_errors);
+        let (werr_str, werr_color) = rw_err(disk.write_errors);
+
         lines.push(Line::from(vec![
             Span::styled(
                 format!("{:<5}", disk.device),
@@ -73,6 +81,10 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
             Span::styled(nme_str, Style::default().fg(nme_color)),
             Span::styled("  Defects: ", Style::default().fg(Color::DarkGray)),
             Span::styled(defect_str, Style::default().fg(defect_color)),
+            Span::styled("  RdErr: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(rerr_str, Style::default().fg(rerr_color)),
+            Span::styled("  WrErr: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(werr_str, Style::default().fg(werr_color)),
         ]));
     }
 

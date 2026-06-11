@@ -1,6 +1,6 @@
 # US-MON-22: RAID Rebuild Graph — แสดงเฉพาะตอน Rebuild + รองรับหลาย Array
 
-**Sprint:** 06 | **Estimate:** M (7h) | **Status:** 🟡 Planned
+**Sprint:** 06 | **Estimate:** M (7h) | **Status:** ✅ Done
 
 ---
 

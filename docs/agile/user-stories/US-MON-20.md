@@ -1,6 +1,6 @@
 # US-MON-20: Temperature Graph — Per-Device Legend
 
-**Sprint:** 06 | **Estimate:** S (2h) | **Status:** 🟡 Planned
+**Sprint:** 06 | **Estimate:** S (2h) | **Status:** ✅ Done
 
 ---
 

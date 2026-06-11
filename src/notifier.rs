@@ -8,7 +8,7 @@ const COOLDOWN: Duration = Duration::from_secs(3600);
 
 fn alert_key(alert: &Alert) -> String {
     match alert {
-        Alert::RaidDegraded => "raid_degraded".to_string(),
+        Alert::RaidDegraded { array } => format!("raid_degraded_{array}"),
         Alert::DiskFail { device } => format!("disk_fail_{device}"),
         Alert::HighTemperature { device, .. } => format!("high_temp_{device}"),
         Alert::GrownDefects { device, .. } => format!("grown_defects_{device}"),
@@ -18,7 +18,7 @@ fn alert_key(alert: &Alert) -> String {
 // Discord threshold for temperature is 60°C (higher than the 55°C UI warning)
 fn should_notify(alert: &Alert) -> bool {
     match alert {
-        Alert::RaidDegraded => true,
+        Alert::RaidDegraded { .. } => true,
         Alert::DiskFail { .. } => true,
         Alert::HighTemperature { temp, .. } => *temp > 60,
         Alert::GrownDefects { .. } => false,

@@ -10,7 +10,7 @@ pub enum Alert {
     HighTemperature { device: String, temp: u8 },
     DiskFail { device: String },
     GrownDefects { device: String, count: u64 },
-    RaidDegraded,
+    RaidDegraded { array: String },
 }
 
 impl Alert {
@@ -23,12 +23,14 @@ impl Alert {
             Alert::GrownDefects { device, count } => {
                 format!("⚠  {device}: Grown defects = {count}")
             }
-            Alert::RaidDegraded => "✗  RAID: Array DEGRADED — disk missing".to_string(),
+            Alert::RaidDegraded { array } => {
+                format!("✗  RAID: {array} DEGRADED — disk missing")
+            }
         }
     }
 
     pub fn is_critical(&self) -> bool {
-        matches!(self, Alert::DiskFail { .. } | Alert::RaidDegraded)
+        matches!(self, Alert::DiskFail { .. } | Alert::RaidDegraded { .. })
     }
 }
 
@@ -41,9 +43,9 @@ pub struct DepError {
 pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
     let mut alerts = Vec::new();
 
-    if let Some(ref raid) = state.raid {
+    for raid in &state.raids {
         if raid.state == RaidState::Degraded {
-            alerts.push(Alert::RaidDegraded);
+            alerts.push(Alert::RaidDegraded { array: raid.name.clone() });
         }
     }
 
@@ -51,15 +53,15 @@ pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
         if !disk.health_ok {
             alerts.push(Alert::DiskFail { device: disk.device.clone() });
         }
-        if let Some(t) = disk.temperature_c {
-            if t > 55 {
-                alerts.push(Alert::HighTemperature { device: disk.device.clone(), temp: t });
-            }
+        if let Some(t) = disk.temperature_c
+            && t > 55
+        {
+            alerts.push(Alert::HighTemperature { device: disk.device.clone(), temp: t });
         }
-        if let Some(d) = disk.grown_defects {
-            if d > 0 {
-                alerts.push(Alert::GrownDefects { device: disk.device.clone(), count: d });
-            }
+        if let Some(d) = disk.grown_defects
+            && d > 0
+        {
+            alerts.push(Alert::GrownDefects { device: disk.device.clone(), count: d });
         }
     }
 
@@ -116,12 +118,13 @@ pub enum FocusedPanel {
     DiskTable,
     SmartDetails,
     TempGraph,
-    ThroughputGraph,
+    ReadGraph,
+    WriteGraph,
     RaidGraph,
 }
 
 pub struct AppState {
-    pub raid: Option<RaidStatus>,
+    pub raids: Vec<RaidStatus>,
     pub disks: Vec<DiskInfo>,
     pub io_stats: Vec<IoStats>,
     pub last_updated: Instant,
@@ -131,7 +134,8 @@ pub struct AppState {
     pub temp_history: HashMap<String, VecDeque<u64>>,
     pub read_history: HashMap<String, VecDeque<u64>>,
     pub write_history: HashMap<String, VecDeque<u64>>,
-    pub raid_speed_history: VecDeque<u64>,
+    /// Rebuild speed history per array name (×10 scale, like read/write).
+    pub raid_speed_history: HashMap<String, VecDeque<u64>>,
 
     pub view_mode: ViewMode,
     pub focused_panel: FocusedPanel,
@@ -159,7 +163,7 @@ impl AppState {
         }
 
         Self {
-            raid: None,
+            raids: Vec::new(),
             disks: Vec::new(),
             io_stats: Vec::new(),
             last_updated: Instant::now(),
@@ -168,7 +172,7 @@ impl AppState {
             temp_history,
             read_history,
             write_history,
-            raid_speed_history: VecDeque::with_capacity(HISTORY_SIZE),
+            raid_speed_history: HashMap::new(),
             view_mode: ViewMode::Table,
             focused_panel: FocusedPanel::DiskTable,
             disk_table_scroll: 0,
@@ -179,5 +183,16 @@ impl AppState {
             alert_cooldowns: HashMap::new(),
             dep_errors: Vec::new(),
         }
+    }
+
+    /// The RAID graph panel is shown while any array is rebuilding, or while
+    /// recent rebuild history is still draining out of the chart window —
+    /// the delay keeps the layout from flickering when a rebuild finishes.
+    pub fn raid_graph_visible(&self) -> bool {
+        self.raids.iter().any(|r| r.state == RaidState::Rebuilding)
+            || self
+                .raid_speed_history
+                .values()
+                .any(|h| h.iter().any(|&v| v > 0))
     }
 }
