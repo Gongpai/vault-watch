@@ -47,6 +47,13 @@ const TEMP_Y_MAX: f64 = 90.0;
 /// Y-axis upper bound for the Read/Write graphs (MB/s).
 const IO_Y_MAX: f64 = 200.0;
 
+/// Vertical fine-tune offset (in rows) for Y-axis number labels.
+/// A label cell is drawn top-aligned, so its glyph center sits at `row + 0.5`;
+/// `-0.5` shifts it up half a cell so the digit is centered on the boundary
+/// line it names. Tune this (e.g. `-1.0 ..= 0.0`) to nudge the numbers
+/// up/down relative to the zone boundaries per font/terminal.
+const Y_LABEL_OFFSET: f64 = -0.5;
+
 // ── Background widget ─────────────────────────────────────────────────────────
 
 /// Paints per-row background colors derived from canvas zone boundaries.
@@ -101,9 +108,13 @@ fn row_pos(value: f64, y_min: f64, y_max: f64, height: u16) -> f64 {
     (1.0 - ratio) * height as f64
 }
 
-/// Clamped integer row for placing a label at `value`.
-fn row_for_value(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
-    (row_pos(value, y_min, y_max, height).round() as i32)
+/// Clamped integer row for placing a Y-axis number label at `value`.
+/// Applies `Y_LABEL_OFFSET` so the digit centers on the boundary instead of
+/// sitting top-aligned (half a cell below it). Zone boundary fills compute
+/// their rows separately via `row_pos` in `ZoneBackground` — only label text
+/// uses this.
+fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
+    ((row_pos(value, y_min, y_max, height) + Y_LABEL_OFFSET).round() as i32)
         .clamp(0, height as i32 - 1) as u16
 }
 
@@ -195,7 +206,7 @@ fn render_y_labels(
         return;
     }
     for &(val, color, text) in labels {
-        let row = row_for_value(val, y_min, y_max, area.height);
+        let row = row_for_label(val, y_min, y_max, area.height);
         let row_area = Rect {
             x: area.x,
             y: area.y + row,

@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 08 Complete — Graph Layout & Color Tuning (Sprints 01–08 ✅ Done) · Sprint 09 📋 Planned (Tunable Y-Axis Label Offset)
+**Status:** Sprint 09 Complete — Tunable Y-Axis Label Offset (Sprints 01–09 ✅ Done)
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
 **Last Updated:** 2026-06-17 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
@@ -38,7 +38,7 @@
 | Proportional Graph Layout | ✅ Done | [US-MON-24](./agile/user-stories/US-MON-24.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Graph Color Tuning | ✅ Done | [US-MON-25](./agile/user-stories/US-MON-25.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Centralized Theme Constants | ✅ Done | [US-MON-26](./agile/user-stories/US-MON-26.md) Part A, [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
-| Tunable Y-Axis Label Offset | 📋 Planned | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
+| Tunable Y-Axis Label Offset | ✅ Done | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
 
 ---
 
@@ -61,7 +61,7 @@
 - [sprint-06.md](./agile/sprint-backlogs/sprint-06.md) - Sprint 06 details (Graph View Improvements)
 - [sprint-07.md](./agile/sprint-backlogs/sprint-07.md) - Sprint 07 details (Canvas Graph Redesign)
 - [sprint-08.md](./agile/sprint-backlogs/sprint-08.md) - Sprint 08 details (Graph Layout & Color Tuning)
-- [sprint-09.md](./agile/sprint-backlogs/sprint-09.md) - Sprint 09 details (Tunable Y-Axis Label Offset) — 📋 Planned
+- [sprint-09.md](./agile/sprint-backlogs/sprint-09.md) - Sprint 09 details (Tunable Y-Axis Label Offset)
 
 ---
 

@@ -374,7 +374,7 @@ row_from_top = (1 - ratio) * height        # canvas row 0 = บนสุด
 **กฎ:** แยกการคำนวณแถวของ **เส้นแบ่ง** ออกจาก **ตัวเลข label** และให้ตัวเลขมี **offset ที่ตั้งได้** (named constant ในกลุ่ม theme)
 
 ```
-boundary row (zone background): row_for_value(v) = round(row_pos(v))                   # เส้นแบ่ง — ไม่เปลี่ยน
+boundary row (zone background): row_pos(v).round() inline ใน ZoneBackground            # เส้นแบ่ง — ไม่เปลี่ยน
 label row    (ตัวเลขแกน Y):      row_for_label(v) = round(row_pos(v) + Y_LABEL_OFFSET)   # offset ปรับได้
 ```
 

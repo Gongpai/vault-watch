@@ -1,6 +1,6 @@
 # Sprint 09 — Tunable Y-Axis Label Offset
 
-**Version:** 0.9.0 | **Duration:** 2026-09-30 → 2026-10-14 | **Status:** 📋 Planned
+**Version:** 0.9.0 | **Duration:** 2026-09-30 → 2026-10-14 | **Status:** ✅ Done
 
 ---
 
@@ -27,7 +27,7 @@
 > **ตำแหน่งตัวเลข = สัดส่วน + offset ที่ตั้งได้** — offset เป็น named constant ในกลุ่ม theme (ปรับที่เดียวมีผลทุก label) ไม่ใช่ magic number กระจายในสูตร
 
 ```
-boundary row (เดิม, ไม่เปลี่ยน):  row_for_value(v) = round(row_pos(v))
+boundary row (เดิม, ไม่เปลี่ยน):  ZoneBackground ใช้ row_pos(v).round() inline
 label row    (ใหม่):              row_for_label(v) = round(row_pos(v) + Y_LABEL_OFFSET)
 ```
 
@@ -79,9 +79,9 @@ fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
 
 เปลี่ยนบรรทัด `let row = row_for_value(...)` เป็น `row_for_label(...)` จุดเดียว — ครอบ Temperature/Read/Write/RAID เพราะทุก graph เรียก `render_y_labels` ร่วมกัน
 
-### 4. ไม่แตะ
+### 4. ลบ `row_for_value()` + ไม่แตะ `ZoneBackground`
 
-`ZoneBackground::render`, `row_pos`, `row_for_value` — เส้นแบ่ง zone ต้องอยู่ที่เดิม (US-MON-24/25 ไม่ regression)
+`render_y_labels` เป็นผู้เรียก `row_for_value` รายเดียว → ย้ายไป `row_for_label` แล้ว `row_for_value` กลายเป็น dead code จึงลบทิ้ง; `ZoneBackground::render` คำนวณ `row_pos(v).round()` inline อยู่แล้ว — ไม่แตะ → เส้นแบ่ง zone อยู่ที่เดิม (US-MON-24/25 ไม่ regression)
 
 ### 5. เตรียม config override
 
@@ -101,14 +101,14 @@ fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
 
 ## Definition of Done
 
-- [ ] `make build` ผ่านไม่มี error/warning (`cargo clippy` clean)
-- [ ] มี `Y_LABEL_OFFSET` named constant ในกลุ่ม theme block พร้อม doc comment
-- [ ] เปลี่ยนค่า `Y_LABEL_OFFSET` แล้วตัวเลขทุก graph ขยับตาม (ปรับที่เดียว)
-- [ ] Default `-0.5` → ตัวเลข `30/40/50/60` (Temperature) อยู่กึ่งกลางเส้นแบ่งด้วยตา — verify ด้วย screenshot เครื่องจริง
-- [ ] เส้นแบ่ง zone ไม่ขยับจาก Sprint 08 (zone heights/boundary เดิม)
-- [ ] Read/Write/RAID label ใช้ offset เดียวกัน
-- [ ] `config.example.toml` มี commented `label_offset` ใน `[graph]`
-- [ ] `cargo test` ผ่านทั้งหมด
+- [x] `make build` ผ่านไม่มี error/warning (`cargo clippy` clean)
+- [x] มี `Y_LABEL_OFFSET` named constant ในกลุ่ม theme block พร้อม doc comment
+- [x] เปลี่ยนค่า `Y_LABEL_OFFSET` แล้วตัวเลขทุก graph ขยับตาม (helper เดียว `row_for_label`)
+- [ ] Default `-0.5` → ตัวเลข `30/40/50/60` (Temperature) อยู่กึ่งกลางเส้นแบ่งด้วยตา — **ยังต้อง verify ด้วย screenshot เครื่องจริง**
+- [x] เส้นแบ่ง zone ไม่ขยับจาก Sprint 08 (`ZoneBackground` ไม่ถูกแตะ)
+- [x] Read/Write/RAID label ใช้ offset เดียวกัน (เรียก `render_y_labels` ร่วมกัน)
+- [x] `config.example.toml` มี commented `label_offset` ใน `[graph]`
+- [x] `cargo test` ผ่านทั้งหมด (16 passed)
 
 ---
 

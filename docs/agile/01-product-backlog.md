@@ -46,7 +46,7 @@
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-27](./user-stories/US-MON-27.md) | **ในฐานะ** ผู้ดูแลระบบที่อ่านค่าอุณหภูมิจาก Temperature graph<br>**ฉันต้องการ** ให้มีตัวแปร offset ปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone (ปัจจุบันลอยใต้เส้นครึ่งบรรทัด)<br>**เพื่อให้** จูนตำแหน่งตัวเลขได้จากตัวแปรจุดเดียว | 1. มี `Y_LABEL_OFFSET` named constant ในกลุ่ม theme block<br>2. ปรับค่าที่เดียวมีผลตัวเลขทุก graph<br>3. Default `-0.5` → label center บนเส้นแบ่ง<br>4. เส้นแบ่ง zone ไม่ขยับ (ไม่ regression US-MON-24/25)<br>5. Edge labels (`90`/`0`) clamp ที่ขอบ<br>6. เตรียม config override (`[graph] label_offset`)<br>7. build/clippy/test สะอาด | **S** | 📋 Planned |
+| [US-MON-27](./user-stories/US-MON-27.md) | **ในฐานะ** ผู้ดูแลระบบที่อ่านค่าอุณหภูมิจาก Temperature graph<br>**ฉันต้องการ** ให้มีตัวแปร offset ปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone (ปัจจุบันลอยใต้เส้นครึ่งบรรทัด)<br>**เพื่อให้** จูนตำแหน่งตัวเลขได้จากตัวแปรจุดเดียว | 1. มี `Y_LABEL_OFFSET` named constant ในกลุ่ม theme block<br>2. ปรับค่าที่เดียวมีผลตัวเลขทุก graph<br>3. Default `-0.5` → label center บนเส้นแบ่ง<br>4. เส้นแบ่ง zone ไม่ขยับ (ไม่ regression US-MON-24/25)<br>5. Edge labels (`90`/`0`) clamp ที่ขอบ<br>6. เตรียม config override (`[graph] label_offset`)<br>7. build/clippy/test สะอาด | **S** | ✅ Done |
 
 ---
 

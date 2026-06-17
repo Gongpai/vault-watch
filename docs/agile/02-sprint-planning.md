@@ -16,7 +16,7 @@
 | [sprint-06](./sprint-backlogs/sprint-06.md) | 2026-08-19 → 2026-09-02 | **Graph View Improvements** (temp legend, Read/Write split, conditional multi-array RAID graph) | ✅ Done |
 | [sprint-07](./sprint-backlogs/sprint-07.md) | 2026-09-02 → 2026-09-16 | **Canvas Graph Redesign** (temperature zone backgrounds, dark theme I/O graphs, unified style) | ✅ Done |
 | [sprint-08](./sprint-backlogs/sprint-08.md) | 2026-09-16 → 2026-09-30 | **Graph Layout & Color Tuning** (math-based Y-axis positioning, เส้นสว่างขึ้น, zone bg มืดลง 10%) | ✅ Done |
-| [sprint-09](./sprint-backlogs/sprint-09.md) | 2026-09-30 → 2026-10-14 | **Tunable Y-Axis Label Offset** (ตัวแปร `Y_LABEL_OFFSET` ปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone) | 📋 Planned |
+| [sprint-09](./sprint-backlogs/sprint-09.md) | 2026-09-30 → 2026-10-14 | **Tunable Y-Axis Label Offset** (ตัวแปร `Y_LABEL_OFFSET` ปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone) | ✅ Done |
 
 ---
 
@@ -78,7 +78,7 @@
 
 ---
 
-### 📋 [Sprint 09: Tunable Y-Axis Label Offset](./sprint-backlogs/sprint-09.md)
+### ✅ [Sprint 09: Tunable Y-Axis Label Offset](./sprint-backlogs/sprint-09.md)
 - **จุดมุ่งหมายหลัก:** เพิ่มตัวแปร `Y_LABEL_OFFSET` (named constant ในกลุ่ม theme, default `-0.5`) สำหรับปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone (Sprint 08 ทำ layout zone ตรงแล้ว แต่ตัวเลขยังลอยใต้เส้นราวครึ่ง cell) — ปรับที่เดียวมีผลทุก graph โดยไม่ขยับ zone background
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** ดู Temperature graph แล้วตัวเลข `30/40/50/60` อยู่กึ่งกลางเส้นแบ่งสีพอดี ไม่ลอยใต้เส้น; ปรับค่า `Y_LABEL_OFFSET` แล้วจูนตำแหน่งได้; เส้นแบ่ง zone ยังอยู่ที่เดิมจาก Sprint 08

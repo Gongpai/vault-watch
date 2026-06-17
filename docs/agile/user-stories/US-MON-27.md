@@ -1,6 +1,6 @@
 # US-MON-27: Tunable Y-Axis Label Offset — ตัวแปรปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone
 
-**Sprint:** 09 | **Estimate:** S (2h) | **Status:** 📋 Planned
+**Sprint:** 09 | **Estimate:** S (2h) | **Status:** ✅ Done
 
 ---
 
@@ -45,7 +45,7 @@ const Y_LABEL_OFFSET: f64 = -0.5;
 ### สูตร
 
 ```
-boundary row (เส้นแบ่ง zone — ไม่เปลี่ยน):  row_for_value(v) = round(row_pos(v))
+boundary row (เส้นแบ่ง zone — ไม่เปลี่ยน):  ZoneBackground ใช้ row_pos(v).round() inline
 label row    (ตัวเลข — ใหม่):               row_for_label(v) = round(row_pos(v) + Y_LABEL_OFFSET)
 ```
 
@@ -77,7 +77,7 @@ label row    (ตัวเลข — ใหม่):               row_for_label(
 **`src/widgets/graph_view.rs`:**
 
 - เพิ่ม `const Y_LABEL_OFFSET: f64 = -0.5;` ในกลุ่ม theme constants (ใต้ `IO_Y_MAX`)
-- เพิ่ม `row_for_label()` แยกจาก `row_for_value()`:
+- เพิ่ม `row_for_label()`:
   ```rust
   /// แถวสำหรับวาง "ตัวเลข label" — ใช้ Y_LABEL_OFFSET จูนเทียบเส้นแบ่ง
   fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
@@ -85,8 +85,9 @@ label row    (ตัวเลข — ใหม่):               row_for_label(
           .clamp(0, height as i32 - 1) as u16
   }
   ```
-- `render_y_labels` เปลี่ยนจาก `row_for_value` → `row_for_label` (จุดเดียว ครอบทุก graph เพราะ Temperature/Read/Write/RAID เรียก `render_y_labels` ร่วมกัน)
-- ไม่แตะ `ZoneBackground::render`, `row_pos`, `row_for_value`
+- `render_y_labels` เปลี่ยนมาเรียก `row_for_label` (จุดเดียว ครอบทุก graph เพราะ Temperature/Read/Write/RAID เรียก `render_y_labels` ร่วมกัน)
+- ลบ `row_for_value()` เดิม — กลายเป็น dead code หลัง `render_y_labels` ย้ายไป `row_for_label` (เส้นแบ่ง zone คำนวณ `row_pos(v).round()` inline ใน `ZoneBackground` อยู่แล้ว ไม่ได้เรียก helper ตัวนี้)
+- ไม่แตะ `ZoneBackground::render`, `row_pos`
 
 ### ตาราง row mapping (height = 60, max = 90, `Y_LABEL_OFFSET = -0.5`)
 

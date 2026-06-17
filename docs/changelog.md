@@ -6,6 +6,16 @@
 
 ## [0.9.0] - 2026-06-17
 
+### Implemented (Sprint 09 — Tunable Y-Axis Label Offset)
+
+- **`src/widgets/graph_view.rs`** (US-MON-27): เพิ่ม `Y_LABEL_OFFSET: f64 = -0.5` ในกลุ่ม theme constants (ใต้ `IO_Y_MAX`) + `row_for_label()` (`round(row_pos(v) + Y_LABEL_OFFSET)`); `render_y_labels` เรียก `row_for_label` แทน `row_for_value` → ตัวเลขแกน Y center บนเส้นแบ่งแทน top-align (ครอบทุก graph เพราะใช้ `render_y_labels` ร่วมกัน); ลบ `row_for_value()` ที่กลายเป็น dead code (ผู้เรียกรายเดียวคือ `render_y_labels`; `ZoneBackground` คำนวณ `row_pos().round()` inline อยู่แล้ว → เส้นแบ่ง zone ไม่ขยับ)
+- **`contrib/config.example.toml`**: เพิ่ม commented `label_offset = -0.5` ใน `[graph]` (planned US-MON-26 Part B)
+
+### Verified
+
+- `cargo clippy` clean (ไม่มี warning — รวม dead_code หลังลบ `row_for_value`), `cargo test` 16 passed
+- ยังต้อง verify บนเครื่องจริง (HPE server): ตัวเลข `30/40/50/60` center บนเส้นแบ่ง zone ด้วยตา + ลองจูน `Y_LABEL_OFFSET` ตามฟอนต์/terminal
+
 ### Added (Sprint 09 Planning — Tunable Y-Axis Label Offset)
 
 จาก feedback การใช้งานจริง (screenshot 2026-06-17 10:51): หลัง Sprint 08 layout เขต temperature ตรงสัดส่วนแล้ว แต่ตัวเลขแกน Y (`30/40/50/60`) ยังลอยอยู่ **ใต้** เส้นแบ่ง zone ราวครึ่ง cell — ผู้ใช้ชี้แจงเพิ่มว่าไม่ได้ให้ hardcode แต่ต้องการ **ตัวแปร offset** สำหรับปรับตำแหน่งตัวเลขให้ตรงขึ้น
