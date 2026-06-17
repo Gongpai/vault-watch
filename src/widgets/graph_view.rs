@@ -11,26 +11,41 @@ use ratatui::widgets::canvas::{Canvas, Context, Line as CanvasLine};
 
 use crate::app::{AppState, FocusedPanel};
 
+// ── Graph theme ───────────────────────────────────────────────────────────────
+// Single place to tune every graph color and axis bound. Editing a value here
+// takes effect across all graphs and their legends. US-MON-26 Part B will let
+// these be overridden from `config.toml [graph]`.
+
+/// Per-device / per-array line colors — used by all 4 graphs and their legends.
+/// Cycles when there are more devices than colors. Bright RGB tones so lines
+/// stand out against the dark zone / IO backgrounds (US-MON-25).
 const DISK_COLORS: [Color; 6] = [
-    Color::Cyan,
-    Color::Yellow,
-    Color::Green,
-    Color::Magenta,
-    Color::Blue,
-    Color::Red,
+    Color::Rgb(80, 250, 250),  // bright cyan
+    Color::Rgb(250, 230, 90),  // bright yellow
+    Color::Rgb(120, 250, 120), // bright green
+    Color::Rgb(250, 130, 250), // bright magenta
+    Color::Rgb(122, 170, 250), // bright blue
+    Color::Rgb(250, 130, 90),  // bright orange-red
 ];
 
-/// Temperature zone backgrounds: (y_min inclusive, y_max exclusive, fill color).
+/// Temperature zone backgrounds: (temp_low, temp_high, fill color).
+/// Colors are 10% darker than the original palette to raise line contrast
+/// (US-MON-25). Zones must tile the full [0, TEMP_Y_MAX] range.
 const TEMP_ZONES: [(f64, f64, Color); 5] = [
-    (0.0,  30.0, Color::Rgb(8,  53, 77)),
-    (30.0, 40.0, Color::Rgb(2,  55, 15)),
-    (40.0, 50.0, Color::Rgb(71, 57,  0)),
-    (50.0, 60.0, Color::Rgb(64,  0,  0)),
-    (60.0, 90.0, Color::Rgb(39,  0, 52)),
+    (0.0,  30.0, Color::Rgb(7,  48, 69)), // dark teal
+    (30.0, 40.0, Color::Rgb(2,  50, 14)), // dark green
+    (40.0, 50.0, Color::Rgb(64, 51,  0)), // dark amber
+    (50.0, 60.0, Color::Rgb(58,  0,  0)), // dark red
+    (60.0, 90.0, Color::Rgb(35,  0, 47)), // dark purple
 ];
 
 /// Solid dark background for I/O and RAID speed graphs.
 const IO_BG: Color = Color::Rgb(10, 13, 20);
+
+/// Y-axis upper bound for the temperature graph (°C).
+const TEMP_Y_MAX: f64 = 90.0;
+/// Y-axis upper bound for the Read/Write graphs (MB/s).
+const IO_Y_MAX: f64 = 200.0;
 
 // ── Background widget ─────────────────────────────────────────────────────────
 
@@ -47,29 +62,49 @@ struct ZoneBackground<'a> {
 
 impl Widget for ZoneBackground<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let range = self.y_max - self.y_min;
-        if range <= 0.0 || area.height == 0 {
+        if self.y_max <= self.y_min || area.height == 0 {
             return;
         }
-        for row_offset in 0..area.height {
-            // Canvas y increases upward; terminal row 0 corresponds to y_max.
-            // Sample the midpoint of each terminal row.
-            let canvas_y =
-                self.y_max - ((row_offset as f64 + 0.5) / area.height as f64) * range;
-            let color = self
-                .zones
-                .iter()
-                .find(|(lo, hi, _)| canvas_y >= *lo && canvas_y < *hi)
-                .map(|(_, _, c)| *c)
-                .unwrap_or(Color::Black);
-            let row = area.top() + row_offset;
-            for col in area.left()..area.right() {
-                if let Some(cell) = buf.cell_mut((col, row)) {
-                    cell.set_bg(color);
+        // Each zone fills the rows between its boundaries, computed with the
+        // same `row_pos` formula the Y-axis labels use — so a zone edge and the
+        // label naming it always land on the same row (US-MON-24).
+        for &(lo, hi, color) in self.zones {
+            let top = row_pos(hi, self.y_min, self.y_max, area.height)
+                .round()
+                .clamp(0.0, area.height as f64) as u16;
+            let bot = row_pos(lo, self.y_min, self.y_max, area.height)
+                .round()
+                .clamp(0.0, area.height as f64) as u16;
+            for row_offset in top..bot {
+                let row = area.top() + row_offset;
+                for col in area.left()..area.right() {
+                    if let Some(cell) = buf.cell_mut((col, row)) {
+                        cell.set_bg(color);
+                    }
                 }
             }
         }
     }
+}
+
+// ── Y-axis positioning ──────────────────────────────────────────────────────────
+// Single source of truth for mapping a Y value to a row. Zones and labels both
+// go through here, so proportions are exact (`value / max`) and consistent —
+// no manual offsets (US-MON-24).
+
+/// Floating row offset (from the top of the area) for a Y value:
+/// `y_max` → `0.0` (top edge), `y_min` → `height` (bottom edge, one past the
+/// last row). Example: value 60 on [0, 90] over 1024 rows →
+/// `(1 - 60/90) * 1024 = 341.33` from the top (i.e. 682.67 from the bottom).
+fn row_pos(value: f64, y_min: f64, y_max: f64, height: u16) -> f64 {
+    let ratio = (value - y_min) / (y_max - y_min);
+    (1.0 - ratio) * height as f64
+}
+
+/// Clamped integer row for placing a label at `value`.
+fn row_for_value(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
+    (row_pos(value, y_min, y_max, height).round() as i32)
+        .clamp(0, height as i32 - 1) as u16
 }
 
 // ── Public entry point ────────────────────────────────────────────────────────
@@ -156,14 +191,11 @@ fn render_y_labels(
     y_min: f64,
     y_max: f64,
 ) {
-    let range = y_max - y_min;
-    if range <= 0.0 || area.height == 0 {
+    if y_max <= y_min || area.height == 0 {
         return;
     }
     for &(val, color, text) in labels {
-        let ratio = (val - y_min) / range;
-        let row = ((1.0 - ratio) * area.height as f64) as u16;
-        let row = row.min(area.height.saturating_sub(1));
+        let row = row_for_value(val, y_min, y_max, area.height);
         let row_area = Rect {
             x: area.x,
             y: area.y + row,
@@ -247,7 +279,7 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     f.render_widget(
         Canvas::default()
             .x_bounds([x_min, 0.0])
-            .y_bounds([0.0, 90.0])
+            .y_bounds([0.0, TEMP_Y_MAX])
             .background_color(Color::Reset)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
@@ -260,7 +292,7 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     // 2. Zone backgrounds — overwrites Canvas bg per row, braille chars intact.
     f.render_widget(
-        ZoneBackground { zones: &TEMP_ZONES, y_min: 0.0, y_max: 90.0 },
+        ZoneBackground { zones: &TEMP_ZONES, y_min: 0.0, y_max: TEMP_Y_MAX },
         canvas_area,
     );
 
@@ -281,7 +313,7 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
             (0.0,  Color::DarkGray,  "0"),
         ],
         0.0,
-        90.0,
+        TEMP_Y_MAX,
     );
 
     // 4. Legend.
@@ -339,7 +371,7 @@ fn render_io_graph(
     f.render_widget(
         Canvas::default()
             .x_bounds([x_min, 0.0])
-            .y_bounds([0.0, 200.0])
+            .y_bounds([0.0, IO_Y_MAX])
             .background_color(IO_BG)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
@@ -358,12 +390,12 @@ fn render_io_graph(
         f,
         y_col,
         &[
-            (200.0, Color::Gray,    "200"),
-            (100.0, Color::DarkGray, "100"),
-            (0.0,   Color::DarkGray,   "0"),
+            (IO_Y_MAX,       Color::Gray,    "200"),
+            (IO_Y_MAX / 2.0, Color::DarkGray, "100"),
+            (0.0,            Color::DarkGray,   "0"),
         ],
         0.0,
-        200.0,
+        IO_Y_MAX,
     );
 
     let legend: Vec<(String, Color)> = devices

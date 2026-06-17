@@ -29,3 +29,21 @@
 # Cooldown: 1 hour per alert type to prevent spam.
 # Remove or comment out this section to disable Discord notifications.
 # webhook_url = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN"
+
+# ── Graph theme (planned — US-MON-26 Part B) ──────────────────────────────────
+# Override Graph view colors. All fields optional; omit to use built-in defaults.
+# [graph]
+# Per-device line colors (hex). Cycles if fewer than the device count.
+# line_colors = ["#50FAFA", "#FAE65A", "#78FA78", "#FA82FA", "#7AAAFA", "#FA825A"]
+#
+# Temperature zone boundaries (°C) + fill color. Order by `max` ascending.
+# temp_zones = [
+#   { max = 30, color = "#073045" },
+#   { max = 40, color = "#02320E" },
+#   { max = 50, color = "#403300" },
+#   { max = 60, color = "#3A0000" },
+#   { max = 90, color = "#23002F" },
+# ]
+#
+# Solid background for Read/Write/RAID graphs.
+# io_background = "#0A0D14"
