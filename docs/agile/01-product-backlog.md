@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-11 | **Version:** 2.1
+**Last Updated:** 2026-06-11 | **Version:** 2.2
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -42,6 +42,16 @@
 
 ---
 
+## 🟠 Graph Layout & Color Tuning (Sprint 08)
+
+| ID | User Story | Acceptance Criteria | Estimate | Status |
+|:---|:---|:---|:---|:---|
+| [US-MON-24](./user-stories/US-MON-24.md) | **ในฐานะ** ผู้ดูแลระบบที่อ่านค่าอุณหภูมิจาก Temperature graph<br>**ฉันต้องการ** ให้ zone background และตัวเลขแกน Y อยู่ตรงตำแหน่งตามสัดส่วนอุณหภูมิจริง<br>**เพื่อให้** เส้นกราฟ, เส้นแบ่ง zone และตัวเลขกำกับ ตรงกันทุกจุด | 1. ใช้สูตร `value/max` คำนวณทุกตำแหน่ง — ไม่จับวาง<br>2. Zone boundary ตรงสัดส่วน (`60/90 = 66.67%`)<br>3. Zone span เท่ากัน → สูงเท่ากัน<br>4. Label ตรงแถวเดียวกับ boundary<br>5. ใช้กับ Read/Write/RAID ด้วย<br>6. ไม่มี hardcoded offset | **S** | ✅ Done |
+| [US-MON-25](./user-stories/US-MON-25.md) | **ในฐานะ** ผู้ดูแลระบบที่จ้อง Graph view นานๆ<br>**ฉันต้องการ** ให้เส้นกราฟทุกหน้าใช้สีสว่างขึ้น และพื้นหลัง zone ของ Temperature graph มืดลง 10%<br>**เพื่อให้** เส้นกราฟเด่นและอ่านง่ายขึ้น (contrast สูงขึ้น) | 1. เส้นสว่างขึ้นทุก graph (bright RGB palette)<br>2. Zone bg มืดลง 10% (× 0.9)<br>3. IO/RAID bg `#0A0D14` คงเดิม<br>4. Contrast เพิ่มจริง<br>5. Legend สียังตรงกับเส้น | **S** | ✅ Done |
+| [US-MON-26](./user-stories/US-MON-26.md) **Part A** | **ในฐานะ** ผู้พัฒนา/ผู้ดูแลที่อยากปรับ theme<br>**ฉันต้องการ** ให้ค่าสีเส้น/zone/Y-max รวมเป็นตัวแปร block เดียวที่ชื่อชัดเจน<br>**เพื่อให้** เปลี่ยน theme ได้ง่ายโดยแก้จุดเดียว | 1. theme constants อยู่ block เดียวที่หัวไฟล์ + doc comment<br>2. ไม่มี magic number สี/Y-max กระจาย<br>3. แก้สี 1 ค่า มีผลทั้ง graph + legend<br>4. ไม่มี regression | **S** | ✅ Done |
+
+---
+
 ## 🟠 Canvas Graph Redesign (Sprint 07)
 
 | ID | User Story | Acceptance Criteria | Estimate | Status |
@@ -75,6 +85,7 @@
 
 | Feature | Description | Status |
 |:---|:---|:---|
+| [US-MON-26](./user-stories/US-MON-26.md) Part B — Config-Driven Theme | โหลดสีเส้น/zone/พื้นหลัง จาก `config.toml [graph]` — ต่อยอดจาก Part A (Sprint 08) | 🟡 Should |
 | Prometheus Exporter | Export metrics ไปยัง Prometheus/Grafana | 🔵 Planned |
 | JSON API Export | HTTP endpoint สำหรับ external tooling | 🔵 Planned |
 | Cockpit Integration | Plugin สำหรับ RHEL/Ubuntu Cockpit web console | 🔵 Planned |

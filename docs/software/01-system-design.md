@@ -313,12 +313,18 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 └────────────────────────────────────────┴─────────────────────────────────────────────┘
 ```
 
-**Chart widget:** `ratatui::widgets::Chart` + `Dataset` per disk per metric
+**Canvas widget:** `ratatui::widgets::canvas::Canvas` + `Line` per disk per metric (Sprint 07 — แทน `Chart` เดิม)
 - X axis: เวลา (วินาทีย้อนหลัง `0` = ปัจจุบัน, `-120` = 2 นาทีที่แล้ว)
-- Y axis Temperature: range dynamic (min-10 ถึง max+5 °C)
-- Y axis Throughput: range 0 ถึง max+20 MB/s
-- แต่ละ disk ใช้คนละสี: sdc=Cyan, sdd=Yellow, sde=Green
-- Read=solid line, Write=dashed (ต่างกันด้วย marker style)
+- Y axis Temperature: range คงที่ `0–90°C` พร้อม zone background 5 ระดับสี
+- Y axis Throughput: range คงที่ `0–200 MB/s`; RAID: `0` ถึง dynamic max
+- แต่ละ disk/array ใช้คนละสีจาก `DISK_COLORS` พร้อม legend overlay มุมขวาบน
+- แต่ละ panel: คอลัมน์ซ้าย (กว้าง 4) = Y-axis labels, ที่เหลือ = canvas area
+
+**Temperature zone backgrounds** (Sprint 07): พื้นหลังแบ่ง 5 โซนตามอุณหภูมิ — `0-30` `#08354D`, `30-40` `#02370F`, `40-50` `#473900`, `50-60` `#400000`, `60-90` `#270034`. วาดด้วย 2-pass: Canvas (เส้น braille) → `ZoneBackground` widget (set bg ต่อแถว) ; ไม่มี threshold line (zone background บอก zone แทน)
+
+**Proportional positioning** (Sprint 08): ตำแหน่งบนแกน Y ทุกจุด (zone boundary + label) คำนวณจากสูตรเดียว — ดู §3.4
+
+**Centralized theme** (Sprint 08): ค่าสีเส้น (`DISK_COLORS`), zone (`TEMP_ZONES`), พื้นหลัง (`IO_BG`) และ Y-max รวมเป็น constant block เดียวที่หัว `graph_view.rs` — แก้จุดเดียวมีผลทุก graph + legend. วางโครงให้โหลด override จาก `config.toml [graph]` ได้ในอนาคต (US-MON-26 Part B)
 
 ---
 
@@ -345,6 +351,21 @@ sde               0.00         0.00       182304.00     0.00          0    10902
 - รองรับ dynamic disk count (ไม่ hardcode 3 disks)
 - Disk Table: column widths ยืดหยุ่นตาม terminal width — Sparkline ยืดเต็มช่องที่เหลือ
 - Graph View: left/right panels แบ่ง 50/50 horizontal
+
+#### Proportional Positioning (Sprint 08)
+
+**หลักการ:** ทุกตำแหน่งบนแกน Y ของ graph (zone boundary, Y-axis label, จุดข้อมูล) ต้องคำนวณจากสูตรสัดส่วนเดียว — **ห้ามจับวาง (hardcode pixel/row offset)**
+
+```
+ratio        = value / max_value          # 60/90 = 0.666667
+row_from_top = (1 - ratio) * height        # canvas row 0 = บนสุด
+```
+
+- ตัวอย่าง: จอสูง 1024 px, `60°C → 0.666667 × 1024 = 682.67 px` จากล่าง
+- Zone boundary กับ label ของค่าเดียวกันใช้ helper `row_for_value()` ตัวเดียว → อยู่แถวเดียวกันเสมอ
+- Zone heights เป็นสัดส่วนกับ span: `0-30`/`60-90` = 33.3%, `30-40`/`40-50`/`50-60` = 11.1% (เท่ากันทุกอันที่ span 10°C)
+- ใช้สูตรเดียวกันทุก graph: Temperature (max 90), Read/Write (max 200), RAID (max dynamic)
+- ข้อจำกัด: integer terminal rows ทำให้คลาดได้ ±0.5 แถว — แต่ boundary กับ label คลาดไปด้วยกัน จึงยังตรงกันเอง
 
 ---
 

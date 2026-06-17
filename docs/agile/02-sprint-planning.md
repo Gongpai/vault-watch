@@ -1,6 +1,6 @@
 # Sprint Planning & Roadmap
 
-**Last Updated:** 2026-06-11 | **Version:** 1.7
+**Last Updated:** 2026-06-11 | **Version:** 1.8
 
 ยินดีต้อนรับสู่แผนการดำเนินงาน HDD Monitor สำหรับขั้นตอนการพัฒนาต้นแบบ (MVP Development)
 
@@ -15,6 +15,7 @@
 | [sprint-05](./sprint-backlogs/sprint-05.md) | 2026-08-05 → 2026-08-19 | **Device Discovery** (auto-detect `sd*` from `/sys/block/`, config override) | ✅ Done |
 | [sprint-06](./sprint-backlogs/sprint-06.md) | 2026-08-19 → 2026-09-02 | **Graph View Improvements** (temp legend, Read/Write split, conditional multi-array RAID graph) | ✅ Done |
 | [sprint-07](./sprint-backlogs/sprint-07.md) | 2026-09-02 → 2026-09-16 | **Canvas Graph Redesign** (temperature zone backgrounds, dark theme I/O graphs, unified style) | ✅ Done |
+| [sprint-08](./sprint-backlogs/sprint-08.md) | 2026-09-16 → 2026-09-30 | **Graph Layout & Color Tuning** (math-based Y-axis positioning, เส้นสว่างขึ้น, zone bg มืดลง 10%) | ✅ Done |
 
 ---
 
@@ -66,3 +67,10 @@
 - **จุดมุ่งหมายหลัก:** แทนที่ `ratatui::Chart` ทุกช่องใน Graph view ด้วย `Canvas` เพื่อให้ Temperature graph แสดง zone background สี 5 ระดับตามช่วงอุณหภูมิ และ Read/Write/RAID graphs แสดง dark background แบบ unified — ทุก panel มี visual style เดียวกัน
 - **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
 - **การประเมินผล:** ดู Temperature graph แล้วเห็น background เปลี่ยนสีตามโซน (teal → green → amber → red → purple) อย่างชัดเจน; Read/Write/RAID graph มี dark background `#0A0D14` เหมือนกัน; เส้น braille ทับ background ได้ไม่ถูกบัง
+
+---
+
+### ✅ [Sprint 08: Graph Layout & Color Tuning](./sprint-backlogs/sprint-08.md)
+- **จุดมุ่งหมายหลัก:** (1) แก้การจัดตำแหน่งบน Graph view ให้คำนวณจากสูตรสัดส่วนเดียว (`value / max_value`) แทนการจับวาง เพื่อให้ zone background, เส้นแบ่ง zone และตัวเลขแกน Y ตรงกัน; (2) ปรับสีเส้นกราฟให้สว่างขึ้นและพื้นหลัง zone มืดลง 10% เพื่อเพิ่ม contrast
+- **ระยะเวลา:** 2 สัปดาห์ (14 วัน)
+- **การประเมินผล:** เส้นแบ่ง zone `60-90°C` เริ่มที่ 66.67% ของความสูงพอดี; ตัวเลข `60` อยู่แถวเดียวกับเส้นแบ่ง; zone ที่ห่างกัน 10°C สูงเท่ากัน; เส้นกราฟสว่างเด่นบนพื้นหลังที่เข้มขึ้น; ไม่มี hardcoded offset ในโค้ด
