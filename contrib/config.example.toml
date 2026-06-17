@@ -47,3 +47,8 @@
 #
 # Solid background for Read/Write/RAID graphs.
 # io_background = "#0A0D14"
+#
+# Vertical offset (in rows) for Y-axis number labels, to fine-tune their
+# alignment with the zone boundary lines. -0.5 centers the digits on the
+# boundary; use 0.0 for top-aligned, more negative to nudge further up.
+# label_offset = -0.5

@@ -4,6 +4,25 @@
 
 ---
 
+## [0.9.0] - 2026-06-17
+
+### Added (Sprint 09 Planning — Tunable Y-Axis Label Offset)
+
+จาก feedback การใช้งานจริง (screenshot 2026-06-17 10:51): หลัง Sprint 08 layout เขต temperature ตรงสัดส่วนแล้ว แต่ตัวเลขแกน Y (`30/40/50/60`) ยังลอยอยู่ **ใต้** เส้นแบ่ง zone ราวครึ่ง cell — ผู้ใช้ชี้แจงเพิ่มว่าไม่ได้ให้ hardcode แต่ต้องการ **ตัวแปร offset** สำหรับปรับตำแหน่งตัวเลขให้ตรงขึ้น
+
+- **[docs/agile/user-stories/US-MON-27.md](agile/user-stories/US-MON-27.md)**: Tunable Y-Axis Label Offset — เพิ่ม named constant `Y_LABEL_OFFSET` (default `-0.5`) ในกลุ่ม theme block + `row_for_label()` (`round(row_pos + Y_LABEL_OFFSET)`) แยกจาก `row_for_value()` (boundary, ไม่เปลี่ยน); `-0.5` = ครึ่งความสูง text cell แต่เป็น **ตัวแปร** ปรับที่เดียวมีผลทุก label; root cause = label top-aligned ทำให้ glyph center (`row + 0.5`) อยู่ใต้ boundary
+- **[docs/agile/sprint-backlogs/sprint-09.md](agile/sprint-backlogs/sprint-09.md)**: สร้าง Sprint 09 backlog — timeline 2026-09-30 → 2026-10-14, implementation plan, target visual (before/after), DoD, known risks
+- **[docs/software/01-system-design.md](software/01-system-design.md)**: §3.4 เพิ่มหัวข้อ "Tunable Label Offset" — กฎแยก boundary row vs label row + `Y_LABEL_OFFSET`
+- **[contrib/config.example.toml](../contrib/config.example.toml)**: เพิ่ม commented `label_offset` ใน `[graph]` (planned US-MON-26 Part B)
+
+### Changed
+
+- **[docs/agile/01-product-backlog.md](agile/01-product-backlog.md)** v2.2 → v2.3: เพิ่ม section "🟠 Graph Label Centering (Sprint 09)" + US-MON-27
+- **[docs/agile/02-sprint-planning.md](agile/02-sprint-planning.md)** v1.8 → v1.9: เพิ่ม Sprint 09 row + section details
+- **[docs/index.md](index.md)**: sync สถานะที่ค้าง — status → Sprint 08 Complete + Sprint 09 Planned, เพิ่ม US-MON-23/24/25/26/27 ใน status matrix, เพิ่มลิงก์ sprint-07/08/09
+
+---
+
 ## [0.7.0] - 2026-06-11
 
 ### Implemented (Sprint 06 — Graph View Improvements)

@@ -367,6 +367,25 @@ row_from_top = (1 - ratio) * height        # canvas row 0 = บนสุด
 - ใช้สูตรเดียวกันทุก graph: Temperature (max 90), Read/Write (max 200), RAID (max dynamic)
 - ข้อจำกัด: integer terminal rows ทำให้คลาดได้ ±0.5 แถว — แต่ boundary กับ label คลาดไปด้วยกัน จึงยังตรงกันเอง
 
+#### Tunable Label Offset (Sprint 09 — US-MON-27)
+
+**ปัญหา:** terminal label กิน 1 cell แบบ top-aligned — จุดกึ่งกลาง glyph (`row + 0.5`) จึงอยู่ **ใต้** เส้นแบ่ง zone ราวครึ่ง cell ทำให้ตัวเลขดูไม่ตรงกับเส้น
+
+**กฎ:** แยกการคำนวณแถวของ **เส้นแบ่ง** ออกจาก **ตัวเลข label** และให้ตัวเลขมี **offset ที่ตั้งได้** (named constant ในกลุ่ม theme)
+
+```
+boundary row (zone background): row_for_value(v) = round(row_pos(v))                   # เส้นแบ่ง — ไม่เปลี่ยน
+label row    (ตัวเลขแกน Y):      row_for_label(v) = round(row_pos(v) + Y_LABEL_OFFSET)   # offset ปรับได้
+```
+
+- `Y_LABEL_OFFSET` = named constant (default `-0.5`) อยู่ในกลุ่ม theme block หัว `graph_view.rs` — ปรับที่เดียวมีผลทุก label ทุก graph
+- default `-0.5` มาจาก geometry (cell center = `row + 0.5` → center บน boundary ต้องการ `row = row_pos - 0.5`) แต่เป็น **ตัวแปร** จูนได้ตามฟอนต์/terminal ไม่ใช่ค่าฝัง
+- terminal วาด text แบบ cell-granular — ไม่มี sub-cell positioning → offset หน่วยเป็น "แถว" (รับทศนิยม ปัดตอนท้าย)
+- `ZoneBackground` (เส้นแบ่ง) **ไม่แตะ** — เฉพาะ `render_y_labels` ใช้ `row_for_label`
+- ใช้กับทุก graph (Temperature/Read/Write/RAID) เพราะเรียก `render_y_labels` ร่วมกัน
+- label บนสุด/ล่างสุด (`90`/`0`) `clamp` ที่ขอบ (center ไม่ได้เพราะไม่มี cell เลยขอบ canvas)
+- เตรียม override ผ่าน `config.toml [graph] label_offset` ใน US-MON-26 Part B
+
 ---
 
 ### 3.5 Keyboard & Mouse Interaction

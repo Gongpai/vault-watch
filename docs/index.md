@@ -1,10 +1,10 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 06 Complete — Graph View Improvements (Sprints 01–06 ✅ Done)
+**Status:** Sprint 08 Complete — Graph Layout & Color Tuning (Sprints 01–08 ✅ Done) · Sprint 09 📋 Planned (Tunable Y-Axis Label Offset)
 **Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
-**Last Updated:** 2026-06-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
+**Last Updated:** 2026-06-17 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
 
 ---
 
@@ -34,6 +34,11 @@
 | Temperature Graph Legend | ✅ Done | [US-MON-20](./agile/user-stories/US-MON-20.md) |
 | Read/Write Graph Split | ✅ Done | [US-MON-21](./agile/user-stories/US-MON-21.md) |
 | Conditional Multi-Array RAID Graph | ✅ Done | [US-MON-22](./agile/user-stories/US-MON-22.md) |
+| Canvas Graph Redesign (zone backgrounds) | ✅ Done | [US-MON-23](./agile/user-stories/US-MON-23.md), [Sprint 07](./agile/sprint-backlogs/sprint-07.md) |
+| Proportional Graph Layout | ✅ Done | [US-MON-24](./agile/user-stories/US-MON-24.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
+| Graph Color Tuning | ✅ Done | [US-MON-25](./agile/user-stories/US-MON-25.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
+| Centralized Theme Constants | ✅ Done | [US-MON-26](./agile/user-stories/US-MON-26.md) Part A, [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
+| Tunable Y-Axis Label Offset | 📋 Planned | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
 
 ---
 
@@ -54,6 +59,9 @@
 - [sprint-04.md](./agile/sprint-backlogs/sprint-04.md) - Sprint 04 details (Cross-Distribution Support)
 - [sprint-05.md](./agile/sprint-backlogs/sprint-05.md) - Sprint 05 details (Device Discovery)
 - [sprint-06.md](./agile/sprint-backlogs/sprint-06.md) - Sprint 06 details (Graph View Improvements)
+- [sprint-07.md](./agile/sprint-backlogs/sprint-07.md) - Sprint 07 details (Canvas Graph Redesign)
+- [sprint-08.md](./agile/sprint-backlogs/sprint-08.md) - Sprint 08 details (Graph Layout & Color Tuning)
+- [sprint-09.md](./agile/sprint-backlogs/sprint-09.md) - Sprint 09 details (Tunable Y-Axis Label Offset) — 📋 Planned
 
 ---
 
