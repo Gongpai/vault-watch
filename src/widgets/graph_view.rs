@@ -44,7 +44,7 @@ const IO_BG: Color = Color::Rgb(10, 13, 20);
 
 /// Y-axis upper bound for the temperature graph (°C).
 const TEMP_Y_MAX: f64 = 90.0;
-/// Y-axis upper bound for the Read/Write graphs (MB/s).
+/// Y-axis upper bound for the Read/Write graphs (MiB/s).
 const IO_Y_MAX: f64 = 200.0;
 
 /// Vertical fine-tune offset (in rows) for Y-axis number labels.
@@ -151,14 +151,14 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
         right_rows[0],
         state,
         FocusedPanel::ReadGraph,
-        " Read (MB/s) ",
+        " Read (MiB/s) ",
     );
     render_io_graph(
         f,
         right_rows[1],
         state,
         FocusedPanel::WriteGraph,
-        " Write (MB/s) ",
+        " Write (MiB/s) ",
     );
 }
 

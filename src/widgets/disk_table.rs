@@ -12,8 +12,8 @@ use ratatui::{
 use crate::app::{Alert, AppState, FocusedPanel, HealthStatus};
 use crate::widgets::sparkline_cell::sparkline;
 
-// Column widths: 5+23+18+18+5+8 = 77 + 5 col_spacings = 82 chars (fits in 100-col terminal)
-const COL_DISK: u16 = 5;
+// Column widths: 12+23+18+18+5+8 = 84 + 5 spacings = 89 chars.
+const COL_DISK: u16 = 12;
 const COL_TEMP: u16 = 23; // 12 sparkline + 1 space + 5 value + 5 warn (" WARN" or "     ")
 const COL_READ: u16 = 18; // 12 sparkline + 1 space + 5 value
 const COL_WRITE: u16 = 18; // 12 sparkline + 1 space + 5 value
@@ -66,8 +66,8 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let header = Row::new(vec![
         Cell::from("Disk").style(Style::default().add_modifier(Modifier::BOLD)),
         Cell::from("Temperature").style(Style::default().add_modifier(Modifier::BOLD)),
-        Cell::from("Read MB/s").style(Style::default().add_modifier(Modifier::BOLD)),
-        Cell::from("Write MB/s").style(Style::default().add_modifier(Modifier::BOLD)),
+        Cell::from("Read MiB/s").style(Style::default().add_modifier(Modifier::BOLD)),
+        Cell::from("Write MiB/s").style(Style::default().add_modifier(Modifier::BOLD)),
         Cell::from("Health").style(Style::default().add_modifier(Modifier::BOLD)),
         Cell::from("Defects").style(Style::default().add_modifier(Modifier::BOLD)),
     ])

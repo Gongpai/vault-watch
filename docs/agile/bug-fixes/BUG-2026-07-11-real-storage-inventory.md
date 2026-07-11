@@ -85,10 +85,17 @@
 
 ### BUG-09 — Long device names and privacy summary are clipped
 
-**Severity:** Medium | **Owner:** US-MON-32 | **Status:** 🐛 Open
+**Severity:** Medium | **Owner:** US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
 
 - Observed: NVMe namespace names are truncated by the five-column Disk field; the privacy summary can lose trailing fields at the tested terminal width.
 - Expected: device column accommodates common NVMe/MMC/DM names or safely ellipsizes with an unambiguous detail view; privacy/security state remains visible with responsive compact formatting.
+
+### BUG-10 — Throughput unit label says MB/s for MiB/s values
+
+**Severity:** Medium | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
+
+- Actual: native formula divides by 1,048,576 bytes but table/graph labels said `MB/s`.
+- Expected: label native throughput `MiB/s`; keep RAID rebuild units separately scoped to their source.
 
 ## Regression and Hardware Acceptance
 

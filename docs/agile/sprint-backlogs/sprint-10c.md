@@ -13,7 +13,8 @@
 - [x] BUG-01/02/04: scoped device counts และใช้ graph inventory เป็น source ของ Disk Summary
 - [x] BUG-03: unavailable/permission/parser errors แสดง `UNKNOWN`/`N/A` และห้ามสร้าง health alert
 - [x] BUG-08: graph/history ใช้ eligible subjects จาก inventory รวม NVMe
-- [ ] BUG-09: responsive device names และ compact privacy summary ไม่ถูกตัด
+- [x] BUG-09: 12-column device names และ compact privacy summary สำหรับ terminal <150 columns
+- [x] BUG-10: native throughput labels ใช้ `MiB/s` ตรงกับ binary-unit formula
 
 ## Exit Gate
 

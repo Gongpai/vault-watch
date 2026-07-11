@@ -157,24 +157,23 @@ fn render_security_bar(f: &mut Frame, area: Rect, state: &AppState) {
     let nvme = inventory.count_whole_kind(StorageKind::Nvme);
     let mmc = inventory.count_whole_kind(StorageKind::Mmc);
     let removable = inventory.removable_count();
-    let partial = if inventory.partial {
-        " · inventory PARTIAL"
+    let disclosure = state.security.disclosure();
+    let summary = if area.width >= 150 {
+        format!(
+            " · nodes {nodes} · whole {whole} · NVMe {nvme} · MMC {mmc} · part {partitions} · virtual {virtual_nodes} · removable {removable}"
+        )
     } else {
-        ""
+        format!(" · W:{whole} N:{nvme} P:{partitions} V:{virtual_nodes} R:{removable}")
     };
+    let partial = if inventory.partial { " · PARTIAL" } else { "" };
     let line = Line::from(vec![
         Span::styled(
             " Privacy: ",
             Style::default().fg(Color::Black).bg(Color::Green),
         ),
+        Span::styled(disclosure, Style::default().fg(Color::Green)),
         Span::styled(
-            state.security.disclosure(),
-            Style::default().fg(Color::Green),
-        ),
-        Span::styled(
-            format!(
-                " · nodes {nodes} · whole {whole} · NVMe {nvme} · MMC {mmc} · part {partitions} · virtual {virtual_nodes} · removable {removable}{partial}"
-            ),
+            format!("{partial}{summary}"),
             Style::default().fg(Color::DarkGray),
         ),
     ]);
