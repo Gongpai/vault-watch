@@ -16,6 +16,7 @@
 - hardware verification: removable whole device และ partitions เพิ่ม/ลดจาก inventory ภายใน polling cycle โดยไม่ restart/crash; หลักฐานบันทึกแบบ sanitized
 - เริ่ม Sprint 10B native counters: defensive `/proc/diskstats` batch parser สำหรับ base/discard/flush layouts และ reset-safe metric calculator ที่ใช้ sector 512 bytes พร้อม unavailable latency เมื่อ idle
 - cut over throughput runtime จาก `iostat` เป็น generation-keyed `/proc/diskstats` sampler; IO table/graphs รวม NVMe whole devices และตัด partition/virtual/stacked layers เพื่อไม่ double count
+- hardware verification: native NVMe/removable throughput แสดงใน table/graph และ removable add/read/remove ทำงานโดยไม่ restart/crash
 
 ## [0.9.0] - 2026-06-17
 

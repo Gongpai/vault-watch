@@ -78,7 +78,7 @@
 
 ### BUG-08 — NVMe is absent from throughput graphs
 
-**Severity:** High | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
+**Severity:** High | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Hardware verified
 
 - Observed: table contains both NVMe namespaces as `N/A`, but graph legends/history contain only legacy `sd*` devices.
 - Expected: native block counters and graph subjects come from eligible whole-device graph nodes, with explicit scope and no partition/stack double counting.
@@ -99,6 +99,7 @@
 - [ ] Native NVMe health is collected and displayed independently for `/dev/nvme0` and `/dev/nvme1`.
 - [ ] UI groups both controllers as one P4618 card only when PCIe/topology evidence supports that relationship.
 - [x] Manual TUI retest verifies BUG-01–04 without storing raw identifiers.
+- [x] Native throughput and removable-device add/read/remove behavior verified without storing raw identifiers.
 - [ ] Sanitized hardware qualification captures protocol/model/firmware class and pass/fail fields without serial, WWN, host or mount metadata.
 
 ## Security Constraint

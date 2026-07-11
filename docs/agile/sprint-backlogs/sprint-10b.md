@@ -11,6 +11,7 @@
 - [x] iostat production cutover; legacy parser retained only as test oracle
 - [ ] fixture/property tests และ live MD qualification handoff
 - [x] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
+- [x] live NVMe + removable throughput/add/remove qualification (sanitized evidence 2026-07-11)
 
 ## Exit Gate
 
