@@ -9,7 +9,8 @@
 - [x] whole-device metric scope; exclude partition/virtual/MD/DM stacked double counting
 - [x] MD sysfs snapshot/member model + state/action boundary retries (shadow backend)
 - [x] iostat production cutover; legacy parser retained only as test oracle
-- [ ] remaining MD transition/property tests, semantic cutover และ live qualification handoff
+- [x] MD operation-generation cache + delta speed/ETA + semantic legacy-oracle fixtures
+- [ ] partial/inconsistent availability gate, sysfs cutover และ live qualification handoff
 - [x] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
 - [x] live NVMe + removable throughput/add/remove qualification (sanitized evidence 2026-07-11)
 

@@ -318,6 +318,7 @@ async fn collector_loop(
 ) {
     let (smartctl_prog, smartctl_base_args) = config::smartctl_base_cmd(&cfg);
     let mut native_diskstats = collectors::diskstats::DiskstatsSampler::default();
+    let mut native_md = collectors::md_sysfs::MdOperationSampler::default();
 
     loop {
         // Events will be hints in a later phase; this bounded sysfs resnapshot
@@ -355,7 +356,7 @@ async fn collector_loop(
         // Shadow MD snapshot for semantic comparison; `/proc/mdstat` remains
         // primary until state/action/member mapping has passed migration gates.
         let _native_md_shadow = collectors::md_sysfs::collect(Path::new("/sys/class/block"))
-            .map(|inventory| inventory.legacy_statuses())
+            .map(|inventory| native_md.statuses(&inventory, Instant::now()))
             .unwrap_or_default();
 
         let (raid_result, disks_result) = tokio::join!(

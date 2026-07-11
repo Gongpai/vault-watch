@@ -17,8 +17,8 @@
 ## Implementation Progress
 
 - [x] AC1–AC3 core: injectable block-class root, md-directory enumeration without name assumptions, unknown-safe array/action/member states, pre/post state+action consistency boundary and bounded retry
-- [x] AC4 partial: typed progress, kernel speed and checked ETA; delta-speed operation cache remains
+- [x] AC4 core: typed progress, kernel speed/ETA และ delta-speed operation cache ที่ reset เมื่อ action/total/metadata/topology เปลี่ยนหรือ progress ถอยหลัง
 - [x] AC5: `external:*` metadata is explicit and backend is read-only
-- [x] AC6 partial: healthy/member/recovery/external/malformed fixtures; sysfs runs in shadow while `/proc/mdstat` remains primary oracle
+- [x] AC6 partial: healthy/member/recovery/external/malformed/transition fixtures และ semantic shared-field comparison กับ `/proc/mdstat`; sysfs remains shadow until availability UI is ready
 - [x] targeted MD sysfs fixture suite verified by operator (4/4, sanitized evidence 2026-07-11)
-- [ ] state-transition/delta fixtures, semantic oracle comparison, sysfs cutover and live multi-array/rebuild qualification
+- [ ] partial/inconsistent availability UI, sysfs cutover and live multi-array/rebuild qualification

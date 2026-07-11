@@ -21,7 +21,7 @@ pub async fn collect() -> Vec<RaidStatus> {
     }
 }
 
-fn parse_mdstat(content: &str) -> Vec<RaidStatus> {
+pub(crate) fn parse_mdstat(content: &str) -> Vec<RaidStatus> {
     let mut arrays = Vec::new();
     let lines: Vec<&str> = content.lines().collect();
     let mut i = 0;

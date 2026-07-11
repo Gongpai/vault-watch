@@ -1,5 +1,7 @@
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 use crate::app::{RaidState, RaidStatus};
 
@@ -105,7 +107,9 @@ impl MdProgress {
             return None;
         }
         let remaining = self.total_sectors.checked_sub(self.completed_sectors)? as u128;
-        let seconds = remaining.checked_mul(512)? / (speed_kib_per_sec as u128 * 1_024);
+        let bytes = remaining.checked_mul(512)?;
+        let bytes_per_second = speed_kib_per_sec as u128 * 1_024;
+        let seconds = bytes.div_ceil(bytes_per_second);
         u64::try_from(seconds).ok()
     }
 }
@@ -186,13 +190,87 @@ pub struct MdInventory {
     pub partial: bool,
 }
 
-impl MdInventory {
-    pub fn legacy_statuses(&self) -> Vec<RaidStatus> {
-        self.arrays
+#[derive(Debug, Default)]
+pub struct MdOperationSampler {
+    previous: HashMap<String, MdOperationBaseline>,
+}
+
+#[derive(Debug, Clone)]
+struct MdOperationBaseline {
+    action: MdSyncAction,
+    total_sectors: u64,
+    completed_sectors: u64,
+    metadata_version: String,
+    raid_disks: u32,
+    observed_at: Instant,
+}
+
+impl MdOperationSampler {
+    pub fn statuses(&mut self, inventory: &MdInventory, now: Instant) -> Vec<RaidStatus> {
+        let present: HashSet<&str> = inventory
+            .arrays
             .iter()
-            .map(MdArraySnapshot::legacy_status)
+            .map(|array| array.name.as_str())
+            .collect();
+        self.previous
+            .retain(|name, _| present.contains(name.as_str()));
+
+        inventory
+            .arrays
+            .iter()
+            .map(|array| {
+                let mut status = array.legacy_status();
+                let Some(progress) = array.progress.as_ref().filter(|_| array.action.is_active())
+                else {
+                    self.previous.remove(&array.name);
+                    return status;
+                };
+
+                if let Some(previous) = self.previous.get(&array.name)
+                    && previous.action == array.action
+                    && previous.total_sectors == progress.total_sectors
+                    && previous.metadata_version == array.metadata_version
+                    && previous.raid_disks == array.raid_disks
+                    && let Some(delta_sectors) = progress
+                        .completed_sectors
+                        .checked_sub(previous.completed_sectors)
+                {
+                    let elapsed = now.saturating_duration_since(previous.observed_at);
+                    if let Some(speed_kib_per_sec) = delta_speed_kib(delta_sectors, elapsed) {
+                        status.rebuild_speed_mb = Some(speed_kib_per_sec / 1_024);
+                        status.eta_minutes = progress
+                            .eta_seconds(speed_kib_per_sec)
+                            .map(|seconds| seconds.div_ceil(60));
+                    } else {
+                        status.rebuild_speed_mb = None;
+                        status.eta_minutes = None;
+                    }
+                }
+
+                self.previous.insert(
+                    array.name.clone(),
+                    MdOperationBaseline {
+                        action: array.action.clone(),
+                        total_sectors: progress.total_sectors,
+                        completed_sectors: progress.completed_sectors,
+                        metadata_version: array.metadata_version.clone(),
+                        raid_disks: array.raid_disks,
+                        observed_at: now,
+                    },
+                );
+                status
+            })
             .collect()
     }
+}
+
+fn delta_speed_kib(delta_sectors: u64, elapsed: Duration) -> Option<u64> {
+    let elapsed_seconds = elapsed.as_secs_f64();
+    if delta_sectors == 0 || elapsed_seconds <= 0.0 {
+        return None;
+    }
+    let speed = delta_sectors as f64 / 2.0 / elapsed_seconds;
+    speed.is_finite().then_some(speed as u64)
 }
 
 #[derive(Debug)]
@@ -513,5 +591,57 @@ mod tests {
             MdSyncAction::Unknown("future".into())
         );
         assert!(parse_progress(Path::new("sync_completed"), "9 / 8").is_err());
+    }
+
+    #[test]
+    fn operation_sampler_uses_delta_speed_and_resets_on_action_change() {
+        let fixture = Fixture::new();
+        let md = fixture.array("md-delta", "recover", "1", "1.2");
+        fs::write(md.join("sync_completed"), "1024 / 8192").unwrap();
+        fs::write(md.join("sync_speed"), "4096").unwrap();
+        let started = Instant::now();
+        let mut sampler = MdOperationSampler::default();
+
+        let first = collect(&fixture.0).unwrap();
+        let first_status = sampler.statuses(&first, started);
+        assert_eq!(first_status[0].rebuild_speed_mb, Some(4));
+
+        fs::write(md.join("sync_completed"), "5120 / 8192").unwrap();
+        let second = collect(&fixture.0).unwrap();
+        let second_status = sampler.statuses(&second, started + Duration::from_secs(2));
+        assert_eq!(second_status[0].rebuild_speed_mb, Some(1));
+        assert_eq!(second_status[0].eta_minutes, Some(1));
+
+        fs::write(md.join("sync_action"), "check").unwrap();
+        fs::write(md.join("sync_completed"), "6144 / 8192").unwrap();
+        let changed = collect(&fixture.0).unwrap();
+        let changed_status = sampler.statuses(&changed, started + Duration::from_secs(3));
+        assert_eq!(changed_status[0].rebuild_speed_mb, Some(4));
+    }
+
+    #[test]
+    fn sysfs_and_legacy_oracle_agree_on_shared_recovery_fields() {
+        let fixture = Fixture::new();
+        let md = fixture.array("md0", "recover", "0", "1.2");
+        fs::write(md.join("sync_completed"), "1024 / 2048").unwrap();
+        fs::write(md.join("sync_speed"), "1024").unwrap();
+        let inventory = collect(&fixture.0).unwrap();
+        let native = MdOperationSampler::default()
+            .statuses(&inventory, Instant::now())
+            .remove(0);
+        let legacy = crate::collectors::raid::parse_mdstat(
+            "md0 : active raid1 sda[0] sdb[1]\n\
+             2048 blocks [2/2] [UU]\n\
+             [==========>.........] recovery = 50.0% (1024/2048) finish=0.1min speed=1024K/sec\n\n",
+        )
+        .remove(0);
+
+        assert_eq!(native.name, legacy.name);
+        assert_eq!(native.state, legacy.state);
+        assert_eq!(native.active_disks, legacy.active_disks);
+        assert_eq!(native.total_disks, legacy.total_disks);
+        assert_eq!(native.rebuild_pct, legacy.rebuild_pct);
+        assert_eq!(native.rebuild_speed_mb, legacy.rebuild_speed_mb);
+        assert_eq!(native.eta_minutes, legacy.eta_minutes);
     }
 }
