@@ -1,10 +1,11 @@
 # Sprint 10B — Native Counters & MD RAID
 
-**Status:** 📋 Planned | **Stories:** US-MON-30, US-MON-31
+**Status:** 🚧 In Progress | **Stories:** US-MON-30, US-MON-31
 
 ## Tasks
 
-- [ ] `/proc/diskstats` batch snapshot + reset-safe delta metrics
+- [x] `/proc/diskstats` 11/15/17-counter batch parser + reset-safe delta metric core
+- [ ] monotonic sampler/cache keyed by graph identity+generation
 - [ ] metric source/scope และ cross-layer no-double-count policy
 - [ ] MD sysfs snapshot/member model + race retries
 - [ ] legacy iostat/mdstat parallel comparison then cutover

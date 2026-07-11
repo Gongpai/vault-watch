@@ -14,6 +14,7 @@
 - เพิ่ม synthetic Intel DC P4618 fixture: 2 NVMe whole devices, 6 partitions และ 32 loop devices
 - เพิ่ม periodic sysfs topology reconciliation แบบ atomic; failed-empty snapshot รักษา last-known graph เป็น partial และ device incarnation ใหม่แทนรุ่นเดิมผ่าน `diskseq`/`dev_t`
 - hardware verification: removable whole device และ partitions เพิ่ม/ลดจาก inventory ภายใน polling cycle โดยไม่ restart/crash; หลักฐานบันทึกแบบ sanitized
+- เริ่ม Sprint 10B native counters: defensive `/proc/diskstats` batch parser สำหรับ base/discard/flush layouts และ reset-safe metric calculator ที่ใช้ sector 512 bytes พร้อม unavailable latency เมื่อ idle
 
 ## [0.9.0] - 2026-06-17
 

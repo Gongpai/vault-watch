@@ -20,7 +20,7 @@
 | Sub-sprint | Skill/Source | Stories | Status |
 |:---|:---|:---|:---|
 | [**10A — Privacy & Graph Foundation**](sprint-10a.md) | `$universal-linux-storage-monitoring-rust` | [US-MON-28](../user-stories/US-MON-28.md), [US-MON-29](../user-stories/US-MON-29.md) | 🚧 In Progress |
-| [**10B — Native Counters & MD RAID**](sprint-10b.md) | `$linux-disk-monitoring-rust`, `$linux-md-raid-monitoring-rust` | [US-MON-30](../user-stories/US-MON-30.md), [US-MON-31](../user-stories/US-MON-31.md) | 📋 Planned |
+| [**10B — Native Counters & MD RAID**](sprint-10b.md) | `$linux-disk-monitoring-rust`, `$linux-md-raid-monitoring-rust` | [US-MON-30](../user-stories/US-MON-30.md), [US-MON-31](../user-stories/US-MON-31.md) | 🚧 In Progress |
 | [**10C — Storage-first TUI**](sprint-10c.md) | universal metric/scope model | [US-MON-32](../user-stories/US-MON-32.md) | 📋 Planned |
 | [**10D — Native SAS/SCSI**](sprint-10d.md) | `$native-sas-scsi-health-rust` | [US-MON-33](../user-stories/US-MON-33.md) | 📋 Planned |
 | [**10E — Native SATA/ATA**](sprint-10e.md) | `$native-sata-ata-health-rust` | [US-MON-34](../user-stories/US-MON-34.md) | 📋 Planned |

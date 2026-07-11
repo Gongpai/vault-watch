@@ -1,7 +1,8 @@
 use std::collections::VecDeque;
 use std::io;
+use std::path::Path;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crossterm::{
     ExecutableCommand,
@@ -317,6 +318,7 @@ async fn collector_loop(
 ) {
     let (smartctl_prog, smartctl_base_args) = config::smartctl_base_cmd(&cfg);
     let iostat_prog = config::iostat_cmd(&cfg);
+    let mut native_diskstats = collectors::diskstats::DiskstatsSampler::default();
 
     loop {
         // Events will be hints in a later phase; this bounded sysfs resnapshot
@@ -327,6 +329,11 @@ async fn collector_loop(
             s.reconcile_storage(next_inventory);
             s.disk_devices.clone()
         };
+        // Shadow sampling is intentionally not rendered yet. It establishes a
+        // native baseline while legacy iostat remains the comparison oracle.
+        let _native_metrics = native_diskstats
+            .sample(Path::new("/proc/diskstats"), Instant::now())
+            .unwrap_or_default();
 
         let (raid_result, disks_result, iostat_result) = tokio::join!(
             collectors::raid::collect(),
