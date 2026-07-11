@@ -1,6 +1,6 @@
 # BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618
 
-**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–12 hardware-verified; BUG-13 fix awaiting hardware verification; BUG-05–07 open | **Source:** sanitized real-hardware observations
+**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–12 hardware-verified; BUG-13 accepted edge case; BUG-05–07 open | **Source:** sanitized real-hardware observations
 
 ## Privacy Handling
 
@@ -119,13 +119,14 @@
 
 ### BUG-13 — Tab intermittently skips a Graph panel
 
-**Severity:** Medium | **Owner:** US-MON-32 | **Status:** 🧪 Fix implemented; hardware verification pending
+**Severity:** Medium | **Owner:** US-MON-32 | **Status:** ⚠ Accepted edge case after hardware retest
 
 - Observed: Tab sometimes cycles Temperature → Read → Write, but sometimes appears to cycle only Temperature → Read.
 - Root cause: enhanced keyboard reporting can emit Press, early Repeat and Release events for one physical Tab press; without requesting typed/all-key protocol flags, auto-repeat for plain Tab can arrive as indistinguishable Press events. Earlier filters therefore could not stop every repeated Press.
 - Fix: on supported terminals request typed all-key events, then let focus/view actions accept only the initial Press; Repeat remains enabled only for continuous scroll keys and Release never changes state. Enhancement state is restored on normal and panic exits.
 - RAID note: deterministic fixture tests cover the conditional RAID focus cycle without forcing a real array rebuild.
 - Expected: one physical Tab press advances exactly one visible panel; without RAID the sequence repeats Temperature → Read → Write.
+- Hardware retest: ordinary press/hold behavior is usable; extremely rapid presses can still expose terminal-specific focus skipping. Accepted for now so storage backend work can continue.
 
 ## Regression and Hardware Acceptance
 

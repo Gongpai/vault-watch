@@ -1,6 +1,6 @@
 # US-MON-31 — Native Linux MD RAID Backend
 
-**Sprint:** 10B | **Priority:** Must | **Status:** 🚧 In Progress
+**Sprint:** 10B | **Priority:** Must | **Status:** 🚧 Implementation Complete — qualification pending in US-MON-38
 
 แทน `/proc/mdstat` parser ด้วย read-only MD sysfs snapshots ที่รักษาความต่างระหว่าง recover/resync/check/repair/reshape
 
@@ -25,4 +25,4 @@
 - [x] no-array runtime path starts successfully on openSUSE; live MD qualification remains intentionally separate
 - [x] BUG-11 regression fixture: unchanged `sync_completed` preserves kernel speed/ETA and retains the older delta baseline
 - [x] BUG-11 short-window fixture: 150 ms event-driven sample uses kernel speed and cannot create a delta spike
-- [ ] live multi-array/rebuild qualification
+- [x] live single-array rebuild/speed/ETA and refetch-spike qualification; multi-array matrix handed off explicitly to US-MON-38

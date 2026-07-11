@@ -4,6 +4,23 @@
 
 ---
 
+## [0.17.4] - 2026-07-11
+
+> **PATCH bump:** บันทึก hardware retest/handoff โดยไม่มี runtime behavior ใหม่ต่อจาก `0.17.3`
+
+### Changed
+
+- Sprint 10B implementation gate ปิดหลัง native diskstats/MD sysfs cutover และ live single-array rebuild verification
+- multi-array qualification ถูกส่งต่ออย่างชัดเจนไป US-MON-38/10H โดย US-MON-31 ยังไม่ถูกประกาศ fully qualified
+
+### Known limitations
+
+- BUG-13: ordinary Tab/hold behavior ใช้งานได้ แต่การกดเร็วมากอาจยังพบ terminal-specific focus skipping; ยอมรับ edge case นี้ชั่วคราว
+
+### Security
+
+- เอกสาร hardware retest เก็บเฉพาะ pass/fail behavior ไม่เก็บ array/device identity หรือ raw terminal events
+
 ## [0.17.3] - 2026-07-11
 
 > **PATCH bump:** request typed keyboard events เพื่อหยุด repeated Press focus loops ต่อจาก `0.17.2`
