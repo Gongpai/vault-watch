@@ -146,8 +146,27 @@ async fn handle_key(
         KeyCode::Char('g') => {
             let mut s = state.lock().await;
             s.view_mode = match s.view_mode {
-                ViewMode::Table => ViewMode::Graph,
+                ViewMode::Table | ViewMode::Topology => ViewMode::Graph,
                 ViewMode::Graph => ViewMode::Table,
+            };
+            s.focused_panel = if s.view_mode == ViewMode::Graph {
+                FocusedPanel::TempGraph
+            } else {
+                FocusedPanel::DiskTable
+            };
+        }
+
+        KeyCode::Char('t') => {
+            let mut s = state.lock().await;
+            s.view_mode = if s.view_mode == ViewMode::Topology {
+                ViewMode::Table
+            } else {
+                ViewMode::Topology
+            };
+            s.focused_panel = if s.view_mode == ViewMode::Topology {
+                FocusedPanel::Topology
+            } else {
+                FocusedPanel::DiskTable
             };
         }
 
@@ -158,7 +177,7 @@ async fn handle_key(
                     FocusedPanel::DiskTable => FocusedPanel::SmartDetails,
                     _ => FocusedPanel::DiskTable,
                 }
-            } else {
+            } else if matches!(s.view_mode, ViewMode::Graph) {
                 // RAID graph participates in the cycle only while visible
                 match s.focused_panel {
                     FocusedPanel::TempGraph => FocusedPanel::ReadGraph,
@@ -166,6 +185,8 @@ async fn handle_key(
                     FocusedPanel::WriteGraph if s.raid_graph_visible() => FocusedPanel::RaidGraph,
                     _ => FocusedPanel::TempGraph,
                 }
+            } else {
+                FocusedPanel::Topology
             };
         }
 
@@ -176,7 +197,7 @@ async fn handle_key(
                     FocusedPanel::SmartDetails => FocusedPanel::DiskTable,
                     _ => FocusedPanel::SmartDetails,
                 }
-            } else {
+            } else if matches!(s.view_mode, ViewMode::Graph) {
                 match s.focused_panel {
                     FocusedPanel::ReadGraph => FocusedPanel::TempGraph,
                     FocusedPanel::WriteGraph => FocusedPanel::ReadGraph,
@@ -184,6 +205,8 @@ async fn handle_key(
                     _ if s.raid_graph_visible() => FocusedPanel::RaidGraph,
                     _ => FocusedPanel::WriteGraph,
                 }
+            } else {
+                FocusedPanel::Topology
             };
         }
 
@@ -212,6 +235,7 @@ async fn handle_key(
             match s.focused_panel {
                 FocusedPanel::DiskTable => s.disk_table_scroll = 0,
                 FocusedPanel::SmartDetails => s.smart_details_scroll = 0,
+                FocusedPanel::Topology => s.topology_scroll = 0,
                 _ => s.graph_scroll = 0,
             }
         }
@@ -221,11 +245,13 @@ async fn handle_key(
             let max = match s.focused_panel {
                 FocusedPanel::DiskTable => s.disks.len().saturating_sub(1),
                 FocusedPanel::SmartDetails => (s.disks.len() * 2).saturating_sub(1),
+                FocusedPanel::Topology => s.storage_inventory.nodes.len().saturating_sub(1),
                 _ => 0,
             };
             match s.focused_panel {
                 FocusedPanel::DiskTable => s.disk_table_scroll = max,
                 FocusedPanel::SmartDetails => s.smart_details_scroll = max,
+                FocusedPanel::Topology => s.topology_scroll = max,
                 _ => s.graph_scroll = max,
             }
         }
@@ -242,6 +268,9 @@ fn scroll_focused(s: &mut AppState, delta: i64) {
         }
         FocusedPanel::SmartDetails => {
             s.smart_details_scroll = (s.smart_details_scroll as i64 + delta).max(0) as usize;
+        }
+        FocusedPanel::Topology => {
+            s.topology_scroll = (s.topology_scroll as i64 + delta).max(0) as usize;
         }
         _ => {
             s.graph_scroll = (s.graph_scroll as i64 + delta).max(0) as usize;
@@ -264,6 +293,9 @@ async fn handle_mouse(mouse: MouseEvent, state: &Arc<Mutex<AppState>>) {
                 FocusedPanel::SmartDetails => {
                     s.smart_details_scroll = s.smart_details_scroll.saturating_sub(3);
                 }
+                FocusedPanel::Topology => {
+                    s.topology_scroll = s.topology_scroll.saturating_sub(3);
+                }
                 _ => {
                     s.graph_scroll = s.graph_scroll.saturating_sub(3);
                 }
@@ -278,6 +310,9 @@ async fn handle_mouse(mouse: MouseEvent, state: &Arc<Mutex<AppState>>) {
                 }
                 FocusedPanel::SmartDetails => {
                     s.smart_details_scroll = s.smart_details_scroll.saturating_add(3);
+                }
+                FocusedPanel::Topology => {
+                    s.topology_scroll = s.topology_scroll.saturating_add(3);
                 }
                 _ => {
                     s.graph_scroll = s.graph_scroll.saturating_add(3);

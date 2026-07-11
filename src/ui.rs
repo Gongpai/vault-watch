@@ -8,20 +8,24 @@ use ratatui::{
 
 use crate::app::{AppState, FocusedPanel, ViewMode};
 use crate::storage::StorageKind;
-use crate::widgets::{disk_table, error_screen, graph_view, raid_panel, smart_details};
+use crate::widgets::{
+    disk_table, error_screen, graph_view, raid_panel, smart_details, topology_view,
+};
 
 const MIN_WIDTH_TABLE: u16 = 100;
 const MIN_HEIGHT_TABLE: u16 = 28;
 const MIN_WIDTH_GRAPH: u16 = 110;
 const MIN_HEIGHT_GRAPH: u16 = 30;
+const MIN_WIDTH_TOPOLOGY: u16 = 100;
+const MIN_HEIGHT_TOPOLOGY: u16 = 20;
 
 pub fn draw(f: &mut Frame, state: &mut AppState) {
     let area = f.area();
 
-    let (min_w, min_h) = if state.view_mode == ViewMode::Graph {
-        (MIN_WIDTH_GRAPH, MIN_HEIGHT_GRAPH)
-    } else {
-        (MIN_WIDTH_TABLE, MIN_HEIGHT_TABLE)
+    let (min_w, min_h) = match state.view_mode {
+        ViewMode::Table => (MIN_WIDTH_TABLE, MIN_HEIGHT_TABLE),
+        ViewMode::Graph => (MIN_WIDTH_GRAPH, MIN_HEIGHT_GRAPH),
+        ViewMode::Topology => (MIN_WIDTH_TOPOLOGY, MIN_HEIGHT_TOPOLOGY),
     };
 
     if area.width < min_w || area.height < min_h {
@@ -32,6 +36,7 @@ pub fn draw(f: &mut Frame, state: &mut AppState) {
     match state.view_mode {
         ViewMode::Table => render_table_view(f, area, state),
         ViewMode::Graph => render_graph_view(f, area, state),
+        ViewMode::Topology => render_topology_view(f, area, state),
     }
 
     if !state.dep_errors.is_empty() {
@@ -131,6 +136,23 @@ fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     render_key_bar(f, chunks[3], state);
 }
 
+fn render_topology_view(f: &mut Frame, area: Rect, state: &mut AppState) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(1),
+            Constraint::Length(1),
+            Constraint::Min(1),
+            Constraint::Length(1),
+        ])
+        .split(area);
+
+    render_header(f, chunks[0], state);
+    render_security_bar(f, chunks[1], state);
+    topology_view::render(f, chunks[2], state);
+    render_key_bar(f, chunks[3], state);
+}
+
 fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
     let title = Span::styled(
         " VaultWatch — Storage Monitor ",
@@ -225,17 +247,24 @@ fn render_key_bar(f: &mut Frame, area: Rect, state: &AppState) {
     let graph_label = match state.view_mode {
         ViewMode::Table => "Graph",
         ViewMode::Graph => "Table",
+        ViewMode::Topology => "Graph",
+    };
+    let topology_label = if state.view_mode == ViewMode::Topology {
+        "Table"
+    } else {
+        "Topology"
     };
 
     let mut hints: Vec<(&str, &str)> = vec![
         ("q", "Quit"),
         ("r", "Refresh"),
         ("g", graph_label),
+        ("t", topology_label),
         ("Tab", "Panel"),
         ("↑↓", "Scroll"),
         ("PgU/D", "Page"),
     ];
-    if matches!(state.view_mode, ViewMode::Table) {
+    if !matches!(state.view_mode, ViewMode::Graph) {
         hints.push(("Home/End", "Jump"));
     }
 

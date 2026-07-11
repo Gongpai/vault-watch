@@ -1,6 +1,6 @@
 # BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618
 
-**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–10 hardware-verified; BUG-05–07 open; BUG-11 fix pending hardware verification | **Source:** sanitized real-hardware observations
+**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–11 hardware-verified; BUG-05–07 open | **Source:** sanitized real-hardware observations
 
 ## Privacy Handling
 
@@ -99,7 +99,7 @@
 
 ### BUG-11 — MD rebuild speed and ETA disappear after refresh
 
-**Severity:** High | **Owner:** US-MON-31 | **Status:** 🧪 Fixed, pending server retest
+**Severity:** High | **Owner:** US-MON-31 | **Status:** ✅ Hardware verified
 
 - Observed: initial native MD snapshot displays kernel rebuild speed/ETA, but a later refresh retains only progress percentage.
 - Root cause: when two short-interval samples had identical `sync_completed`, the delta sampler replaced valid kernel `sync_speed`/derived ETA with unavailable values.
@@ -119,7 +119,7 @@
 - [x] Manual TUI retest verifies BUG-01–04 without storing raw identifiers.
 - [x] Native throughput and removable-device add/read/remove behavior verified without storing raw identifiers.
 - [x] Responsive device names, compact privacy counts and MiB/s labels verified without storing raw identifiers.
-- [ ] MD rebuild speed/ETA remain visible across repeated refreshes on the live server.
+- [x] MD rebuild speed/ETA remain visible across repeated refreshes and no startup/refetch spike recurs on the live server.
 - [ ] Sanitized hardware qualification captures protocol/model/firmware class and pass/fail fields without serial, WWN, host or mount metadata.
 
 ## Security Constraint

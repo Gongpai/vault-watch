@@ -4,6 +4,24 @@
 
 ---
 
+## [0.13.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม Storage Topology Overview และ keyboard interaction ใหม่ต่อจาก `0.12.3`; US-MON-32 ยัง In Progress
+
+### Added
+
+- ปุ่ม `t` สลับ Topology Overview/Table และ `g` เปิด Graph จากทุก view
+- scrollable topology table จาก graph inventory: node locator, layer, protocol, removable state, confidence, generation presence และ relation counts
+- topology availability/source banner พร้อมคำเตือนว่า counters ข้าม stacked layers ไม่ additive
+
+### Security
+
+- topology UI ไม่ render identity claim values, raw `dev_t` หรือ `diskseq`; แสดงเพียง locator ที่ UI ใช้อยู่และ presence ของ generation discriminator
+
+### Validated
+
+- topology privacy fixture ผ่าน; BUG-11 live server retest ยืนยัน speed/ETA คงที่และไม่มี startup/refetch spike
+
 ## [0.12.3] - 2026-07-11
 
 > **PATCH bump:** แก้ one-frame MD rebuild speed spike ต่อจาก `0.12.2` โดยไม่เปลี่ยน metric scope หรือเพิ่ม feature

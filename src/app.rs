@@ -206,6 +206,7 @@ impl IoMetricScope {
 pub enum ViewMode {
     Table,
     Graph,
+    Topology,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -216,6 +217,7 @@ pub enum FocusedPanel {
     ReadGraph,
     WriteGraph,
     RaidGraph,
+    Topology,
 }
 
 pub struct AppState {
@@ -240,6 +242,7 @@ pub struct AppState {
     pub disk_table_scroll: usize,
     pub smart_details_scroll: usize,
     pub graph_scroll: usize,
+    pub topology_scroll: usize,
 
     pub panel_rects: HashMap<FocusedPanel, Rect>,
 
@@ -283,6 +286,7 @@ impl AppState {
             disk_table_scroll: 0,
             smart_details_scroll: 0,
             graph_scroll: 0,
+            topology_scroll: 0,
             panel_rects: HashMap::new(),
             alerts: Vec::new(),
             alert_cooldowns: HashMap::new(),
