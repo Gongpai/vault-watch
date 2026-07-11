@@ -19,6 +19,7 @@
 - hardware verification: native NVMe/removable throughput แสดงใน table/graph และ removable add/read/remove ทำงานโดยไม่ restart/crash
 - fix responsive TUI regressions: ขยาย device column เป็น 12, compact privacy counts บน terminal <150 columns และแก้ native throughput label จาก MB/s เป็น MiB/s
 - hardware verification: common NVMe names, compact storage counts และ MiB/s table/graph labels แสดงถูกต้องที่ terminal width จริง
+- เริ่ม native MD sysfs shadow backend: enumerate โดยตรวจ `md/` ไม่ assume ชื่อ, typed array/action/member state, external metadata, progress/speed/ETA, malformed-to-partial และ bounded consistency retry พร้อม fixtures
 
 ## [0.9.0] - 2026-06-17
 

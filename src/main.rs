@@ -352,6 +352,11 @@ async fn collector_loop(
                 write_mb_s: metrics.write_mib_per_sec,
             })
             .collect::<Vec<_>>();
+        // Shadow MD snapshot for semantic comparison; `/proc/mdstat` remains
+        // primary until state/action/member mapping has passed migration gates.
+        let _native_md_shadow = collectors::md_sysfs::collect(Path::new("/sys/class/block"))
+            .map(|inventory| inventory.legacy_statuses())
+            .unwrap_or_default();
 
         let (raid_result, disks_result) = tokio::join!(
             collectors::raid::collect(),
