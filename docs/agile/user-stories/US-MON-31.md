@@ -20,6 +20,7 @@
 - [x] AC4 core: typed progress, kernel speed/ETA และ delta-speed operation cache ที่ reset เมื่อ action/total/metadata/topology เปลี่ยนหรือ progress ถอยหลัง
 - [x] AC5: `external:*` metadata is explicit and backend is read-only
 - [x] AC6: healthy/member/recovery/external/malformed/transition fixtures, semantic shared-field comparison และ sysfs production cutover; `/proc/mdstat` parser is test-only oracle
-- [x] targeted MD sysfs fixture suite verified by operator (4/4, sanitized evidence 2026-07-11)
+- [x] targeted MD sysfs fixture suite verified by operator after production cutover (6/6) and full regression suite passed (52/52, sanitized evidence 2026-07-11)
 - [x] partial/unavailable availability gate retains last-known arrays and labels UI; complete-empty alone means no array
+- [x] no-array runtime path starts successfully on openSUSE; live MD qualification remains intentionally separate
 - [ ] live multi-array/rebuild qualification

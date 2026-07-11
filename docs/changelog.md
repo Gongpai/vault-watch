@@ -23,6 +23,7 @@
 - operator verification: targeted native MD sysfs fixture suite ผ่านครบโดยไม่มี MD hardware dependency
 - เพิ่ม MD operation sampler: delta rebuild speed/ETA, generation reset บน action/total/metadata/topology change และ semantic fixture comparison กับ legacy `/proc/mdstat`
 - cut over MD runtime เป็น read-only sysfs primary; `/proc/mdstat` เหลือ test oracle และ partial/unavailable snapshots รักษา last-known arrays พร้อม UI availability label
+- operator verification หลัง MD cutover: native MD fixture suite 6/6, full regression 52/52 และ no-array runtime path เริ่มทำงานได้บน openSUSE; ยังไม่อ้างว่า live MD/rebuild ผ่าน
 
 ## [0.9.0] - 2026-06-17
 
