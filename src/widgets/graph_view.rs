@@ -372,7 +372,8 @@ fn render_io_graph(
         .split(inner);
     let (y_col, canvas_area) = (chunks[0], chunks[1]);
 
-    let devices: Vec<String> = state.disk_devices.clone();
+    let mut devices = state.storage_inventory.whole_device_names();
+    devices.sort();
     let data: Vec<Vec<(f64, f64)>> = {
         let history = match panel {
             FocusedPanel::ReadGraph => &state.read_history,

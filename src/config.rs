@@ -18,7 +18,7 @@ pub struct SystemConfig {
     pub smartctl_prefix: Option<String>,
     /// Custom path to smartctl binary. Defaults to "smartctl" (PATH lookup).
     pub smartctl_path: Option<String>,
-    /// Custom path to iostat binary. Defaults to "iostat" (PATH lookup).
+    /// Deprecated compatibility key; native throughput does not execute it.
     pub iostat_path: Option<String>,
     /// Explicit disk device list (e.g. ["sda", "sdb"]). Auto-detected from /sys/block if omitted.
     pub devices: Option<Vec<String>>,
@@ -183,15 +183,6 @@ pub fn smartctl_base_cmd(config: &Config) -> (String, Vec<String>) {
     }
 }
 
-pub fn iostat_cmd(config: &Config) -> String {
-    config
-        .system
-        .as_ref()
-        .and_then(|s| s.iostat_path.as_deref())
-        .unwrap_or("iostat")
-        .to_string()
-}
-
 // ── Device discovery ─────────────────────────────────────────────────────────
 
 /// Discover SAS/SATA block devices from /sys/block (sd* entries only).
@@ -244,17 +235,6 @@ impl Distro {
             Distro::Unknown => "install smartmontools (see distro docs)",
         }
     }
-
-    fn sysstat_hint(&self) -> &'static str {
-        match self {
-            Distro::Ubuntu | Distro::Debian => "sudo apt install sysstat",
-            Distro::Fedora | Distro::Rhel => "sudo dnf install sysstat",
-            Distro::Arch => "sudo pacman -S sysstat",
-            Distro::Opensuse => "sudo zypper install sysstat",
-            Distro::Alpine => "sudo apk add sysstat",
-            Distro::Unknown => "install sysstat (see distro docs)",
-        }
-    }
 }
 
 fn detect_distro() -> Distro {
@@ -296,21 +276,6 @@ pub async fn check_dependencies(config: &Config) -> Vec<DepError> {
         missing.push(DepError {
             tool: "smartctl".to_string(),
             install_hint: distro.smartmontools_hint().to_string(),
-        });
-    }
-
-    // Check iostat
-    let iostat = iostat_cmd(config);
-    let iostat_ok = Command::new(&iostat)
-        .arg("-V")
-        .output()
-        .await
-        .map(|o| o.status.success())
-        .unwrap_or(false);
-    if !iostat_ok {
-        missing.push(DepError {
-            tool: "iostat".to_string(),
-            install_hint: distro.sysstat_hint().to_string(),
         });
     }
 

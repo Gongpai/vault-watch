@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 use std::time::{Duration, Instant};
@@ -64,7 +64,21 @@ impl std::error::Error for DiskstatsError {}
 
 #[derive(Debug, Default)]
 pub struct DiskstatsSampler {
-    previous: HashMap<String, (DiskStat, Instant)>,
+    previous: HashMap<String, PreviousSample>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DiskstatsSubject {
+    pub name: String,
+    pub dev_t: Option<(u32, u32)>,
+    pub diskseq: Option<u64>,
+}
+
+#[derive(Debug)]
+struct PreviousSample {
+    stat: DiskStat,
+    observed_at: Instant,
+    diskseq: Option<u64>,
 }
 
 impl DiskstatsSampler {
@@ -74,25 +88,61 @@ impl DiskstatsSampler {
         &mut self,
         path: &Path,
         now: Instant,
+        subjects: &[DiskstatsSubject],
     ) -> Result<Vec<(String, DiskMetrics)>, DiskstatsError> {
         let content = std::fs::read_to_string(path).map_err(DiskstatsError::Read)?;
-        let snapshot = parse_snapshot(&content)?;
-        let present: HashSet<&str> = snapshot.iter().map(|stat| stat.name.as_str()).collect();
+        self.sample_content(&content, now, subjects)
+    }
+
+    fn sample_content(
+        &mut self,
+        content: &str,
+        now: Instant,
+        subjects: &[DiskstatsSubject],
+    ) -> Result<Vec<(String, DiskMetrics)>, DiskstatsError> {
+        let snapshot = parse_snapshot(content)?;
+        let selected: HashMap<&str, &DiskstatsSubject> = subjects
+            .iter()
+            .map(|item| (item.name.as_str(), item))
+            .collect();
+        let current: HashMap<&str, &DiskStat> = snapshot
+            .iter()
+            .filter(|stat| selected.contains_key(stat.name.as_str()))
+            .map(|stat| (stat.name.as_str(), stat))
+            .collect();
         self.previous
-            .retain(|name, _| present.contains(name.as_str()));
+            .retain(|name, _| current.contains_key(name.as_str()));
 
         let mut metrics = Vec::new();
-        for current in snapshot {
-            if let Some((previous, observed_at)) = self.previous.get(&current.name)
+        for subject in subjects {
+            let Some(current) = current.get(subject.name.as_str()) else {
+                continue;
+            };
+            if subject
+                .dev_t
+                .is_some_and(|dev_t| dev_t != (current.major, current.minor))
+            {
+                self.previous.remove(&subject.name);
+                continue;
+            }
+            if let Some(previous) = self.previous.get(&subject.name)
+                && previous.diskseq == subject.diskseq
                 && let Some(value) = calculate_metrics(
-                    previous,
-                    &current,
-                    now.saturating_duration_since(*observed_at),
+                    &previous.stat,
+                    current,
+                    now.saturating_duration_since(previous.observed_at),
                 )
             {
-                metrics.push((current.name.clone(), value));
+                metrics.push((subject.name.clone(), value));
             }
-            self.previous.insert(current.name.clone(), (current, now));
+            self.previous.insert(
+                subject.name.clone(),
+                PreviousSample {
+                    stat: (*current).clone(),
+                    observed_at: now,
+                    diskseq: subject.diskseq,
+                },
+            );
         }
         Ok(metrics)
     }
@@ -294,6 +344,87 @@ mod tests {
         let mut replaced = previous.clone();
         replaced.minor = 1;
         assert!(calculate_metrics(&previous, &replaced, Duration::from_secs(1)).is_none());
+    }
+
+    #[test]
+    fn sampler_filters_scope_and_rebaselines_generation_and_reappearance() {
+        let mut sampler = DiskstatsSampler::default();
+        let started = Instant::now();
+        let subject = |diskseq| DiskstatsSubject {
+            name: "sda".into(),
+            dev_t: Some((8, 0)),
+            diskseq: Some(diskseq),
+        };
+        let baseline = format!(
+            "{}\n{}\n",
+            line("sda", 8, 0, [10, 0, 100, 20, 10, 0, 100, 20, 0, 20, 20]),
+            line("sda1", 8, 1, [5, 0, 50, 10, 5, 0, 50, 10, 0, 10, 10]),
+        );
+        assert!(
+            sampler
+                .sample_content(&baseline, started, &[subject(1)])
+                .unwrap()
+                .is_empty()
+        );
+
+        let next = line("sda", 8, 0, [20, 0, 2_148, 40, 20, 0, 2_148, 40, 0, 40, 40]);
+        let metrics = sampler
+            .sample_content(&next, started + Duration::from_secs(1), &[subject(1)])
+            .unwrap();
+        assert_eq!(metrics.len(), 1);
+        assert_eq!(metrics[0].0, "sda");
+
+        // Same kernel name/dev_t but a new diskseq is a replacement baseline,
+        // even if its counters are already larger than the previous device.
+        assert!(
+            sampler
+                .sample_content(
+                    &line(
+                        "sda",
+                        8,
+                        0,
+                        [100, 0, 20_000, 100, 100, 0, 20_000, 100, 0, 100, 100],
+                    ),
+                    started + Duration::from_secs(2),
+                    &[subject(2)],
+                )
+                .unwrap()
+                .is_empty()
+        );
+
+        assert!(
+            sampler
+                .sample_content("", started + Duration::from_secs(3), &[subject(2)])
+                .unwrap()
+                .is_empty()
+        );
+        assert!(sampler.previous.is_empty());
+        assert!(
+            sampler
+                .sample_content(
+                    &line(
+                        "sda",
+                        8,
+                        0,
+                        [200, 0, 40_000, 200, 200, 0, 40_000, 200, 0, 200, 200],
+                    ),
+                    started + Duration::from_secs(4),
+                    &[subject(2)],
+                )
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    fn line(name: &str, major: u32, minor: u32, counters: [u64; 11]) -> String {
+        format!(
+            "{major} {minor} {name} {}",
+            counters
+                .iter()
+                .map(u64::to_string)
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
     }
 
     fn stat(counters: [u64; 8]) -> DiskStat {

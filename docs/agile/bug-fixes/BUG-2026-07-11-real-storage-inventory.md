@@ -78,7 +78,7 @@
 
 ### BUG-08 — NVMe is absent from throughput graphs
 
-**Severity:** High | **Owner:** US-MON-30 / US-MON-32 | **Status:** 🐛 Open
+**Severity:** High | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
 
 - Observed: table contains both NVMe namespaces as `N/A`, but graph legends/history contain only legacy `sd*` devices.
 - Expected: native block counters and graph subjects come from eligible whole-device graph nodes, with explicit scope and no partition/stack double counting.

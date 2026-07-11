@@ -14,13 +14,12 @@
 # Default: "smartctl" (resolved via PATH)
 # smartctl_path = "/usr/sbin/smartctl"
 
-# Custom path to the iostat binary.
-# Default: "iostat" (resolved via PATH)
+# Deprecated compatibility key; native `/proc/diskstats` no longer executes iostat.
 # iostat_path = "/usr/bin/iostat"
 
-# Explicit disk device list (names without /dev/ prefix).
+# Explicit legacy SMART device list (names without /dev/ prefix).
 # Default: auto-detected from /sys/block/sd* at startup.
-# Use this to pin specific devices or override auto-detection order.
+# Native throughput subjects always come from the storage graph.
 # devices = ["sda", "sdb", "sdc"]
 
 [discord]

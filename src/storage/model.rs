@@ -93,6 +93,13 @@ pub struct StorageInventory {
     pub partial: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ThroughputSubject {
+    pub name: String,
+    pub dev_t: Option<(u32, u32)>,
+    pub diskseq: Option<u64>,
+}
+
 impl StorageInventory {
     pub fn replaced_device_names(&self, next: &StorageInventory) -> HashSet<String> {
         let current: HashMap<&str, &Generation> = self
@@ -160,6 +167,18 @@ impl StorageInventory {
             .iter()
             .filter(|node| node.materialization == Materialization::BlockDevice)
             .map(|node| node.name.clone())
+            .collect()
+    }
+
+    pub fn throughput_subjects(&self) -> Vec<ThroughputSubject> {
+        self.nodes
+            .iter()
+            .filter(|node| node.materialization == Materialization::BlockDevice)
+            .map(|node| ThroughputSubject {
+                name: node.name.clone(),
+                dev_t: node.generation.dev_t,
+                diskseq: node.generation.diskseq,
+            })
             .collect()
     }
 
@@ -283,6 +302,40 @@ mod tests {
             graph.validate(),
             Err(GraphViolation::DanglingEdge { .. })
         ));
+    }
+
+    #[test]
+    fn throughput_scope_selects_only_direct_whole_devices() {
+        let mut whole = node("block:sda");
+        whole.name = "sda".into();
+        whole.kind = StorageKind::ScsiLike;
+        whole.generation = Generation {
+            diskseq: Some(10),
+            dev_t: Some((8, 0)),
+        };
+        let mut partition = node("block:sda1");
+        partition.name = "sda1".into();
+        partition.materialization = Materialization::Partition;
+        let mut virtual_node = node("block:loop0");
+        virtual_node.name = "loop0".into();
+        virtual_node.materialization = Materialization::Virtual;
+        let mut stacked = node("block:dm-0");
+        stacked.name = "dm-0".into();
+        stacked.materialization = Materialization::Stacked;
+        let inventory = StorageInventory {
+            nodes: vec![whole, partition, virtual_node, stacked],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        assert_eq!(
+            inventory.throughput_subjects(),
+            vec![ThroughputSubject {
+                name: "sda".into(),
+                dev_t: Some((8, 0)),
+                diskseq: Some(10),
+            }]
+        );
     }
 
     #[test]

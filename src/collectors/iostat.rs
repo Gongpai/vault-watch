@@ -1,25 +1,4 @@
-use tokio::process::Command;
-
 use crate::app::IoStats;
-
-pub async fn collect(devices: &[String], iostat: &str) -> Vec<IoStats> {
-    let output = Command::new(iostat)
-        .arg("-d")
-        .arg("-k")
-        .arg("-y")
-        .arg("1")
-        .arg("1")
-        .args(devices)
-        .output()
-        .await;
-
-    match output {
-        Ok(out) if !out.stdout.is_empty() => {
-            parse_iostat_output(&String::from_utf8_lossy(&out.stdout), devices)
-        }
-        _ => Vec::new(),
-    }
-}
 
 fn parse_iostat_output(output: &str, devices: &[String]) -> Vec<IoStats> {
     // Split output into blocks separated by blank lines

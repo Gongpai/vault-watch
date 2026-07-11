@@ -317,28 +317,45 @@ async fn collector_loop(
     cfg: Arc<config::Config>,
 ) {
     let (smartctl_prog, smartctl_base_args) = config::smartctl_base_cmd(&cfg);
-    let iostat_prog = config::iostat_cmd(&cfg);
     let mut native_diskstats = collectors::diskstats::DiskstatsSampler::default();
 
     loop {
         // Events will be hints in a later phase; this bounded sysfs resnapshot
         // is the correctness path for add/remove/replacement reconciliation.
         let next_inventory = storage::discover_storage();
-        let devices = {
+        let (devices, throughput_subjects) = {
             let mut s = state.lock().await;
             s.reconcile_storage(next_inventory);
-            s.disk_devices.clone()
+            let subjects = s
+                .storage_inventory
+                .throughput_subjects()
+                .into_iter()
+                .map(|subject| collectors::diskstats::DiskstatsSubject {
+                    name: subject.name,
+                    dev_t: subject.dev_t,
+                    diskseq: subject.diskseq,
+                })
+                .collect::<Vec<_>>();
+            (s.disk_devices.clone(), subjects)
         };
-        // Shadow sampling is intentionally not rendered yet. It establishes a
-        // native baseline while legacy iostat remains the comparison oracle.
-        let _native_metrics = native_diskstats
-            .sample(Path::new("/proc/diskstats"), Instant::now())
-            .unwrap_or_default();
+        let io_result = native_diskstats
+            .sample(
+                Path::new("/proc/diskstats"),
+                Instant::now(),
+                &throughput_subjects,
+            )
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(device, metrics)| app::IoStats {
+                device,
+                read_mb_s: metrics.read_mib_per_sec,
+                write_mb_s: metrics.write_mib_per_sec,
+            })
+            .collect::<Vec<_>>();
 
-        let (raid_result, disks_result, iostat_result) = tokio::join!(
+        let (raid_result, disks_result) = tokio::join!(
             collectors::raid::collect(),
             collectors::smart::collect_all(&devices, &smartctl_prog, &smartctl_base_args),
-            collectors::iostat::collect(&devices, &iostat_prog),
         );
 
         {
@@ -354,7 +371,7 @@ async fn collector_loop(
                     }
                 }
             }
-            for stat in &iostat_result {
+            for stat in &io_result {
                 if let Some(buf) = s.read_history.get_mut(&stat.device) {
                     buf.push_back((stat.read_mb_s * 10.0) as u64);
                     if buf.len() > HISTORY_SIZE {
@@ -397,7 +414,7 @@ async fn collector_loop(
 
             s.raids = raid_result;
             s.disks = merge_inventory_disks(&s.storage_inventory, disks_result);
-            s.io_stats = iostat_result;
+            s.io_stats = io_result;
             s.last_updated = std::time::Instant::now();
             s.last_updated_str = chrono::Local::now().format("%H:%M:%S").to_string();
         }
