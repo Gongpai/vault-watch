@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native SATA ATA Health with Rust"
+  short_description: "Build safe native ATA and SAT health monitoring"
+  default_prompt: "Use $native-sata-ata-health-rust to implement safe native SATA/ATA SMART health monitoring in Rust."

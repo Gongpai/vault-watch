@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native NVMe Health with Rust"
+  short_description: "Build safe native NVMe health monitoring"
+  default_prompt: "Use $native-nvme-health-rust to implement safe native Linux NVMe SSD health monitoring in Rust."

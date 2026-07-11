@@ -1,0 +1,4 @@
+interface:
+  display_name: "Universal Linux Storage Monitoring"
+  short_description: "Design graph-based Linux storage monitoring"
+  default_prompt: "Use $universal-linux-storage-monitoring-rust to design a safe graph-based storage discovery and backend architecture in Rust."

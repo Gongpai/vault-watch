@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linux USB Removable Storage with Rust"
+  short_description: "Monitor USB, removable, SD, and eMMC storage"
+  default_prompt: "Use $linux-usb-removable-storage-rust to implement safe Linux USB and removable storage monitoring in Rust."
