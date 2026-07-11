@@ -4,6 +4,15 @@
 
 ---
 
+## [0.15.1] - 2026-07-11
+
+> **PATCH bump:** บันทึก live typed-availability qualification ต่อจาก `0.15.0` โดยไม่มี runtime behavior ใหม่
+
+### Validated
+
+- ตรวจทุก visible device แล้ว availability reasons ไม่สร้าง false `FAIL` alert
+- หลักฐานถูกบันทึกแบบ sanitized โดยไม่เก็บ device identifier หรือ diagnostic output
+
 ## [0.15.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม typed health availability taxonomy ต่อจาก `0.14.0`; alert semantics ยังต้องมี explicit health failure เท่านั้น

@@ -9,6 +9,7 @@
 - [x] typed availability/confidence/source labels in selected-node details
 - [x] initial node-detail mappings: MD complete/partial/unavailable, legacy whole-device available/temporary, partition/virtual/stacked unsupported
 - [x] empty/partial/stale/hidden/unsupported/asleep/permission/malformed/device-gone states
+- [x] live all-device availability/false-alert verification
 - [ ] scoped graphs และ stacked-counter warning
 - [ ] validated graph-theme config Part B
 - [ ] responsive/focus/scroll regression tests
