@@ -14,7 +14,7 @@
 - [x] initial whole-block classification สำหรับ SCSI-like/NVMe/MMC/MD/DM/virtual
 - [x] typed graph edges, scoped identities, confidence และ generation model
 - [x] fixture-root discovery tests + no-device/partial state
-- [ ] periodic topology reconciliation
+- [x] periodic topology reconciliation with atomic publish and failed-empty snapshot retention
 - [x] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
 
 ## Exit Gate

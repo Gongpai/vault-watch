@@ -319,8 +319,12 @@ async fn collector_loop(
     let iostat_prog = config::iostat_cmd(&cfg);
 
     loop {
+        // Events will be hints in a later phase; this bounded sysfs resnapshot
+        // is the correctness path for add/remove/replacement reconciliation.
+        let next_inventory = storage::discover_storage();
         let devices = {
-            let s = state.lock().await;
+            let mut s = state.lock().await;
+            s.reconcile_storage(next_inventory);
             s.disk_devices.clone()
         };
 

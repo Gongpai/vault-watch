@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 
 use ratatui::layout::Rect;
@@ -252,6 +252,35 @@ impl AppState {
                 .values()
                 .any(|h| h.iter().any(|&v| v > 0))
     }
+
+    pub fn reconcile_storage(&mut self, next: StorageInventory) {
+        let replaced = self.storage_inventory.replaced_device_names(&next);
+        self.storage_inventory.reconcile(next);
+        let devices = self.storage_inventory.whole_device_names();
+        let active: HashSet<&str> = devices.iter().map(String::as_str).collect();
+        self.temp_history
+            .retain(|device, _| active.contains(device.as_str()));
+        self.read_history
+            .retain(|device, _| active.contains(device.as_str()));
+        self.write_history
+            .retain(|device, _| active.contains(device.as_str()));
+        for device in &replaced {
+            self.temp_history.remove(device);
+            self.read_history.remove(device);
+            self.write_history.remove(device);
+        }
+        for device in devices {
+            self.temp_history
+                .entry(device.clone())
+                .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
+            self.read_history
+                .entry(device.clone())
+                .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
+            self.write_history
+                .entry(device)
+                .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -314,5 +343,59 @@ mod tests {
         assert_eq!(merged[1].device, "sda");
         assert_eq!(merged[0].device, "nvme0n1");
         assert_eq!(merged[0].health, HealthStatus::Unavailable);
+    }
+
+    #[test]
+    fn reconciliation_prepares_histories_for_hot_added_whole_device() {
+        use crate::storage::{Generation, Materialization, StorageKind, StorageNode};
+
+        let mut state = AppState::new(
+            Vec::new(),
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        );
+        state.reconcile_storage(StorageInventory {
+            nodes: vec![StorageNode {
+                id: "block:nvme0n1".into(),
+                name: "nvme0n1".into(),
+                kind: StorageKind::Nvme,
+                materialization: Materialization::BlockDevice,
+                removable: Some(false),
+                identities: Vec::new(),
+                generation: Generation::default(),
+            }],
+            edges: Vec::new(),
+            partial: false,
+        });
+
+        assert!(state.temp_history.contains_key("nvme0n1"));
+        assert!(state.read_history.contains_key("nvme0n1"));
+        assert!(state.write_history.contains_key("nvme0n1"));
+
+        state.temp_history.get_mut("nvme0n1").unwrap().push_back(42);
+        state.reconcile_storage(StorageInventory {
+            nodes: vec![StorageNode {
+                id: "block:nvme0n1".into(),
+                name: "nvme0n1".into(),
+                kind: StorageKind::Nvme,
+                materialization: Materialization::BlockDevice,
+                removable: Some(false),
+                identities: Vec::new(),
+                generation: Generation {
+                    diskseq: Some(2),
+                    dev_t: Some((259, 0)),
+                },
+            }],
+            edges: Vec::new(),
+            partial: false,
+        });
+
+        assert!(state.temp_history["nvme0n1"].is_empty());
+
+        state.reconcile_storage(StorageInventory::default());
+
+        assert!(!state.temp_history.contains_key("nvme0n1"));
+        assert!(!state.read_history.contains_key("nvme0n1"));
+        assert!(!state.write_history.contains_key("nvme0n1"));
     }
 }

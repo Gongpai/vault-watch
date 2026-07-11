@@ -17,4 +17,5 @@
 ## Implementation Progress
 
 - [x] AC1–AC5, AC7: sysfs fixture root, independent node classification, directed typed graph, cycle-safe traversal, scoped identity claims, `diskseq`/`dev_t` generation และ partial/empty state
-- [ ] AC6: event hints + periodic topology reconciliation
+- [x] AC6 (periodic path): bounded sysfs resnapshot + atomic topology reconciliation
+- [ ] AC6 (event optimization): event hints trigger coalesced resnapshot; periodic path remains mandatory

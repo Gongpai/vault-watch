@@ -94,6 +94,34 @@ pub struct StorageInventory {
 }
 
 impl StorageInventory {
+    pub fn replaced_device_names(&self, next: &StorageInventory) -> HashSet<String> {
+        let current: HashMap<&str, &Generation> = self
+            .nodes
+            .iter()
+            .map(|node| (node.id.as_str(), &node.generation))
+            .collect();
+        next.nodes
+            .iter()
+            .filter(|node| {
+                current
+                    .get(node.id.as_str())
+                    .is_some_and(|generation| *generation != &node.generation)
+            })
+            .map(|node| node.name.clone())
+            .collect()
+    }
+
+    /// Atomically publish a newly discovered topology generation. A completely
+    /// empty partial snapshot means discovery itself failed, so retain the last
+    /// known graph and mark it partial instead of reporting every device gone.
+    pub fn reconcile(&mut self, next: StorageInventory) {
+        if next.partial && next.nodes.is_empty() && !self.nodes.is_empty() {
+            self.partial = true;
+            return;
+        }
+        *self = next;
+    }
+
     pub fn count_whole_kind(&self, kind: StorageKind) -> usize {
         self.nodes
             .iter()
@@ -255,5 +283,70 @@ mod tests {
             graph.validate(),
             Err(GraphViolation::DanglingEdge { .. })
         ));
+    }
+
+    #[test]
+    fn reconciliation_replaces_a_device_incarnation_atomically() {
+        let mut current = StorageInventory {
+            nodes: vec![node_with_generation("block:sda", 10, (8, 0))],
+            edges: Vec::new(),
+            partial: false,
+        };
+        let next = StorageInventory {
+            nodes: vec![node_with_generation("block:sda", 11, (8, 0))],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        assert_eq!(
+            current.replaced_device_names(&next),
+            HashSet::from(["block:sda".into()])
+        );
+        current.reconcile(next);
+
+        assert_eq!(current.nodes.len(), 1);
+        assert_eq!(current.nodes[0].generation.diskseq, Some(11));
+        assert!(!current.partial);
+    }
+
+    #[test]
+    fn failed_empty_snapshot_retains_last_known_graph_as_partial() {
+        let mut current = StorageInventory {
+            nodes: vec![node_with_generation("block:sda", 10, (8, 0))],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        current.reconcile(StorageInventory {
+            partial: true,
+            ..StorageInventory::default()
+        });
+
+        assert_eq!(current.nodes.len(), 1);
+        assert_eq!(current.nodes[0].generation.diskseq, Some(10));
+        assert!(current.partial);
+    }
+
+    #[test]
+    fn complete_empty_snapshot_removes_all_devices() {
+        let mut current = StorageInventory {
+            nodes: vec![node_with_generation("block:sda", 10, (8, 0))],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        current.reconcile(StorageInventory::default());
+
+        assert!(current.nodes.is_empty());
+        assert!(!current.partial);
+    }
+
+    fn node_with_generation(id: &str, diskseq: u64, dev_t: (u32, u32)) -> StorageNode {
+        let mut node = node(id);
+        node.generation = Generation {
+            diskseq: Some(diskseq),
+            dev_t: Some(dev_t),
+        };
+        node
     }
 }
