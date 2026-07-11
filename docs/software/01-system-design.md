@@ -2,6 +2,8 @@
 
 > **Sprint 10 migration note (2026-07-11):** `IoStats` ใน runtime มาจาก `/proc/diskstats` delta (sector = 512 bytes) ไม่ใช่ `iostat`; graph scope เลือก direct whole-device nodes และไม่รวม partition/virtual/MD/DM counters ซ้ำ รายละเอียด iostat ด้านล่างเก็บไว้เป็น legacy/test-oracle design
 
+> Linux MD status ใน runtime มาจาก read-only sysfs snapshots พร้อม state/action boundary retry และ availability gate; `/proc/mdstat` parser ด้านล่างเป็น test oracle
+
 **Version:** 0.1.3 | **Last Updated:** 2026-06-10
 
 ---

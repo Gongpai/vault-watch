@@ -25,7 +25,10 @@ mod storage;
 mod ui;
 mod widgets;
 
-use app::{AppState, FocusedPanel, HISTORY_SIZE, ViewMode, collect_alerts, merge_inventory_disks};
+use app::{
+    AppState, FocusedPanel, HISTORY_SIZE, RaidAvailability, ViewMode, collect_alerts,
+    merge_inventory_disks,
+};
 
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
 const RENDER_INTERVAL: Duration = Duration::from_millis(250);
@@ -353,19 +356,25 @@ async fn collector_loop(
                 write_mb_s: metrics.write_mib_per_sec,
             })
             .collect::<Vec<_>>();
-        // Shadow MD snapshot for semantic comparison; `/proc/mdstat` remains
-        // primary until state/action/member mapping has passed migration gates.
-        let _native_md_shadow = collectors::md_sysfs::collect(Path::new("/sys/class/block"))
-            .map(|inventory| native_md.statuses(&inventory, Instant::now()))
-            .unwrap_or_default();
+        let (raid_result, raid_availability) =
+            match collectors::md_sysfs::collect(Path::new("/sys/class/block")) {
+                Ok(inventory) => {
+                    let availability = if inventory.partial {
+                        RaidAvailability::Partial
+                    } else {
+                        RaidAvailability::Complete
+                    };
+                    (native_md.statuses(&inventory, Instant::now()), availability)
+                }
+                Err(_) => (Vec::new(), RaidAvailability::Unavailable),
+            };
 
-        let (raid_result, disks_result) = tokio::join!(
-            collectors::raid::collect(),
-            collectors::smart::collect_all(&devices, &smartctl_prog, &smartctl_base_args),
-        );
+        let disks_result =
+            collectors::smart::collect_all(&devices, &smartctl_prog, &smartctl_base_args).await;
 
         {
             let mut s = state.lock().await;
+            s.reconcile_raids(raid_result, raid_availability);
 
             for disk in &disks_result {
                 if let Some(temp) = disk.temperature_c
@@ -394,11 +403,15 @@ async fn collector_loop(
             // Per-array rebuild speed, stored ×10 for consistency with
             // read/write history (supports 0.1 MB/s precision). Arrays without
             // an active rebuild push 0 so every line shares the same time axis.
-            for raid in &raid_result {
-                let speed = raid.rebuild_speed_mb.unwrap_or(0) * 10;
+            let raid_speeds: Vec<(String, u64)> = s
+                .raids
+                .iter()
+                .map(|raid| (raid.name.clone(), raid.rebuild_speed_mb.unwrap_or(0) * 10))
+                .collect();
+            for (name, speed) in raid_speeds {
                 let buf = s
                     .raid_speed_history
-                    .entry(raid.name.clone())
+                    .entry(name)
                     .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
                 buf.push_back(speed);
                 if buf.len() > HISTORY_SIZE {
@@ -407,7 +420,7 @@ async fn collector_loop(
             }
             // Arrays that vanished from mdstat (stopped) keep flowing zeros
             // until their history drains, then get dropped.
-            let current: Vec<String> = raid_result.iter().map(|r| r.name.clone()).collect();
+            let current: Vec<String> = s.raids.iter().map(|r| r.name.clone()).collect();
             s.raid_speed_history.retain(|name, buf| {
                 if !current.contains(name) {
                     buf.push_back(0);
@@ -418,7 +431,6 @@ async fn collector_loop(
                 current.contains(name) || buf.iter().any(|&v| v > 0)
             });
 
-            s.raids = raid_result;
             s.disks = merge_inventory_disks(&s.storage_inventory, disks_result);
             s.io_stats = io_result;
             s.last_updated = std::time::Instant::now();

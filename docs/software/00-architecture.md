@@ -2,6 +2,8 @@
 
 > **Sprint 10 migration note (2026-07-11):** throughput production path ใช้ native `/proc/diskstats` batch sampler ที่เลือก whole-device subjects จาก storage graph และ key baseline ด้วย `dev_t`/`diskseq`; `iostat` ด้านล่างเป็น legacy architecture/test oracle เท่านั้น ไม่ถูก execute ใน runtime ปัจจุบัน
 
+> **MD migration note:** Linux Software RAID production path ใช้ `/sys/class/block/<device>/md/`; `/proc/mdstat` ด้านล่างเป็น test oracle เท่านั้น ไม่ถูกอ่านใน runtime
+
 **Version:** 0.1.1 | **Last Updated:** 2026-06-11
 
 ---

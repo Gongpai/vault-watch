@@ -14,7 +14,7 @@ fn format_eta(minutes: u64) -> String {
     }
 }
 
-use crate::app::{Alert, AppState, RaidState};
+use crate::app::{Alert, AppState, RaidAvailability, RaidState};
 use crate::widgets::sparkline_cell::sparkline;
 
 pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
@@ -37,10 +37,13 @@ pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
         .or_else(|| state.raids.iter().find(|r| r.state == RaidState::Degraded))
         .or_else(|| state.raids.first());
 
-    let title = match (raid, state.raids.len()) {
+    let mut title = match (raid, state.raids.len()) {
         (Some(r), n) if n > 1 => format!(" RAID Array {} (+{} more) ", r.name, n - 1),
         _ => " RAID Array ".to_string(),
     };
+    if state.raid_availability != RaidAvailability::Complete {
+        title = format!("{} [{:?}] ", title.trim_end(), state.raid_availability);
+    }
 
     let block = Block::default()
         .title(title)
@@ -51,8 +54,17 @@ pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
     f.render_widget(block, area);
 
     let Some(raid) = raid else {
+        let message = match state.raid_availability {
+            RaidAvailability::Complete => " No RAID array detected",
+            RaidAvailability::Partial => {
+                " RAID inventory PARTIAL — last complete state unavailable"
+            }
+            RaidAvailability::Unavailable => {
+                " RAID inventory UNAVAILABLE — retaining last known state"
+            }
+        };
         let p = Paragraph::new(Line::from(Span::styled(
-            " No RAID array detected",
+            message,
             Style::default().fg(Color::DarkGray),
         )));
         f.render_widget(p, inner);

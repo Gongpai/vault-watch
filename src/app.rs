@@ -89,6 +89,13 @@ pub enum RaidState {
     Unknown,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RaidAvailability {
+    Complete,
+    Partial,
+    Unavailable,
+}
+
 #[derive(Debug, Clone)]
 pub struct RaidStatus {
     pub name: String,
@@ -176,6 +183,7 @@ pub struct AppState {
     pub storage_inventory: StorageInventory,
     pub security: SecurityPosture,
     pub raids: Vec<RaidStatus>,
+    pub raid_availability: RaidAvailability,
     pub disks: Vec<DiskInfo>,
     pub io_stats: Vec<IoStats>,
     pub last_updated: Instant,
@@ -221,6 +229,7 @@ impl AppState {
             storage_inventory,
             security,
             raids: Vec::new(),
+            raid_availability: RaidAvailability::Complete,
             disks: Vec::new(),
             io_stats: Vec::new(),
             last_updated: Instant::now(),
@@ -280,6 +289,28 @@ impl AppState {
                 .entry(device)
                 .or_insert_with(|| VecDeque::with_capacity(HISTORY_SIZE));
         }
+    }
+
+    pub fn reconcile_raids(&mut self, incoming: Vec<RaidStatus>, availability: RaidAvailability) {
+        match availability {
+            RaidAvailability::Complete => self.raids = incoming,
+            RaidAvailability::Partial => {
+                for raid in incoming {
+                    if let Some(existing) = self
+                        .raids
+                        .iter_mut()
+                        .find(|existing| existing.name == raid.name)
+                    {
+                        *existing = raid;
+                    } else {
+                        self.raids.push(raid);
+                    }
+                }
+            }
+            RaidAvailability::Unavailable => {}
+        }
+        self.raids.sort_by(|left, right| left.name.cmp(&right.name));
+        self.raid_availability = availability;
     }
 }
 
@@ -397,5 +428,34 @@ mod tests {
         assert!(!state.temp_history.contains_key("nvme0n1"));
         assert!(!state.read_history.contains_key("nvme0n1"));
         assert!(!state.write_history.contains_key("nvme0n1"));
+    }
+
+    #[test]
+    fn partial_or_unavailable_raid_snapshot_never_erases_last_known_array() {
+        let mut state = AppState::new(
+            Vec::new(),
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        );
+        let raid = RaidStatus {
+            name: "md-test".into(),
+            state: RaidState::Degraded,
+            rebuild_pct: None,
+            rebuild_speed_mb: None,
+            eta_minutes: None,
+            active_disks: 1,
+            total_disks: 2,
+        };
+        state.reconcile_raids(vec![raid], RaidAvailability::Complete);
+        state.reconcile_raids(Vec::new(), RaidAvailability::Partial);
+        assert_eq!(state.raids.len(), 1);
+        assert_eq!(state.raid_availability, RaidAvailability::Partial);
+
+        state.reconcile_raids(Vec::new(), RaidAvailability::Unavailable);
+        assert_eq!(state.raids.len(), 1);
+        assert_eq!(state.raid_availability, RaidAvailability::Unavailable);
+
+        state.reconcile_raids(Vec::new(), RaidAvailability::Complete);
+        assert!(state.raids.is_empty());
     }
 }

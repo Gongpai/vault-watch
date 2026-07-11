@@ -22,6 +22,7 @@
 - เริ่ม native MD sysfs shadow backend: enumerate โดยตรวจ `md/` ไม่ assume ชื่อ, typed array/action/member state, external metadata, progress/speed/ETA, malformed-to-partial และ bounded consistency retry พร้อม fixtures
 - operator verification: targeted native MD sysfs fixture suite ผ่านครบโดยไม่มี MD hardware dependency
 - เพิ่ม MD operation sampler: delta rebuild speed/ETA, generation reset บน action/total/metadata/topology change และ semantic fixture comparison กับ legacy `/proc/mdstat`
+- cut over MD runtime เป็น read-only sysfs primary; `/proc/mdstat` เหลือ test oracle และ partial/unavailable snapshots รักษา last-known arrays พร้อม UI availability label
 
 ## [0.9.0] - 2026-06-17
 

@@ -10,10 +10,11 @@
 - [x] MD sysfs snapshot/member model + state/action boundary retries (shadow backend)
 - [x] iostat production cutover; legacy parser retained only as test oracle
 - [x] MD operation-generation cache + delta speed/ETA + semantic legacy-oracle fixtures
-- [ ] partial/inconsistent availability gate, sysfs cutover และ live qualification handoff
+- [x] partial/unavailable availability gate + native MD sysfs production cutover
+- [ ] live multi-array/rebuild qualification handoff
 - [x] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
 - [x] live NVMe + removable throughput/add/remove qualification (sanitized evidence 2026-07-11)
 
 ## Exit Gate
 
-Production path ไม่ต้องใช้ iostat หรือ mdstat parser และ malformed data ไม่กลายเป็น healthy
+Production path ไม่ใช้ iostat หรือ mdstat parser แล้ว; เหลือ live MD qualification และ malformed data ไม่กลายเป็น healthy

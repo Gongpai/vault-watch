@@ -1,9 +1,7 @@
 use std::sync::LazyLock;
 
-use regex::Regex;
-use tokio::fs;
-
 use crate::app::{RaidState, RaidStatus};
+use regex::Regex;
 
 static ARRAY_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\w+)\s*:\s*(active|inactive)\s+\w+").unwrap());
@@ -13,13 +11,6 @@ static REBUILD_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 static SPEED_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"speed=(\d+)K/sec").unwrap());
 static FINISH_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"finish=([\d.]+)min").unwrap());
-
-pub async fn collect() -> Vec<RaidStatus> {
-    match fs::read_to_string("/proc/mdstat").await {
-        Ok(content) => parse_mdstat(&content),
-        Err(_) => Vec::new(),
-    }
-}
 
 pub(crate) fn parse_mdstat(content: &str) -> Vec<RaidStatus> {
     let mut arrays = Vec::new();

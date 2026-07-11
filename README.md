@@ -35,7 +35,7 @@ For all other distros (Fedora, Arch, openSUSE, Alpine) see **[Manual.md](MANUAL.
 |:-----|:--------|
 | `smartctl` (smartmontools) | SMART data — temperature, health, defects |
 | Linux `/proc/diskstats` | Disk I/O throughput (native, no package required) |
-| mdadm (optional) | RAID status via `/proc/mdstat` |
+| Linux MD sysfs | Software RAID status (native, no mdadm runtime required) |
 
 ---
 
