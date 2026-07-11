@@ -1,6 +1,6 @@
 # US-MON-32 — Storage-first TUI & Scoped Metrics
 
-**Sprint:** 10C | **Priority:** Must | **Status:** 🚧 In Progress
+**Sprint:** 10C | **Priority:** Must | **Status:** ✅ Done
 
 ออกแบบ UI ใหม่ให้แสดง storage topology, protocol, scope, source, availability และ security posture แทน UI ที่สมมติว่าทุกอย่างเป็น SAS HDD
 
@@ -29,3 +29,5 @@
 - [x] validated graph-theme config Part B: line colors, temperature zones, I/O background and label offset
 - [x] live graph-theme override qualification: shared palette/legend cycling and I/O background (sanitized evidence 2026-07-11)
 - [x] topology overview/selection/detail and scroll hardware qualification (sanitized evidence 2026-07-11)
+- [x] Graph view labels native `diskstats` source, direct whole-device scope and non-additive stacked-counter semantics
+- [x] responsive/focus/scroll regression fixtures cover minimum-size fallback, compact disclosure, stale hitbox reset and visible-panel focus cycles

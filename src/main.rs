@@ -174,42 +174,12 @@ async fn handle_key(
 
         KeyCode::Tab => {
             let mut s = state.lock().await;
-            s.focused_panel = if matches!(s.view_mode, ViewMode::Table) {
-                match s.focused_panel {
-                    FocusedPanel::DiskTable => FocusedPanel::SmartDetails,
-                    _ => FocusedPanel::DiskTable,
-                }
-            } else if matches!(s.view_mode, ViewMode::Graph) {
-                // RAID graph participates in the cycle only while visible
-                match s.focused_panel {
-                    FocusedPanel::TempGraph => FocusedPanel::ReadGraph,
-                    FocusedPanel::ReadGraph => FocusedPanel::WriteGraph,
-                    FocusedPanel::WriteGraph if s.raid_graph_visible() => FocusedPanel::RaidGraph,
-                    _ => FocusedPanel::TempGraph,
-                }
-            } else {
-                FocusedPanel::Topology
-            };
+            s.focused_panel = next_focused_panel(&s, false);
         }
 
         KeyCode::BackTab => {
             let mut s = state.lock().await;
-            s.focused_panel = if matches!(s.view_mode, ViewMode::Table) {
-                match s.focused_panel {
-                    FocusedPanel::SmartDetails => FocusedPanel::DiskTable,
-                    _ => FocusedPanel::SmartDetails,
-                }
-            } else if matches!(s.view_mode, ViewMode::Graph) {
-                match s.focused_panel {
-                    FocusedPanel::ReadGraph => FocusedPanel::TempGraph,
-                    FocusedPanel::WriteGraph => FocusedPanel::ReadGraph,
-                    FocusedPanel::RaidGraph => FocusedPanel::WriteGraph,
-                    _ if s.raid_graph_visible() => FocusedPanel::RaidGraph,
-                    _ => FocusedPanel::WriteGraph,
-                }
-            } else {
-                FocusedPanel::Topology
-            };
+            s.focused_panel = next_focused_panel(&s, true);
         }
 
         KeyCode::Up | KeyCode::Char('k') => {
@@ -267,6 +237,33 @@ async fn handle_key(
         _ => {}
     }
     true
+}
+
+fn next_focused_panel(s: &AppState, backwards: bool) -> FocusedPanel {
+    match (s.view_mode.clone(), backwards) {
+        (ViewMode::Table, false) => match s.focused_panel {
+            FocusedPanel::DiskTable => FocusedPanel::SmartDetails,
+            _ => FocusedPanel::DiskTable,
+        },
+        (ViewMode::Table, true) => match s.focused_panel {
+            FocusedPanel::SmartDetails => FocusedPanel::DiskTable,
+            _ => FocusedPanel::SmartDetails,
+        },
+        (ViewMode::Graph, false) => match s.focused_panel {
+            FocusedPanel::TempGraph => FocusedPanel::ReadGraph,
+            FocusedPanel::ReadGraph => FocusedPanel::WriteGraph,
+            FocusedPanel::WriteGraph if s.raid_graph_visible() => FocusedPanel::RaidGraph,
+            _ => FocusedPanel::TempGraph,
+        },
+        (ViewMode::Graph, true) => match s.focused_panel {
+            FocusedPanel::ReadGraph => FocusedPanel::TempGraph,
+            FocusedPanel::WriteGraph => FocusedPanel::ReadGraph,
+            FocusedPanel::RaidGraph => FocusedPanel::WriteGraph,
+            _ if s.raid_graph_visible() => FocusedPanel::RaidGraph,
+            _ => FocusedPanel::WriteGraph,
+        },
+        (ViewMode::Topology, _) => FocusedPanel::Topology,
+    }
 }
 
 fn scroll_focused(s: &mut AppState, delta: i64) {
@@ -516,5 +513,65 @@ async fn collector_loop(
             _ = time::sleep(COLLECTOR_INTERVAL) => {}
             _ = notify.notified() => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        app::{RaidAvailability, RaidState, RaidStatus},
+        security::SecurityPosture,
+        storage::StorageInventory,
+    };
+
+    fn state() -> AppState {
+        AppState::new(
+            Vec::new(),
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        )
+    }
+
+    #[test]
+    fn focus_cycle_matches_each_visible_view() {
+        let mut state = state();
+        assert_eq!(
+            next_focused_panel(&state, false),
+            FocusedPanel::SmartDetails
+        );
+        assert_eq!(next_focused_panel(&state, true), FocusedPanel::SmartDetails);
+
+        state.view_mode = ViewMode::Topology;
+        state.focused_panel = FocusedPanel::DiskTable;
+        assert_eq!(next_focused_panel(&state, false), FocusedPanel::Topology);
+        assert_eq!(next_focused_panel(&state, true), FocusedPanel::Topology);
+
+        state.view_mode = ViewMode::Graph;
+        state.focused_panel = FocusedPanel::TempGraph;
+        assert_eq!(next_focused_panel(&state, false), FocusedPanel::ReadGraph);
+        assert_eq!(next_focused_panel(&state, true), FocusedPanel::WriteGraph);
+    }
+
+    #[test]
+    fn raid_graph_joins_focus_cycle_only_while_visible() {
+        let mut state = state();
+        state.view_mode = ViewMode::Graph;
+        state.focused_panel = FocusedPanel::WriteGraph;
+        assert_eq!(next_focused_panel(&state, false), FocusedPanel::TempGraph);
+
+        state.raids.push(RaidStatus {
+            name: "fixture-array".into(),
+            state: RaidState::Rebuilding,
+            rebuild_pct: Some(50.0),
+            rebuild_speed_mb: Some(10),
+            eta_minutes: Some(5),
+            active_disks: 1,
+            total_disks: 2,
+        });
+        state.raid_availability = RaidAvailability::Complete;
+        assert_eq!(next_focused_panel(&state, false), FocusedPanel::RaidGraph);
+        state.focused_panel = FocusedPanel::TempGraph;
+        assert_eq!(next_focused_panel(&state, true), FocusedPanel::RaidGraph);
     }
 }

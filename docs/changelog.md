@@ -4,6 +4,29 @@
 
 ---
 
+## [0.17.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม Graph metric-scope disclosure และปิด US-MON-32/Sprint 10C ต่อจาก `0.16.1`
+
+### Added
+
+- Graph view แสดง `source=diskstats`, `scope=direct whole-device` และเตือนว่า counters ข้าม stacked layers ไม่สามารถนำมาบวกกันได้
+- fixture UI tests ครอบ minimum-size fallback, compact security disclosure, per-frame hitbox reset และ visible-panel focus cycle
+
+### Changed
+
+- Tab/BackTab ใช้ focus-transition helper เดียวกันเพื่อให้ behavior ที่ทดสอบตรงกับ runtime
+- feature count เป็น 31 delivered, 1 in progress และ 6 planned
+
+### Security
+
+- scope banner เปิดเผยเฉพาะชนิด kernel source และ metric scope; ไม่แสดง identity, path, serial หรือ user content
+
+### Validated
+
+- scoped graph subjects ยังคงจำกัดเฉพาะ direct whole-device จาก graph inventory; partition/virtual/stacked nodes ไม่ถูกนับซ้ำ
+- responsive/focus/scroll tests และ full suite ผ่าน พร้อม live verification ที่บันทึกแบบ sanitized ก่อนหน้า
+
 ## [0.16.1] - 2026-07-11
 
 > **PATCH bump:** บันทึก live graph-theme override qualification ต่อจาก `0.16.0` โดยไม่มี runtime behavior ใหม่

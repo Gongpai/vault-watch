@@ -1,7 +1,7 @@
 # HDD Monitor — Product Backlog
 
 **Last Updated:** 2026-07-11 | **Version:** 3.0
-**Feature count:** 30 delivered · 2 in progress · 6 planned (38 user stories)
+**Feature count:** 31 delivered · 1 in progress · 6 planned (38 user stories)
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -98,7 +98,7 @@
 | [US-MON-29](./user-stories/US-MON-29.md) | Universal storage inventory graph | universal discovery | **L** | ✅ Done |
 | [US-MON-30](./user-stories/US-MON-30.md) | Native block throughput backend | diskstats/sysfs | **M** | ✅ Done |
 | [US-MON-31](./user-stories/US-MON-31.md) | Native Linux MD RAID backend | md sysfs | **L** | 🚧 In Progress |
-| [US-MON-32](./user-stories/US-MON-32.md) | Storage-first TUI and scoped metrics | UI/config | **L** | 🚧 In Progress |
+| [US-MON-32](./user-stories/US-MON-32.md) | Storage-first TUI and scoped metrics | UI/config | **L** | ✅ Done |
 | [US-MON-33](./user-stories/US-MON-33.md) | Native SAS/SCSI health | SG_IO/SCSI | **XL** | 📋 Planned |
 | [US-MON-34](./user-stories/US-MON-34.md) | Native SATA/ATA health | SAT/ATA SMART | **XL** | 📋 Planned |
 | [US-MON-35](./user-stories/US-MON-35.md) | Native NVMe health | NVMe ioctl | **XL** | 📋 Planned |

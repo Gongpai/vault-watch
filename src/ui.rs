@@ -129,6 +129,7 @@ fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
         .constraints([
             Constraint::Length(1),
             Constraint::Length(1),
+            Constraint::Length(1),
             Constraint::Min(1),
             Constraint::Length(1),
         ])
@@ -136,8 +137,20 @@ fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     render_header(f, chunks[0], state);
     render_security_bar(f, chunks[1], state);
-    graph_view::render(f, chunks[2], state);
-    render_key_bar(f, chunks[3], state);
+    render_io_scope_bar(f, chunks[2]);
+    graph_view::render(f, chunks[3], state);
+    render_key_bar(f, chunks[4], state);
+}
+
+fn render_io_scope_bar(f: &mut Frame, area: Rect) {
+    let line = Line::from(vec![
+        Span::styled(" I/O: ", Style::default().fg(Color::Black).bg(Color::Cyan)),
+        Span::styled(
+            "source=diskstats · scope=direct whole-device · stacked counters are NOT additive",
+            Style::default().fg(Color::Cyan),
+        ),
+    ]);
+    f.render_widget(Paragraph::new(line), area);
 }
 
 fn render_topology_view(f: &mut Frame, area: Rect, state: &mut AppState) {
@@ -330,4 +343,78 @@ fn render_status_bar(f: &mut Frame, area: Rect, state: &AppState) {
 
     let p = Paragraph::new(line);
     f.render_widget(p, area);
+}
+
+#[cfg(test)]
+mod tests {
+    use ratatui::{Terminal, backend::TestBackend, layout::Rect};
+
+    use super::*;
+    use crate::{security::SecurityPosture, storage::StorageInventory};
+
+    fn render(width: u16, height: u16, state: &mut AppState) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).expect("test terminal");
+        terminal.draw(|frame| draw(frame, state)).expect("draw");
+        let buffer = terminal.backend().buffer();
+        (0..height)
+            .map(|row| {
+                (0..width)
+                    .map(|col| buffer[(col, row)].symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn state() -> AppState {
+        AppState::new(
+            Vec::new(),
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        )
+    }
+
+    #[test]
+    fn undersized_view_clears_stale_hitboxes_and_shows_required_size() {
+        let mut state = state();
+        state
+            .panel_rects
+            .insert(FocusedPanel::DiskTable, Rect::new(0, 0, 10, 10));
+
+        let output = render(80, 20, &mut state);
+
+        assert!(state.panel_rects.is_empty());
+        assert!(output.contains("Terminal too small"));
+        assert!(output.contains("100×28"));
+    }
+
+    #[test]
+    fn graph_view_labels_native_scope_and_non_additive_counters() {
+        let mut state = state();
+        state.view_mode = ViewMode::Graph;
+        state.focused_panel = FocusedPanel::TempGraph;
+
+        let output = render(MIN_WIDTH_GRAPH, MIN_HEIGHT_GRAPH, &mut state);
+
+        assert!(output.contains("source=diskstats"));
+        assert!(output.contains("scope=direct whole-device"));
+        assert!(output.contains("stacked counters are NOT additive"));
+        assert!(state.panel_rects.contains_key(&FocusedPanel::TempGraph));
+        assert!(state.panel_rects.contains_key(&FocusedPanel::ReadGraph));
+        assert!(state.panel_rects.contains_key(&FocusedPanel::WriteGraph));
+        assert!(!state.panel_rects.contains_key(&FocusedPanel::RaidGraph));
+    }
+
+    #[test]
+    fn narrow_supported_layout_keeps_compact_security_disclosure() {
+        let mut state = state();
+
+        let output = render(MIN_WIDTH_TABLE, MIN_HEIGHT_TABLE, &mut state);
+
+        assert!(output.contains("meta"));
+        assert!(output.contains("content DENIED"));
+        assert!(output.contains("net OFF"));
+        assert!(output.contains("W:0 N:0 P:0 V:0 R:0"));
+    }
 }

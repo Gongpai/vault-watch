@@ -1,6 +1,6 @@
 # Sprint 10C — Storage-first TUI
 
-**Status:** 🚧 In Progress | **Story:** US-MON-32
+**Status:** ✅ Done | **Story:** US-MON-32 | **Delivered:** 0.17.0
 
 ## Tasks
 
@@ -10,10 +10,10 @@
 - [x] initial node-detail mappings: MD complete/partial/unavailable, legacy whole-device available/temporary, partition/virtual/stacked unsupported
 - [x] empty/partial/stale/hidden/unsupported/asleep/permission/malformed/device-gone states
 - [x] live all-device availability/false-alert verification
-- [ ] scoped graphs และ stacked-counter warning
+- [x] scoped graphs และ stacked-counter warning
 - [x] validated graph-theme config Part B integrated into Graph/legends
 - [x] live graph-theme override verification without retaining device identity
-- [ ] responsive/focus/scroll regression tests
+- [x] responsive/focus/scroll regression tests
 - [x] live overview/selection/details/scroll verification without identity disclosure
 - [x] topology row privacy fixture and scrollable focused panel
 - [x] BUG-12 shared final-offset scrollbar mapping + stale mouse-hitbox reset
@@ -28,3 +28,5 @@
 ## Exit Gate
 
 UI ไม่สมมติว่าทุก node เป็น HDD และแสดง privacy/privilege/network state ตลอดเวลา
+
+**Passed:** Graph แสดง source/scope/non-additive warning, topology แยกชนิดและ availability, privacy bar อยู่ทุก view, fixture tests และ sanitized live verification ผ่านแล้ว
