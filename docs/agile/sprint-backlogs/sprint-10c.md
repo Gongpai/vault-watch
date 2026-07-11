@@ -12,6 +12,7 @@
 - [x] live all-device availability/false-alert verification
 - [ ] scoped graphs และ stacked-counter warning
 - [x] validated graph-theme config Part B integrated into Graph/legends
+- [x] live graph-theme override verification without retaining device identity
 - [ ] responsive/focus/scroll regression tests
 - [x] live overview/selection/details/scroll verification without identity disclosure
 - [x] topology row privacy fixture and scrollable focused panel

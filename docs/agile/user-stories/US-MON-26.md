@@ -51,6 +51,8 @@
 
 **Implemented in 0.16.0:** validated `#RRGGBB` colors, bounded line palette, strictly increasing finite temperature zones, bounded finite label offset และ runtime Graph/legend integration; invalid config แสดง error banner และใช้ safe defaults ทั้งชุด
 
+**Hardware-qualified in 0.16.1:** custom three-color palette ถูกใช้กับ legend/series และวนซ้ำข้ามหลาย subjects พร้อม custom I/O background หลัง restart; บันทึกผลแบบ sanitized โดยไม่เก็บ device identity
+
 ---
 
 ## Config Schema (Part B)

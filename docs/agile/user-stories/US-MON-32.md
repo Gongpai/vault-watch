@@ -27,4 +27,5 @@
 - [x] collector diagnostics and topology context preserve availability reason without creating health-failure alerts
 - [x] live all-device verification: unavailable reasons produce no false `FAIL` alert (sanitized evidence 2026-07-11)
 - [x] validated graph-theme config Part B: line colors, temperature zones, I/O background and label offset
+- [x] live graph-theme override qualification: shared palette/legend cycling and I/O background (sanitized evidence 2026-07-11)
 - [x] topology overview/selection/detail and scroll hardware qualification (sanitized evidence 2026-07-11)

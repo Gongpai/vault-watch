@@ -4,6 +4,16 @@
 
 ---
 
+## [0.16.1] - 2026-07-11
+
+> **PATCH bump:** บันทึก live graph-theme override qualification ต่อจาก `0.16.0` โดยไม่มี runtime behavior ใหม่
+
+### Validated
+
+- custom line palette ถูกใช้ร่วมกันใน legend และ graph series พร้อมวนซ้ำอย่างถูกต้องเมื่อจำนวน subject มากกว่าจำนวนสี
+- custom I/O background ถูกนำไปใช้หลัง restart และการ render ไม่ crash
+- หลักฐานถูกบันทึกแบบ sanitized โดยไม่เก็บ device identifier หรือค่า identity จากหน้าจอ
+
 ## [0.16.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม validated graph-theme configuration ต่อจาก `0.15.1` และปิด US-MON-26 Part B
