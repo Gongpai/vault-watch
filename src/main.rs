@@ -7,8 +7,8 @@ use std::time::{Duration, Instant};
 use crossterm::{
     ExecutableCommand,
     event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
-        MouseButton, MouseEvent, MouseEventKind,
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
+        KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
     },
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -137,6 +137,13 @@ async fn handle_key(
     state: &Arc<Mutex<AppState>>,
     refresh_notify: &Arc<Notify>,
 ) -> bool {
+    // Terminals using the enhanced keyboard protocol may report both Press and
+    // Release for one physical key stroke. Acting on Release advances focus a
+    // second time and makes Tab appear to skip panels unpredictably.
+    if !is_actionable_key_event(key.kind) {
+        return true;
+    }
+
     match key.code {
         KeyCode::Char('q') => return false,
         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => return false,
@@ -237,6 +244,10 @@ async fn handle_key(
         _ => {}
     }
     true
+}
+
+const fn is_actionable_key_event(kind: KeyEventKind) -> bool {
+    matches!(kind, KeyEventKind::Press | KeyEventKind::Repeat)
 }
 
 fn next_focused_panel(s: &AppState, backwards: bool) -> FocusedPanel {
@@ -551,6 +562,23 @@ mod tests {
         state.focused_panel = FocusedPanel::TempGraph;
         assert_eq!(next_focused_panel(&state, false), FocusedPanel::ReadGraph);
         assert_eq!(next_focused_panel(&state, true), FocusedPanel::WriteGraph);
+    }
+
+    #[test]
+    fn enhanced_keyboard_release_does_not_advance_focus_twice() {
+        assert!(is_actionable_key_event(KeyEventKind::Press));
+        assert!(is_actionable_key_event(KeyEventKind::Repeat));
+        assert!(!is_actionable_key_event(KeyEventKind::Release));
+
+        let mut state = state();
+        state.view_mode = ViewMode::Graph;
+        state.focused_panel = FocusedPanel::TempGraph;
+        for kind in [KeyEventKind::Press, KeyEventKind::Release] {
+            if is_actionable_key_event(kind) {
+                state.focused_panel = next_focused_panel(&state, false);
+            }
+        }
+        assert_eq!(state.focused_panel, FocusedPanel::ReadGraph);
     }
 
     #[test]

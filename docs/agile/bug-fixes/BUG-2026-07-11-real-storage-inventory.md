@@ -1,6 +1,6 @@
 # BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618
 
-**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–12 hardware-verified; BUG-05–07 open | **Source:** sanitized real-hardware observations
+**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–12 hardware-verified; BUG-13 fix awaiting hardware verification; BUG-05–07 open | **Source:** sanitized real-hardware observations
 
 ## Privacy Handling
 
@@ -116,6 +116,16 @@
 - Root causes: rectangles from the previous view remained in the mouse hit-test map and could capture events; scrollbar content length used total rows instead of the number of valid viewport offsets.
 - Fix: clear panel rectangles before every rendered frame and share `max_offset`/`position_count` semantics across Disk Table, Device Details and Topology.
 - Expected: mouse wheel targets only the visible panel and the final offset maps to the final scrollbar position.
+
+### BUG-13 — Tab intermittently skips a Graph panel
+
+**Severity:** Medium | **Owner:** US-MON-32 | **Status:** 🧪 Fix implemented; hardware verification pending
+
+- Observed: Tab sometimes cycles Temperature → Read → Write, but sometimes appears to cycle only Temperature → Read.
+- Root cause: enhanced keyboard reporting can emit Press and Release events for one physical Tab press; the event loop previously acted on both and advanced focus twice.
+- Fix: accept Press and Repeat for actions, ignore Release before any application state changes.
+- RAID note: deterministic fixture tests cover the conditional RAID focus cycle without forcing a real array rebuild.
+- Expected: one physical Tab press advances exactly one visible panel; without RAID the sequence repeats Temperature → Read → Write.
 
 ## Regression and Hardware Acceptance
 

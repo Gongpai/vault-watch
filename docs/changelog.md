@@ -4,6 +4,20 @@
 
 ---
 
+## [0.17.1] - 2026-07-11
+
+> **PATCH bump:** แก้ Graph focus ขยับซ้ำจาก enhanced-keyboard Release event ต่อจาก `0.17.0`
+
+### Fixed
+
+- keyboard handler ทำงานเฉพาะ Press/Repeat และไม่เปลี่ยน state เมื่อได้รับ Release
+- Tab หนึ่งครั้งจึงเลื่อน focus เพียงหนึ่ง panel ตามลำดับ Temperature → Read → Write เมื่อไม่มี RAID graph
+
+### Validated
+
+- regression fixture จำลอง Press+Release sequence และยืนยันว่า focus ขยับเพียงครั้งเดียว
+- RAID focus cycle ใช้ fixture state จึงไม่ต้องเริ่ม rebuild จริงเพื่อทดสอบ regression
+
 ## [0.17.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม Graph metric-scope disclosure และปิด US-MON-32/Sprint 10C ต่อจาก `0.16.1`
