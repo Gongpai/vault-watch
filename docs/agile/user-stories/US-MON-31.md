@@ -24,4 +24,5 @@
 - [x] partial/unavailable availability gate retains last-known arrays and labels UI; complete-empty alone means no array
 - [x] no-array runtime path starts successfully on openSUSE; live MD qualification remains intentionally separate
 - [x] BUG-11 regression fixture: unchanged `sync_completed` preserves kernel speed/ETA and retains the older delta baseline
+- [x] BUG-11 short-window fixture: 150 ms event-driven sample uses kernel speed and cannot create a delta spike
 - [ ] live multi-array/rebuild qualification

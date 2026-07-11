@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use crate::app::{RaidState, RaidStatus};
 
 const SNAPSHOT_ATTEMPTS: usize = 2;
+const MIN_DELTA_SAMPLE_INTERVAL: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MdArrayState {
@@ -236,14 +237,15 @@ impl MdOperationSampler {
                         .completed_sectors
                         .checked_sub(previous.completed_sectors)
                 {
-                    if delta_sectors == 0 {
+                    let elapsed = now.saturating_duration_since(previous.observed_at);
+                    if delta_sectors == 0 || elapsed < MIN_DELTA_SAMPLE_INTERVAL {
                         // sync_completed can remain unchanged across short
-                        // polling intervals. Keep the kernel sync_speed/ETA
-                        // already populated by legacy_status(), and retain the
-                        // older baseline so the next delta spans real progress.
+                        // polling intervals, while event hints can cause a
+                        // sub-second sample that exaggerates delta speed. Keep
+                        // kernel sync_speed/ETA and the older baseline until a
+                        // representative observation window has elapsed.
                         update_baseline = false;
                     } else {
-                        let elapsed = now.saturating_duration_since(previous.observed_at);
                         if let Some(speed_kib_per_sec) = delta_speed_kib(delta_sectors, elapsed) {
                             status.rebuild_speed_mb = Some(speed_kib_per_sec / 1_024);
                             status.eta_minutes = progress
@@ -652,6 +654,26 @@ mod tests {
         let advanced_status = sampler.statuses(&advanced, started + Duration::from_secs(4));
         assert_eq!(advanced_status[0].rebuild_speed_mb, Some(0));
         assert_eq!(advanced_status[0].eta_minutes, Some(1));
+    }
+
+    #[test]
+    fn event_driven_short_interval_uses_kernel_speed_instead_of_delta_spike() {
+        let fixture = Fixture::new();
+        let md = fixture.array("md-short-window", "recover", "1", "1.2");
+        fs::write(md.join("sync_completed"), "1024 / 16384").unwrap();
+        fs::write(md.join("sync_speed"), "4096").unwrap();
+        let started = Instant::now();
+        let mut sampler = MdOperationSampler::default();
+
+        let first = collect(&fixture.0).unwrap();
+        sampler.statuses(&first, started);
+
+        fs::write(md.join("sync_completed"), "8192 / 16384").unwrap();
+        let event_sample = collect(&fixture.0).unwrap();
+        let status = sampler.statuses(&event_sample, started + Duration::from_millis(150));
+
+        assert_eq!(status[0].rebuild_speed_mb, Some(4));
+        assert_eq!(sampler.previous["md-short-window"].completed_sectors, 1024);
     }
 
     #[test]

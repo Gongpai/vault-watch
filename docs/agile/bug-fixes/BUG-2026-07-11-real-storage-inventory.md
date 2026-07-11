@@ -104,6 +104,8 @@
 - Observed: initial native MD snapshot displays kernel rebuild speed/ETA, but a later refresh retains only progress percentage.
 - Root cause: when two short-interval samples had identical `sync_completed`, the delta sampler replaced valid kernel `sync_speed`/derived ETA with unavailable values.
 - Fix: unchanged progress retains kernel speed/ETA and the older delta baseline; once progress advances, delta speed spans the actual progress interval.
+- Follow-up glitch: a block-event hint could create a sub-second sample immediately after startup; extrapolating its progress delta produced a one-frame multi-GiB/s spike.
+- Follow-up fix: delta speed requires a minimum 2-second observation window. Short event-driven samples retain kernel speed/ETA and the prior baseline without clamping legitimate hardware values.
 - Expected: speed/ETA remain visible throughout an active operation whenever kernel `sync_speed` is available; a repeated progress counter must not erase them.
 
 ## Regression and Hardware Acceptance

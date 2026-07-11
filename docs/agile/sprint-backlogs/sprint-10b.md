@@ -13,6 +13,7 @@
 - [x] partial/unavailable availability gate + native MD sysfs production cutover
 - [x] operator regression after cutover: MD fixtures 6/6, full suite 52/52 and no-array runtime startup
 - [x] BUG-11: repeated progress sample no longer erases kernel rebuild speed/ETA
+- [x] BUG-11: sub-2-second event sample cannot create startup delta-speed spike
 - [ ] live multi-array/rebuild qualification handoff
 - [x] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
 - [x] live NVMe + removable throughput/add/remove qualification (sanitized evidence 2026-07-11)

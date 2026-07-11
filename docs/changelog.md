@@ -4,6 +4,19 @@
 
 ---
 
+## [0.12.3] - 2026-07-11
+
+> **PATCH bump:** แก้ one-frame MD rebuild speed spike ต่อจาก `0.12.2` โดยไม่เปลี่ยน metric scope หรือเพิ่ม feature
+
+### Fixed
+
+- event hint ที่ทำให้ sample ระยะสั้นหลัง startup ไม่ถูก extrapolate เป็น delta speed หลาย GiB/s
+- delta speed ต้องมี observation window อย่างน้อย 2 วินาที; sample ที่สั้นกว่านั้นใช้ kernel `sync_speed`/ETA และรักษา baseline เดิม
+
+### Validated
+
+- MD sysfs fixtures 8/8 รวม 150 ms event-driven spike regression; live server observation ยัง pending
+
 ## [0.12.2] - 2026-07-11
 
 > **PATCH bump:** แก้ native MD presentation regression ต่อจาก `0.12.1` โดยไม่มี feature/API ใหม่
