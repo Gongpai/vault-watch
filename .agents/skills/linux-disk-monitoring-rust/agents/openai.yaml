@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linux Disk Monitoring with Rust"
+  short_description: "Build native Linux disk discovery and I/O metrics"
+  default_prompt: "Use $linux-disk-monitoring-rust to implement native Linux disk discovery and throughput monitoring in Rust."

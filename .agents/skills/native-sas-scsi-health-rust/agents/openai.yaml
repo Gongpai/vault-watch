@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native SAS SCSI Health with Rust"
+  short_description: "Build safe native SG_IO health monitoring"
+  default_prompt: "Use $native-sas-scsi-health-rust to implement safe native SAS/SCSI disk health monitoring with SG_IO in Rust."

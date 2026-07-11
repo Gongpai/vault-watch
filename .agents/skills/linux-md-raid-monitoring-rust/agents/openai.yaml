@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linux MD RAID Monitoring with Rust"
+  short_description: "Build native Linux MD RAID monitoring backends"
+  default_prompt: "Use $linux-md-raid-monitoring-rust to implement native Linux software RAID monitoring from sysfs in Rust."
