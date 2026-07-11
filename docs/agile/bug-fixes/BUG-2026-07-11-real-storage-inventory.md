@@ -85,14 +85,14 @@
 
 ### BUG-09 — Long device names and privacy summary are clipped
 
-**Severity:** Medium | **Owner:** US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
+**Severity:** Medium | **Owner:** US-MON-32 | **Status:** ✅ Hardware verified
 
 - Observed: NVMe namespace names are truncated by the five-column Disk field; the privacy summary can lose trailing fields at the tested terminal width.
 - Expected: device column accommodates common NVMe/MMC/DM names or safely ellipsizes with an unambiguous detail view; privacy/security state remains visible with responsive compact formatting.
 
 ### BUG-10 — Throughput unit label says MB/s for MiB/s values
 
-**Severity:** Medium | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
+**Severity:** Medium | **Owner:** US-MON-30 / US-MON-32 | **Status:** ✅ Hardware verified
 
 - Actual: native formula divides by 1,048,576 bytes but table/graph labels said `MB/s`.
 - Expected: label native throughput `MiB/s`; keep RAID rebuild units separately scoped to their source.
@@ -107,6 +107,7 @@
 - [ ] UI groups both controllers as one P4618 card only when PCIe/topology evidence supports that relationship.
 - [x] Manual TUI retest verifies BUG-01–04 without storing raw identifiers.
 - [x] Native throughput and removable-device add/read/remove behavior verified without storing raw identifiers.
+- [x] Responsive device names, compact privacy counts and MiB/s labels verified without storing raw identifiers.
 - [ ] Sanitized hardware qualification captures protocol/model/firmware class and pass/fail fields without serial, WWN, host or mount metadata.
 
 ## Security Constraint

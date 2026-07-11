@@ -15,6 +15,7 @@
 - [x] BUG-08: graph/history ใช้ eligible subjects จาก inventory รวม NVMe
 - [x] BUG-09: 12-column device names และ compact privacy summary สำหรับ terminal <150 columns
 - [x] BUG-10: native throughput labels ใช้ `MiB/s` ตรงกับ binary-unit formula
+- [x] BUG-09/10 live responsive-layout verification (sanitized evidence 2026-07-11)
 
 ## Exit Gate
 
