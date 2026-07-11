@@ -4,27 +4,37 @@
 
 ---
 
-## Unreleased — 2026-07-11
+## [0.10.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม native Linux storage discovery, throughput และ MD RAID functionality หลัง `0.9.0`; โครงการยังเป็น pre-1.0 เพราะ native health/security broker และ hardware qualification ยังไม่ครบ
+
+### Added (Sprint 10 native storage foundation)
+
+- เพิ่ม periodic sysfs topology reconciliation แบบ atomic; failed-empty snapshot รักษา last-known graph เป็น partial และ device incarnation ใหม่แทนรุ่นเดิมผ่าน `diskseq`/`dev_t`
+- เพิ่ม synthetic Intel DC P4618 fixture: 2 NVMe whole devices, 6 partitions และ 32 loop devices
+- เพิ่ม native `/proc/diskstats` sampler: defensive base/discard/flush parsing, generation/reset-safe delta, 512-byte sector conversion และ scoped MiB/s/IOPS/utilization/latency/queue metrics
+- เพิ่ม native MD sysfs backend: name-independent array/member discovery, typed unknown-safe state, progress/speed/ETA, operation-generation reset และ bounded consistency retry
+- Device Details แสดง native IOPS, utilization, read/write latency, average queue depth และ in-flight I/O พร้อม source/scope `diskstats/whole`; idle latency เป็น `N/A`
+
+### Changed
+
+- cut over throughput runtime จาก `iostat` เป็น `/proc/diskstats`; iostat parser เหลือ test oracle
+- cut over MD runtime จาก `/proc/mdstat` เป็น read-only sysfs primary; mdstat parser เหลือ test oracle
+- Privacy bar แยก whole block, NVMe whole devices, partitions และ virtual nodes
+- Disk Summary ใช้ graph inventory เติม whole devices และตัด partition/virtual/stacked layers ออกจาก presented throughput เพื่อไม่ double count
+- SMART status ใช้ `Healthy`/`Failed`/`Unavailable`; missing/ambiguous data ไม่กลายเป็น failure หรือ zero
 
 ### Fixed (Sprint 10 real-hardware regression)
 
-- Privacy bar แยกจำนวน whole block, NVMe whole devices, partitions และ virtual nodes; partition ของ P4618 ไม่ถูกนับเป็น NVMe drive อีกต่อไป
-- Disk Summary ใช้ graph inventory เติม whole devices ที่ legacy collector ยังไม่รองรับ โดยแสดง health เป็น `N/A` แทนการซ่อน NVMe
-- SMART status เปลี่ยนจาก boolean เป็น `Healthy`/`Failed`/`Unavailable`; missing tool/status, ambiguous output และอุณหภูมิ sentinel `0°C` ไม่สร้าง false critical alert
-- เพิ่ม synthetic Intel DC P4618 fixture: 2 NVMe whole devices, 6 partitions และ 32 loop devices
-- เพิ่ม periodic sysfs topology reconciliation แบบ atomic; failed-empty snapshot รักษา last-known graph เป็น partial และ device incarnation ใหม่แทนรุ่นเดิมผ่าน `diskseq`/`dev_t`
-- hardware verification: removable whole device และ partitions เพิ่ม/ลดจาก inventory ภายใน polling cycle โดยไม่ restart/crash; หลักฐานบันทึกแบบ sanitized
-- เริ่ม Sprint 10B native counters: defensive `/proc/diskstats` batch parser สำหรับ base/discard/flush layouts และ reset-safe metric calculator ที่ใช้ sector 512 bytes พร้อม unavailable latency เมื่อ idle
-- cut over throughput runtime จาก `iostat` เป็น generation-keyed `/proc/diskstats` sampler; IO table/graphs รวม NVMe whole devices และตัด partition/virtual/stacked layers เพื่อไม่ double count
-- hardware verification: native NVMe/removable throughput แสดงใน table/graph และ removable add/read/remove ทำงานโดยไม่ restart/crash
 - fix responsive TUI regressions: ขยาย device column เป็น 12, compact privacy counts บน terminal <150 columns และแก้ native throughput label จาก MB/s เป็น MiB/s
-- hardware verification: common NVMe names, compact storage counts และ MiB/s table/graph labels แสดงถูกต้องที่ terminal width จริง
-- เริ่ม native MD sysfs shadow backend: enumerate โดยตรวจ `md/` ไม่ assume ชื่อ, typed array/action/member state, external metadata, progress/speed/ETA, malformed-to-partial และ bounded consistency retry พร้อม fixtures
-- operator verification: targeted native MD sysfs fixture suite ผ่านครบโดยไม่มี MD hardware dependency
-- เพิ่ม MD operation sampler: delta rebuild speed/ETA, generation reset บน action/total/metadata/topology change และ semantic fixture comparison กับ legacy `/proc/mdstat`
-- cut over MD runtime เป็น read-only sysfs primary; `/proc/mdstat` เหลือ test oracle และ partial/unavailable snapshots รักษา last-known arrays พร้อม UI availability label
-- operator verification หลัง MD cutover: native MD fixture suite 6/6, full regression 52/52 และ no-array runtime path เริ่มทำงานได้บน openSUSE; ยังไม่อ้างว่า live MD/rebuild ผ่าน
-- ปิด US-MON-30: Device Details แสดง native IOPS, utilization, read/write latency, average queue depth และ in-flight I/O พร้อม source/scope `diskstats/whole`; idle latency เป็น `N/A` และ baseline/reset/device absent เป็น unavailable
+- แก้ Intel DC P4618 partition ไม่ให้ถูกนับเป็น NVMe drive และเติม NVMe whole devices ที่เคยหายจากตาราง/กราฟ
+- baseline/reset/device absent และ unavailable health ไม่ถูกแสดงเป็นค่าศูนย์หรือ critical failure
+
+### Validated
+
+- openSUSE: P4618 แบบสอง NVMe controllers, SATA disks และ removable storage แสดง inventory/native throughput/Device Details; add/remove ไม่ restart หรือ crash
+- Ubuntu server: legacy SMART temperature/health และ MD rebuild panel แสดงผลได้ตามปกติ (หลักฐาน sanitized; ไม่บันทึก serial)
+- native MD fixtures 6/6 และ full regression 53/53 ผ่าน; no-array runtime path เริ่มทำงานได้
 
 ## [0.9.0] - 2026-06-17
 

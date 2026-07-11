@@ -1,6 +1,6 @@
 # Sprint 10 — Universal Storage Architecture & Security Hardening
 
-**Version target:** 1.0 architecture migration | **Status:** 🚧 In Progress | **Started:** 2026-07-11
+**Version line:** 0.10.x architecture migration (pre-1.0) | **Status:** 🚧 In Progress | **Started:** 2026-07-11
 
 ## Sprint Goal
 

@@ -1,6 +1,7 @@
 # HDD Monitor — Product Backlog
 
 **Last Updated:** 2026-07-11 | **Version:** 3.0
+**Feature count:** 28 delivered · 3 in progress · 7 planned (38 user stories)
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
