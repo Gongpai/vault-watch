@@ -41,3 +41,18 @@ VaultWatch collects storage topology, kernel counters, RAID state and device hea
 4. Each protocol backend passes unsafe-command rejection, parser fuzzing and hardware qualification.
 
 Until then, Sprint 10 native discovery is limited to read-only sysfs/procfs metadata and the existing legacy collectors remain visibly labelled.
+
+## Executable Baseline Policy
+
+`src/security.rs` ทำให้ baseline เป็น typed, non-configurable policy แทนการพึ่งข้อความเอกสารเพียงอย่างเดียว:
+
+| Capability | Decision |
+|:---|:---|
+| storage topology metadata, kernel counters, health metadata | Allowed |
+| outbound notification | Denied จนกว่าจะมี validated explicit Discord webhook |
+| filesystem contents, raw sectors | Denied |
+| arbitrary privileged command/opcode/CDB/taskfile/CDW | Denied |
+
+Runtime disclosure ต้องแสดง content, network, legacy collector และ privileged-broker state เสมอ การเปิด broker ในอนาคตไม่ได้เปลี่ยนกฎ arbitrary-command default-deny; broker ของ US-MON-37 ต้องรับเฉพาะ typed allowlisted requests ที่ผูกกับ device generation
+
+Regression tests ยืนยัน policy decisions, explicit network consent และ disclosure ที่ไม่อ้างว่า content access เปิดอยู่

@@ -4,6 +4,29 @@
 
 ---
 
+## [0.11.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม executable privacy/security policy และ operator-visible privileged posture ต่อจาก `0.10.0`; ยังเป็น pre-1.0 และ privileged protocol broker ยังคงปิด
+
+### Added
+
+- typed security capability/decision contract สำหรับ metadata, kernel counters, health metadata, outbound notifications, filesystem content, raw sectors และ arbitrary privileged commands
+- privacy bar แสดง `privileged broker OFF` ควบคู่ content/network/legacy state
+- compact privacy disclosure รักษา content/network/legacy/broker state ครบบน terminal แคบ
+- unit tests ยืนยัน content/raw-sector/arbitrary-command default-deny และ network explicit-consent behavior
+
+### Changed
+
+- ปิด US-MON-28 หลังผูก threat-model controls เข้ากับ executable policy; feature count เป็น 29 delivered, 2 in progress, 7 planned
+
+### Security
+
+- TUI/config ไม่มีช่องทางเปิด raw content หรือ arbitrary privileged command; native raw protocol work ยังถูก gate ด้วย US-MON-37
+
+### Validated
+
+- full Rust tests และ clippy `-D warnings` ผ่าน; security disclosure ไม่มี device identifier หรือ secret
+
 ## [0.10.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม native Linux storage discovery, throughput และ MD RAID functionality หลัง `0.9.0`; โครงการยังเป็น pre-1.0 เพราะ native health/security broker และ hardware qualification ยังไม่ครบ

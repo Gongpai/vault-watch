@@ -9,6 +9,7 @@
 ## Tasks
 
 - [x] privacy/network/legacy disclosure บน TUI
+- [x] typed security policy + privileged-broker disclosure; content/raw-sector/arbitrary-command access default-deny
 - [x] config error ไม่ถูกกลืน; empty Discord table regression test
 - [x] reject command/device/webhook injection จาก config
 - [x] initial whole-block classification สำหรับ SCSI-like/NVMe/MMC/MD/DM/virtual
@@ -21,3 +22,5 @@
 ## Exit Gate
 
 ไม่มี device node/raw command access และ threat-model controls ของ 10A ผ่าน tests/clippy
+
+US-MON-28 ผ่าน exit gate แล้ว; Sprint 10A ยังเปิดไว้เฉพาะ US-MON-29 event-hint optimization

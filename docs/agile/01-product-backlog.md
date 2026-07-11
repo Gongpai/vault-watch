@@ -1,7 +1,7 @@
 # HDD Monitor — Product Backlog
 
 **Last Updated:** 2026-07-11 | **Version:** 3.0
-**Feature count:** 28 delivered · 3 in progress · 7 planned (38 user stories)
+**Feature count:** 29 delivered · 2 in progress · 7 planned (38 user stories)
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -94,7 +94,7 @@
 
 | ID | User Story | Skill / Scope | Estimate | Status |
 |:---|:---|:---|:---|:---|
-| [US-MON-28](./user-stories/US-MON-28.md) | Privacy, consent and security baseline | universal/security | **M** | 🚧 In Progress |
+| [US-MON-28](./user-stories/US-MON-28.md) | Privacy, consent and security baseline | universal/security | **M** | ✅ Done |
 | [US-MON-29](./user-stories/US-MON-29.md) | Universal storage inventory graph | universal discovery | **L** | 🚧 In Progress |
 | [US-MON-30](./user-stories/US-MON-30.md) | Native block throughput backend | diskstats/sysfs | **M** | ✅ Done |
 | [US-MON-31](./user-stories/US-MON-31.md) | Native Linux MD RAID backend | md sysfs | **L** | 🚧 In Progress |

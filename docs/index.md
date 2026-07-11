@@ -1,12 +1,12 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Version:** 0.10.0
+**Version:** 0.11.0
 **Status:** Sprint 10 In Progress — Universal Storage Architecture & Security Hardening
 **Current Architecture:** Async TUI migration (`tokio` + `ratatui`, graph-first storage foundation)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
 **Last Updated:** 2026-07-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
-**Feature count:** 28 delivered · 3 in progress · 7 planned (38 Product Backlog stories)
+**Feature count:** 29 delivered · 2 in progress · 7 planned (38 Product Backlog stories)
 
 ---
 
@@ -43,7 +43,7 @@
 | Graph Color Tuning | ✅ Done | [US-MON-25](./agile/user-stories/US-MON-25.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Centralized Theme Constants | ✅ Done | [US-MON-26](./agile/user-stories/US-MON-26.md) Part A, [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Tunable Y-Axis Label Offset | ✅ Done | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
-| Privacy/security disclosure foundation | 🚧 In Progress | [US-MON-28](./agile/user-stories/US-MON-28.md) |
+| Privacy/security disclosure foundation | ✅ Done | [US-MON-28](./agile/user-stories/US-MON-28.md) |
 | Universal storage inventory graph | 🚧 In Progress | [US-MON-29](./agile/user-stories/US-MON-29.md) |
 | Native health backends + privilege broker | 📋 Planned | [Sprint 10](./agile/sprint-backlogs/sprint-10.md) |
 | Native block throughput (`/proc/diskstats`) | ✅ Done | [US-MON-30](./agile/user-stories/US-MON-30.md) |

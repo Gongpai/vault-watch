@@ -157,7 +157,11 @@ fn render_security_bar(f: &mut Frame, area: Rect, state: &AppState) {
     let nvme = inventory.count_whole_kind(StorageKind::Nvme);
     let mmc = inventory.count_whole_kind(StorageKind::Mmc);
     let removable = inventory.removable_count();
-    let disclosure = state.security.disclosure();
+    let disclosure = if area.width >= 150 {
+        state.security.disclosure()
+    } else {
+        state.security.compact_disclosure()
+    };
     let summary = if area.width >= 150 {
         format!(
             " · nodes {nodes} · whole {whole} · NVMe {nvme} · MMC {mmc} · part {partitions} · virtual {virtual_nodes} · removable {removable}"
