@@ -16,6 +16,7 @@
 - [x] fixture-root discovery tests + no-device/partial state
 - [x] periodic topology reconciliation with atomic publish and failed-empty snapshot retention
 - [x] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
+- [x] live hot-add/hot-remove verification: counts/rows reconcile without restart or crash (sanitized evidence 2026-07-11)
 
 ## Exit Gate
 
