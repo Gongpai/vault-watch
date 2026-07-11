@@ -4,6 +4,25 @@
 
 ---
 
+## [0.18.0] - 2026-07-11
+
+> **MINOR bump:** เริ่ม native SAS/SCSI protocol foundation ของ Sprint 10D ต่อจาก `0.17.4`
+
+### Added
+
+- pure typed read-only SCSI commands สำหรับ TEST UNIT READY, standard/selected VPD INQUIRY และ selected LOG SENSE
+- bounds-checked parsers สำหรับ standard INQUIRY, supported VPD pages, temperature LOG SENSE และ fixed/descriptor sense
+- identity-free fixtures ครอบ valid, truncated, malformed parameter และ unavailable-temperature sentinel
+
+### Security
+
+- command surface ไม่มี arbitrary opcode/page, data-to-device direction, path, file descriptor หรือ ioctl
+- module ยังไม่เชื่อม runtime probing/TUI และรอ privilege broker gate ของ US-MON-37
+
+### Validated
+
+- SCSI targeted tests 6/6, full suite 81/81 และ clippy ผ่าน
+
 ## [0.17.4] - 2026-07-11
 
 > **PATCH bump:** บันทึก hardware retest/handoff โดยไม่มี runtime behavior ใหม่ต่อจาก `0.17.3`
