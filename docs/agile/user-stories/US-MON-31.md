@@ -23,4 +23,5 @@
 - [x] targeted MD sysfs fixture suite verified by operator after production cutover (6/6) and full regression suite passed (52/52, sanitized evidence 2026-07-11)
 - [x] partial/unavailable availability gate retains last-known arrays and labels UI; complete-empty alone means no array
 - [x] no-array runtime path starts successfully on openSUSE; live MD qualification remains intentionally separate
+- [x] BUG-11 regression fixture: unchanged `sync_completed` preserves kernel speed/ETA and retains the older delta baseline
 - [ ] live multi-array/rebuild qualification

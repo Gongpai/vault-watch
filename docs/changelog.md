@@ -4,6 +4,19 @@
 
 ---
 
+## [0.12.2] - 2026-07-11
+
+> **PATCH bump:** แก้ native MD presentation regression ต่อจาก `0.12.1` โดยไม่มี feature/API ใหม่
+
+### Fixed
+
+- BUG-11: sample ที่ `sync_completed` ยังไม่ขยับไม่ลบ kernel `sync_speed` และ ETA หลัง refresh
+- delta sampler เก็บ baseline เดิมระหว่าง unchanged samples เพื่อคำนวณความเร็วจากช่วงที่มี progress จริง
+
+### Validated
+
+- MD sysfs fixtures 7/7 รวม unchanged-progress regression; live server rebuild retest ยัง pending
+
 ## [0.12.1] - 2026-07-11
 
 > **PATCH bump:** บันทึก live qualification และปิด Sprint 10A โดยไม่มี runtime behavior ใหม่ต่อจาก `0.12.0`

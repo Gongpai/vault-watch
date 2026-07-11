@@ -226,6 +226,7 @@ impl MdOperationSampler {
                     return status;
                 };
 
+                let mut update_baseline = true;
                 if let Some(previous) = self.previous.get(&array.name)
                     && previous.action == array.action
                     && previous.total_sectors == progress.total_sectors
@@ -235,29 +236,36 @@ impl MdOperationSampler {
                         .completed_sectors
                         .checked_sub(previous.completed_sectors)
                 {
-                    let elapsed = now.saturating_duration_since(previous.observed_at);
-                    if let Some(speed_kib_per_sec) = delta_speed_kib(delta_sectors, elapsed) {
-                        status.rebuild_speed_mb = Some(speed_kib_per_sec / 1_024);
-                        status.eta_minutes = progress
-                            .eta_seconds(speed_kib_per_sec)
-                            .map(|seconds| seconds.div_ceil(60));
+                    if delta_sectors == 0 {
+                        // sync_completed can remain unchanged across short
+                        // polling intervals. Keep the kernel sync_speed/ETA
+                        // already populated by legacy_status(), and retain the
+                        // older baseline so the next delta spans real progress.
+                        update_baseline = false;
                     } else {
-                        status.rebuild_speed_mb = None;
-                        status.eta_minutes = None;
+                        let elapsed = now.saturating_duration_since(previous.observed_at);
+                        if let Some(speed_kib_per_sec) = delta_speed_kib(delta_sectors, elapsed) {
+                            status.rebuild_speed_mb = Some(speed_kib_per_sec / 1_024);
+                            status.eta_minutes = progress
+                                .eta_seconds(speed_kib_per_sec)
+                                .map(|seconds| seconds.div_ceil(60));
+                        }
                     }
                 }
 
-                self.previous.insert(
-                    array.name.clone(),
-                    MdOperationBaseline {
-                        action: array.action.clone(),
-                        total_sectors: progress.total_sectors,
-                        completed_sectors: progress.completed_sectors,
-                        metadata_version: array.metadata_version.clone(),
-                        raid_disks: array.raid_disks,
-                        observed_at: now,
-                    },
-                );
+                if update_baseline {
+                    self.previous.insert(
+                        array.name.clone(),
+                        MdOperationBaseline {
+                            action: array.action.clone(),
+                            total_sectors: progress.total_sectors,
+                            completed_sectors: progress.completed_sectors,
+                            metadata_version: array.metadata_version.clone(),
+                            raid_disks: array.raid_disks,
+                            observed_at: now,
+                        },
+                    );
+                }
                 status
             })
             .collect()
@@ -617,6 +625,33 @@ mod tests {
         let changed = collect(&fixture.0).unwrap();
         let changed_status = sampler.statuses(&changed, started + Duration::from_secs(3));
         assert_eq!(changed_status[0].rebuild_speed_mb, Some(4));
+    }
+
+    #[test]
+    fn unchanged_progress_keeps_kernel_speed_and_eta_until_delta_advances() {
+        let fixture = Fixture::new();
+        let md = fixture.array("md-stalled-sample", "recover", "1", "1.2");
+        fs::write(md.join("sync_completed"), "1024 / 8192").unwrap();
+        fs::write(md.join("sync_speed"), "4096").unwrap();
+        let started = Instant::now();
+        let mut sampler = MdOperationSampler::default();
+
+        let first = collect(&fixture.0).unwrap();
+        assert_eq!(
+            sampler.statuses(&first, started)[0].rebuild_speed_mb,
+            Some(4)
+        );
+
+        let unchanged = collect(&fixture.0).unwrap();
+        let unchanged_status = sampler.statuses(&unchanged, started + Duration::from_secs(2));
+        assert_eq!(unchanged_status[0].rebuild_speed_mb, Some(4));
+        assert_eq!(unchanged_status[0].eta_minutes, Some(1));
+
+        fs::write(md.join("sync_completed"), "5120 / 8192").unwrap();
+        let advanced = collect(&fixture.0).unwrap();
+        let advanced_status = sampler.statuses(&advanced, started + Duration::from_secs(4));
+        assert_eq!(advanced_status[0].rebuild_speed_mb, Some(0));
+        assert_eq!(advanced_status[0].eta_minutes, Some(1));
     }
 
     #[test]
