@@ -7,6 +7,7 @@ use ratatui::{
 
 use crate::app::{AppState, FocusedPanel};
 use crate::storage::{Confidence, Materialization, StorageEdgeKind, StorageKind, StorageNode};
+use crate::widgets::scroll;
 
 pub fn render(frame: &mut Frame, area: Rect, state: &mut AppState) {
     state.panel_rects.insert(FocusedPanel::Topology, area);
@@ -29,7 +30,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &mut AppState) {
     frame.render_widget(block, area);
 
     let visible = inner.height.saturating_sub(1) as usize;
-    let max_scroll = inventory.nodes.len().saturating_sub(visible);
+    let max_scroll = scroll::max_offset(inventory.nodes.len(), visible);
     state.topology_scroll = state.topology_scroll.min(max_scroll);
 
     let header = Row::new([
@@ -74,7 +75,8 @@ pub fn render(frame: &mut Frame, area: Rect, state: &mut AppState) {
 
     if inventory.nodes.len() > visible {
         let mut scrollbar =
-            ScrollbarState::new(inventory.nodes.len()).position(state.topology_scroll);
+            ScrollbarState::new(scroll::position_count(inventory.nodes.len(), visible))
+                .position(state.topology_scroll);
         frame.render_stateful_widget(
             Scrollbar::new(ScrollbarOrientation::VerticalRight),
             area.inner(ratatui::layout::Margin {

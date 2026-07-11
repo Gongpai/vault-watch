@@ -10,6 +10,7 @@ use ratatui::{
 };
 
 use crate::app::{Alert, AppState, FocusedPanel, HealthStatus};
+use crate::widgets::scroll;
 use crate::widgets::sparkline_cell::sparkline;
 
 // Column widths: 12+23+18+18+5+8 = 84 + 5 spacings = 89 chars.
@@ -80,7 +81,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let visible = (inner.height as usize).saturating_sub(1);
 
     // Clamp scroll to valid range (authoritative — only one clamp)
-    let max_scroll = total_disks.saturating_sub(visible);
+    let max_scroll = scroll::max_offset(total_disks, visible);
     let scroll = state.disk_table_scroll.min(max_scroll);
     state.disk_table_scroll = scroll;
 
@@ -215,7 +216,8 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     // Scrollbar
     if total_disks > visible {
-        let mut scrollbar_state = ScrollbarState::new(total_disks).position(scroll);
+        let mut scrollbar_state =
+            ScrollbarState::new(scroll::position_count(total_disks, visible)).position(scroll);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         f.render_stateful_widget(
             scrollbar,

@@ -4,6 +4,19 @@
 
 ---
 
+## [0.13.1] - 2026-07-11
+
+> **PATCH bump:** แก้ shared scrolling regressions ต่อจาก `0.13.0` โดยไม่มี view หรือ metric ใหม่
+
+### Fixed
+
+- BUG-12: ล้าง stale panel rectangles ทุก frame เพื่อให้ mouse wheel ไม่ถูก invisible panel จาก view ก่อนหน้าจับ event
+- Disk Table, Device Details และ Topology ใช้จำนวน viewport positions เป็น scrollbar range ทำให้ final offset อยู่ปลาย track จริง
+
+### Validated
+
+- shared scrollbar boundary fixtures 2/2 และ topology privacy fixture ผ่าน; live mouse/endpoint retest ยัง pending
+
 ## [0.13.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม Storage Topology Overview และ keyboard interaction ใหม่ต่อจาก `0.12.3`; US-MON-32 ยัง In Progress

@@ -9,6 +9,7 @@ use ratatui::{
 };
 
 use crate::app::{Alert, AppState, FocusedPanel};
+use crate::widgets::scroll;
 
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let focused = state.focused_panel == FocusedPanel::SmartDetails;
@@ -127,7 +128,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let total_lines = lines.len();
     let visible = inner.height as usize;
-    let max_scroll = total_lines.saturating_sub(visible);
+    let max_scroll = scroll::max_offset(total_lines, visible);
     let scroll = state.smart_details_scroll.min(max_scroll);
     state.smart_details_scroll = scroll;
 
@@ -138,7 +139,8 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     // Scrollbar
     if total_lines > visible {
-        let mut scrollbar_state = ScrollbarState::new(total_lines).position(scroll);
+        let mut scrollbar_state =
+            ScrollbarState::new(scroll::position_count(total_lines, visible)).position(scroll);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         f.render_stateful_widget(
             scrollbar,

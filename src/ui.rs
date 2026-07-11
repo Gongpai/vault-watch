@@ -21,6 +21,10 @@ const MIN_HEIGHT_TOPOLOGY: u16 = 20;
 
 pub fn draw(f: &mut Frame, state: &mut AppState) {
     let area = f.area();
+    // Panel rectangles belong to one rendered view only. Keeping rectangles
+    // from a previous Table/Graph/Topology view can route mouse-wheel input to
+    // an invisible overlapping panel.
+    state.panel_rects.clear();
 
     let (min_w, min_h) = match state.view_mode {
         ViewMode::Table => (MIN_WIDTH_TABLE, MIN_HEIGHT_TABLE),

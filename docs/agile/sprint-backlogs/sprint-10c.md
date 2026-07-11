@@ -12,6 +12,7 @@
 - [ ] validated graph-theme config Part B
 - [ ] responsive/focus/scroll regression tests
 - [x] topology row privacy fixture and scrollable focused panel
+- [x] BUG-12 shared final-offset scrollbar mapping + stale mouse-hitbox reset
 - [x] BUG-01/02/04: scoped device counts และใช้ graph inventory เป็น source ของ Disk Summary
 - [x] BUG-03: unavailable/permission/parser errors แสดง `UNKNOWN`/`N/A` และห้ามสร้าง health alert
 - [x] BUG-08: graph/history ใช้ eligible subjects จาก inventory รวม NVMe
