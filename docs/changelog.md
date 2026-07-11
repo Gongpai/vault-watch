@@ -4,6 +4,25 @@
 
 ---
 
+## [0.15.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม typed health availability taxonomy ต่อจาก `0.14.0`; alert semantics ยังต้องมี explicit health failure เท่านั้น
+
+### Added
+
+- `MetricAvailability`: Available, Unsupported, Hidden, PermissionDenied, Asleep, TemporarilyUnavailable, Stale, Malformed และ DeviceGone
+- legacy SMART boundary จำแนก process I/O error และ sanitized diagnostic text โดยไม่เปลี่ยน unavailable เป็น FAIL
+- topology details ใช้ Stale สำหรับ retained partial graph, Hidden สำหรับ stacked physical health และ typed legacy collector reason สำหรับ whole devices
+
+### Security
+
+- availability classification ไม่เปิดไฟล์/device เพิ่มและไม่ log stderr, command arguments หรือ identifiers; UI แสดงเฉพาะ reason label
+
+### Validated
+
+- SMART taxonomy tests 7/7 และ topology scope/availability tests 2/2
+- live Topology selection/detail/scroll แสดงถูกต้องและไม่เปิดเผย persistent identity values
+
 ## [0.14.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม privacy-safe selected-node detail view ต่อจาก `0.13.2`; full availability taxonomy ของ US-MON-32 ยังไม่ครบ

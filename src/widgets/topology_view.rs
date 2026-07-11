@@ -132,7 +132,8 @@ fn render_node_details(frame: &mut Frame, area: Rect, state: &AppState) {
             )),
         ]),
         Line::from(format!(
-            "Health availability: {availability}  Source: {source}  Scope: {scope}"
+            "Health availability: {}  Source: {source}  Scope: {scope}",
+            availability.label()
         )),
         Line::from(format!(
             "Topology confidence: {}  Generation: {}",
@@ -149,30 +150,41 @@ fn render_node_details(frame: &mut Frame, area: Rect, state: &AppState) {
 fn health_observation(
     state: &AppState,
     node: &StorageNode,
-) -> (&'static str, &'static str, &'static str) {
-    use crate::app::{HealthStatus, RaidAvailability};
+) -> (crate::app::MetricAvailability, &'static str, &'static str) {
+    use crate::app::{MetricAvailability, RaidAvailability};
+
+    if state.storage_inventory.partial {
+        return (
+            MetricAvailability::Stale,
+            "sysfs-topology",
+            "last-known-node",
+        );
+    }
 
     match node.kind {
         StorageKind::MdRaid => match state.raid_availability {
-            RaidAvailability::Complete => ("Available", "md-sysfs", "array"),
-            RaidAvailability::Partial => ("TemporarilyUnavailable", "md-sysfs", "array"),
-            RaidAvailability::Unavailable => ("Unavailable", "md-sysfs", "array"),
+            RaidAvailability::Complete => (MetricAvailability::Available, "md-sysfs", "array"),
+            RaidAvailability::Partial | RaidAvailability::Unavailable => (
+                MetricAvailability::TemporarilyUnavailable,
+                "md-sysfs",
+                "array",
+            ),
         },
         _ if node.materialization == Materialization::BlockDevice => {
             match state.disks.iter().find(|disk| disk.device == node.name) {
-                Some(disk) => match disk.health {
-                    HealthStatus::Healthy | HealthStatus::Failed => {
-                        ("Available", "legacy-smart", "whole-device")
-                    }
-                    HealthStatus::Unavailable => {
-                        ("TemporarilyUnavailable", "legacy-smart", "whole-device")
-                    }
-                },
-                None => ("Unsupported", "topology-only", "whole-device"),
+                Some(disk) => (disk.health_availability, "legacy-smart", "whole-device"),
+                None => (
+                    MetricAvailability::Unsupported,
+                    "topology-only",
+                    "whole-device",
+                ),
             }
         }
+        _ if node.materialization == Materialization::Stacked => {
+            (MetricAvailability::Hidden, "topology-only", "stacked")
+        }
         _ => (
-            "Unsupported",
+            MetricAvailability::Unsupported,
             "topology-only",
             materialization_label(node.materialization),
         ),
@@ -336,12 +348,30 @@ mod tests {
 
         assert_eq!(
             health_observation(&state, &partition),
-            ("Unsupported", "topology-only", "partition")
+            (
+                crate::app::MetricAvailability::Unsupported,
+                "topology-only",
+                "partition"
+            )
         );
         state.raid_availability = crate::app::RaidAvailability::Partial;
         assert_eq!(
             health_observation(&state, &md),
-            ("TemporarilyUnavailable", "md-sysfs", "array")
+            (
+                crate::app::MetricAvailability::TemporarilyUnavailable,
+                "md-sysfs",
+                "array"
+            )
+        );
+
+        state.storage_inventory.partial = true;
+        assert_eq!(
+            health_observation(&state, &md),
+            (
+                crate::app::MetricAvailability::Stale,
+                "sysfs-topology",
+                "last-known-node"
+            )
         );
     }
 }

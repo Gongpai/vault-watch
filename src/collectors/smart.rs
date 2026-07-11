@@ -4,7 +4,7 @@ use futures::future::join_all;
 use regex::Regex;
 use tokio::process::Command;
 
-use crate::app::{DiskInfo, HealthStatus};
+use crate::app::{DiskInfo, HealthStatus, MetricAvailability};
 
 static SERIAL_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"Serial number:\s+(\S+)").unwrap());
@@ -43,14 +43,46 @@ async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> Di
 
     let output = Command::new(&prog).args(&args).output().await;
 
-    let stdout = match output {
-        Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),
-        Err(_) => {
-            return DiskInfo::unavailable(device);
+    let output = match output {
+        Ok(output) => output,
+        Err(error) => {
+            let mut info = DiskInfo::unavailable(device);
+            info.health_availability = match error.kind() {
+                std::io::ErrorKind::NotFound => MetricAvailability::Unsupported,
+                std::io::ErrorKind::PermissionDenied => MetricAvailability::PermissionDenied,
+                _ => MetricAvailability::TemporarilyUnavailable,
+            };
+            return info;
         }
     };
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr);
 
-    parse_smart_output(&device, &stdout)
+    let mut info = parse_smart_output(&device, &stdout);
+    if info.health == HealthStatus::Unavailable {
+        info.health_availability = classify_unavailable_output(&stdout, &stderr);
+    }
+    info
+}
+
+fn classify_unavailable_output(stdout: &str, stderr: &str) -> MetricAvailability {
+    let diagnostic = format!("{stdout}\n{stderr}").to_ascii_lowercase();
+    if diagnostic.contains("permission denied") || diagnostic.contains("operation not permitted") {
+        MetricAvailability::PermissionDenied
+    } else if diagnostic.contains("standby") || diagnostic.contains("sleep mode") {
+        MetricAvailability::Asleep
+    } else if diagnostic.contains("no such device") || diagnostic.contains("device gone") {
+        MetricAvailability::DeviceGone
+    } else if diagnostic.contains("unsupported")
+        || diagnostic.contains("unknown device type")
+        || diagnostic.contains("not supported")
+    {
+        MetricAvailability::Unsupported
+    } else if HEALTH_RE.is_match(stdout) {
+        MetricAvailability::Malformed
+    } else {
+        MetricAvailability::TemporarilyUnavailable
+    }
 }
 
 fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
@@ -71,6 +103,11 @@ fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
             _ => HealthStatus::Unavailable,
         })
         .unwrap_or(HealthStatus::Unavailable);
+    let health_availability = if health == HealthStatus::Unavailable {
+        classify_unavailable_output(output, "")
+    } else {
+        MetricAvailability::Available
+    };
 
     let power_on_hours = HOURS_RE.captures(output).and_then(|c| c[1].parse().ok());
 
@@ -89,6 +126,7 @@ fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
         serial,
         temperature_c,
         health,
+        health_availability,
         power_on_hours,
         grown_defects,
         non_medium_errors,
@@ -119,6 +157,7 @@ write:         0        0         0         0          0         0.000          
         assert_eq!(info.serial, Some("XXXX000000".to_string()));
         assert_eq!(info.temperature_c, Some(53));
         assert_eq!(info.health, HealthStatus::Healthy);
+        assert_eq!(info.health_availability, MetricAvailability::Available);
         assert_eq!(info.power_on_hours, Some(12345));
         assert_eq!(info.grown_defects, Some(7));
         assert_eq!(info.non_medium_errors, Some(16373));
@@ -133,6 +172,10 @@ write:         0        0         0         0          0         0.000          
         assert!(info.serial.is_none());
         assert!(info.temperature_c.is_none());
         assert_eq!(info.health, HealthStatus::Unavailable);
+        assert_eq!(
+            info.health_availability,
+            MetricAvailability::TemporarilyUnavailable
+        );
         assert!(info.power_on_hours.is_none());
     }
 
@@ -162,5 +205,26 @@ write:         0        0         0         0          0         0.000          
         let info = parse_smart_output("sda", "SMART Health Status: UNKNOWN\n");
 
         assert_eq!(info.health, HealthStatus::Unavailable);
+        assert_eq!(info.health_availability, MetricAvailability::Malformed);
+    }
+
+    #[test]
+    fn unavailable_diagnostics_remain_typed() {
+        assert_eq!(
+            classify_unavailable_output("", "Permission denied"),
+            MetricAvailability::PermissionDenied
+        );
+        assert_eq!(
+            classify_unavailable_output("Device is in STANDBY", ""),
+            MetricAvailability::Asleep
+        );
+        assert_eq!(
+            classify_unavailable_output("unsupported device", ""),
+            MetricAvailability::Unsupported
+        );
+        assert_eq!(
+            classify_unavailable_output("", "No such device"),
+            MetricAvailability::DeviceGone
+        );
     }
 }

@@ -113,6 +113,7 @@ pub struct DiskInfo {
     pub serial: Option<String>,
     pub temperature_c: Option<u8>,
     pub health: HealthStatus,
+    pub health_availability: MetricAvailability,
     pub power_on_hours: Option<u64>,
     pub grown_defects: Option<u64>,
     pub non_medium_errors: Option<u64>,
@@ -127,6 +128,7 @@ impl DiskInfo {
             serial: None,
             temperature_c: None,
             health: HealthStatus::Unavailable,
+            health_availability: MetricAvailability::Unsupported,
             power_on_hours: None,
             grown_defects: None,
             non_medium_errors: None,
@@ -141,6 +143,35 @@ pub enum HealthStatus {
     Healthy,
     Failed,
     Unavailable,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MetricAvailability {
+    Available,
+    Unsupported,
+    Hidden,
+    PermissionDenied,
+    Asleep,
+    TemporarilyUnavailable,
+    Stale,
+    Malformed,
+    DeviceGone,
+}
+
+impl MetricAvailability {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Available => "Available",
+            Self::Unsupported => "Unsupported",
+            Self::Hidden => "Hidden",
+            Self::PermissionDenied => "PermissionDenied",
+            Self::Asleep => "Asleep",
+            Self::TemporarilyUnavailable => "TemporarilyUnavailable",
+            Self::Stale => "Stale",
+            Self::Malformed => "Malformed",
+            Self::DeviceGone => "DeviceGone",
+        }
+    }
 }
 
 pub fn merge_inventory_disks(

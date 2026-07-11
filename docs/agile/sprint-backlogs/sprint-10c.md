@@ -6,12 +6,13 @@
 
 - [x] topology overview from graph nodes with protocol/layer/confidence/generation-presence/relations
 - [x] selected-node detail view with scoped health source/availability/confidence (identity values redacted)
-- [ ] availability/confidence/source labels
+- [x] typed availability/confidence/source labels in selected-node details
 - [x] initial node-detail mappings: MD complete/partial/unavailable, legacy whole-device available/temporary, partition/virtual/stacked unsupported
-- [ ] empty/partial/hidden/unsupported/asleep states
+- [x] empty/partial/stale/hidden/unsupported/asleep/permission/malformed/device-gone states
 - [ ] scoped graphs และ stacked-counter warning
 - [ ] validated graph-theme config Part B
 - [ ] responsive/focus/scroll regression tests
+- [x] live overview/selection/details/scroll verification without identity disclosure
 - [x] topology row privacy fixture and scrollable focused panel
 - [x] BUG-12 shared final-offset scrollbar mapping + stale mouse-hitbox reset
 - [x] BUG-12 live mouse-wheel/scrollbar endpoint verification

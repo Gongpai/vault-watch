@@ -23,6 +23,7 @@
 - [x] shared scrollbar offset semantics and per-frame panel hitbox reset (BUG-12 fixtures)
 - [x] live mouse-wheel and scrollbar endpoint qualification across Topology/Table/Device Details (sanitized evidence 2026-07-11)
 - [x] selected-node detail panel exposes health availability/source/scope, topology confidence, generation presence and relation counts without identity values
-- [ ] full health availability taxonomy (`Hidden`, `Asleep`, `PermissionDenied`, `Stale`, `Malformed`)
+- [x] typed health availability taxonomy: `Available`, `Unsupported`, `Hidden`, `PermissionDenied`, `Asleep`, `TemporarilyUnavailable`, `Stale`, `Malformed`, `DeviceGone`
+- [x] collector diagnostics and topology context preserve availability reason without creating health-failure alerts
 - [ ] validated graph-theme config Part B
-- [ ] responsive/focus/scroll hardware qualification
+- [x] topology overview/selection/detail and scroll hardware qualification (sanitized evidence 2026-07-11)
