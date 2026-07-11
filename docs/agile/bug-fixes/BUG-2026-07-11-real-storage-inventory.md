@@ -1,6 +1,6 @@
 # BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618
 
-**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–11 hardware-verified; BUG-05–07 open; BUG-12 fix pending hardware verification | **Source:** sanitized real-hardware observations
+**Reported:** 2026-07-11 | **Status:** 🚧 BUG-01–04/08–12 hardware-verified; BUG-05–07 open | **Source:** sanitized real-hardware observations
 
 ## Privacy Handling
 
@@ -110,7 +110,7 @@
 
 ### BUG-12 — Mouse wheel misses Topology and scrollbar never reaches bottom
 
-**Severity:** Medium | **Owner:** US-MON-32 | **Status:** 🧪 Fixed, pending UI retest
+**Severity:** Medium | **Owner:** US-MON-32 | **Status:** ✅ Hardware verified
 
 - Observed: Topology rows are correct, but mouse-wheel scrolling may not move the view; scrollbar thumbs across scrollable panels stop above the bottom even when the final rows are visible.
 - Root causes: rectangles from the previous view remained in the mouse hit-test map and could capture events; scrollbar content length used total rows instead of the number of valid viewport offsets.
@@ -129,7 +129,7 @@
 - [x] Native throughput and removable-device add/read/remove behavior verified without storing raw identifiers.
 - [x] Responsive device names, compact privacy counts and MiB/s labels verified without storing raw identifiers.
 - [x] MD rebuild speed/ETA remain visible across repeated refreshes and no startup/refetch spike recurs on the live server.
-- [ ] Mouse wheel scrolls Topology and all scrollbars reach both track endpoints.
+- [x] Mouse wheel scrolls Topology and all scrollbars reach both track endpoints.
 - [ ] Sanitized hardware qualification captures protocol/model/firmware class and pass/fail fields without serial, WWN, host or mount metadata.
 
 ## Security Constraint

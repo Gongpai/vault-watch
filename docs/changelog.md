@@ -4,6 +4,16 @@
 
 ---
 
+## [0.13.2] - 2026-07-11
+
+> **PATCH bump:** บันทึก live BUG-12 qualification ต่อจาก `0.13.1` โดยไม่มี runtime behavior ใหม่
+
+### Validated
+
+- mouse wheel เลื่อน Topology ได้จริงหลังสลับ view
+- scrollbar ของ Topology, Disk Table และ Device Details ถึงปลาย track ถูกต้อง
+- หลักฐานถูกบันทึกแบบ sanitized โดยไม่เก็บ device identifier
+
 ## [0.13.1] - 2026-07-11
 
 > **PATCH bump:** แก้ shared scrolling regressions ต่อจาก `0.13.0` โดยไม่มี view หรือ metric ใหม่

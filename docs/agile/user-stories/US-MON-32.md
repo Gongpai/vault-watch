@@ -21,6 +21,7 @@
 - [x] source/availability banner distinguishes `AVAILABLE`, `PARTIAL` and `EMPTY` and warns that stacked counters are not additive
 - [x] topology rows never render identity claim values, `dev_t` values or `diskseq` values
 - [x] shared scrollbar offset semantics and per-frame panel hitbox reset (BUG-12 fixtures)
+- [x] live mouse-wheel and scrollbar endpoint qualification across Topology/Table/Device Details (sanitized evidence 2026-07-11)
 - [ ] node detail view and full health availability taxonomy
 - [ ] validated graph-theme config Part B
 - [ ] responsive/focus/scroll hardware qualification
