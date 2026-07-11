@@ -4,6 +4,20 @@
 
 ---
 
+## [0.12.1] - 2026-07-11
+
+> **PATCH bump:** บันทึก live qualification และปิด Sprint 10A โดยไม่มี runtime behavior ใหม่ต่อจาก `0.12.0`
+
+### Changed
+
+- ปิด US-MON-29 และ Sprint 10A; feature count เป็น 30 delivered, 1 in progress, 7 planned
+
+### Validated
+
+- live removable-storage add: whole/removable/node counts และ UI row ปรากฏทันทีผ่าน event-assisted reconciliation
+- live remove: counts/row ลดทันทีโดยไม่ restart หรือ crash
+- หลักฐานถูกบันทึกแบบ sanitized โดยไม่เก็บ block name, serial หรือ device identifier
+
 ## [0.12.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม unprivileged Linux block-event plane ต่อจาก `0.11.0`; event เป็นเพียง hint และไม่แทน periodic transactional sysfs reconciliation

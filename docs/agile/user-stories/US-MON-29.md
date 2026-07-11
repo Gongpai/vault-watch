@@ -1,6 +1,6 @@
 # US-MON-29 — Universal Storage Inventory Graph
 
-**Sprint:** 10A | **Priority:** Must | **Status:** 🚧 In Progress
+**Sprint:** 10A | **Priority:** Must | **Status:** ✅ Done
 
 ในฐานะผู้ดูแลระบบ ฉันต้องการ inventory ที่แยก block node, partition, array, logical layer, controller/path และ physical candidate เพื่อให้ข้อมูลไม่ซ้ำชั้นและไม่ระบุอุปกรณ์ผิดประเภท
 
@@ -21,4 +21,4 @@
 - [x] AC6 periodic path verified on live removable storage add/remove without retaining device identifiers
 - [x] AC6 event core: read-only `NETLINK_KOBJECT_UEVENT` block hints are filtered and coalesced before waking the same transactional sysfs resnapshot; socket/read failure silently retains periodic correctness fallback
 - [x] event parser and burst coalescing fixtures; a burst emits one reconciliation hint
-- [ ] live event-assisted add/remove qualification (confirm response before the 2-second periodic deadline without restart/crash)
+- [x] live event-assisted add/remove qualification: removable storage, whole/removable/node counts and rows reconcile immediately on add/remove before the periodic deadline without restart/crash (sanitized operator evidence 2026-07-11)

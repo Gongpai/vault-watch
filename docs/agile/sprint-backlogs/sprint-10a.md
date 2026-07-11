@@ -1,6 +1,6 @@
 # Sprint 10A — Privacy & Graph Foundation
 
-**Status:** 🚧 In Progress | **Stories:** US-MON-28, US-MON-29
+**Status:** ✅ Done | **Stories:** US-MON-28, US-MON-29
 
 ## Outcome
 
@@ -19,10 +19,10 @@
 - [x] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
 - [x] live hot-add/hot-remove verification: counts/rows reconcile without restart or crash (sanitized evidence 2026-07-11)
 - [x] unprivileged block-uevent hints + 150 ms burst coalescing; periodic sysfs reconciliation remains mandatory fallback
-- [ ] live event-assisted hot-add/hot-remove latency qualification
+- [x] live event-assisted hot-add/hot-remove latency qualification (immediate counts/rows; no restart/crash, sanitized evidence 2026-07-11)
 
 ## Exit Gate
 
 ไม่มี device node/raw command access และ threat-model controls ของ 10A ผ่าน tests/clippy
 
-US-MON-28 ผ่าน exit gate แล้ว; Sprint 10A ยังเปิดไว้เฉพาะ US-MON-29 event-hint optimization
+US-MON-28 และ US-MON-29 ผ่าน exit gate แล้ว โดยไม่มี device identifier ถูกบันทึกในหลักฐาน
