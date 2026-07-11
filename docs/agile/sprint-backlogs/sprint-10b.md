@@ -15,6 +15,7 @@
 - [ ] live multi-array/rebuild qualification handoff
 - [x] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
 - [x] live NVMe + removable throughput/add/remove qualification (sanitized evidence 2026-07-11)
+- [x] Device Details exposes scoped native IOPS/utilization/latency/queue/in-flight metrics with explicit unavailable states
 
 ## Exit Gate
 

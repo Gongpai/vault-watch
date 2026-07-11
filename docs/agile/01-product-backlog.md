@@ -95,7 +95,7 @@
 |:---|:---|:---|:---|:---|
 | [US-MON-28](./user-stories/US-MON-28.md) | Privacy, consent and security baseline | universal/security | **M** | 🚧 In Progress |
 | [US-MON-29](./user-stories/US-MON-29.md) | Universal storage inventory graph | universal discovery | **L** | 🚧 In Progress |
-| [US-MON-30](./user-stories/US-MON-30.md) | Native block throughput backend | diskstats/sysfs | **M** | 🚧 In Progress |
+| [US-MON-30](./user-stories/US-MON-30.md) | Native block throughput backend | diskstats/sysfs | **M** | ✅ Done |
 | [US-MON-31](./user-stories/US-MON-31.md) | Native Linux MD RAID backend | md sysfs | **L** | 🚧 In Progress |
 | [US-MON-32](./user-stories/US-MON-32.md) | Storage-first TUI and scoped metrics | UI/config | **L** | 📋 Planned |
 | [US-MON-33](./user-stories/US-MON-33.md) | Native SAS/SCSI health | SG_IO/SCSI | **XL** | 📋 Planned |

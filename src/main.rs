@@ -218,7 +218,7 @@ async fn handle_key(
             let mut s = state.lock().await;
             let max = match s.focused_panel {
                 FocusedPanel::DiskTable => s.disks.len().saturating_sub(1),
-                FocusedPanel::SmartDetails => (s.disks.len() + 1).saturating_sub(1),
+                FocusedPanel::SmartDetails => (s.disks.len() * 2).saturating_sub(1),
                 _ => 0,
             };
             match s.focused_panel {
@@ -354,6 +354,15 @@ async fn collector_loop(
                 device,
                 read_mb_s: metrics.read_mib_per_sec,
                 write_mb_s: metrics.write_mib_per_sec,
+                read_iops: metrics.read_iops,
+                write_iops: metrics.write_iops,
+                utilization_percent: metrics.utilization_percent,
+                average_read_latency_ms: metrics.average_read_latency_ms,
+                average_write_latency_ms: metrics.average_write_latency_ms,
+                average_queue_depth: metrics.average_queue_depth,
+                ios_in_progress: metrics.ios_in_progress,
+                source: app::IoMetricSource::ProcDiskstats,
+                scope: app::IoMetricScope::DirectWholeDevice,
             })
             .collect::<Vec<_>>();
         let (raid_result, raid_availability) =

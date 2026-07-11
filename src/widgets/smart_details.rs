@@ -33,7 +33,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     };
 
     let block = Block::default()
-        .title(" SMART Details ")
+        .title(" Device Details · health + block I/O ")
         .borders(Borders::ALL)
         .border_type(border_type)
         .border_style(Style::default().fg(border_color));
@@ -42,7 +42,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     let inner = block.inner(area);
 
-    // One labeled line per disk (no separate header — labels are inline per row)
+    // Two labeled lines per device: health metadata and scoped block I/O.
     let mut lines: Vec<Line> = Vec::new();
 
     for disk in &state.disks {
@@ -75,7 +75,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
 
         lines.push(Line::from(vec![
             Span::styled(
-                format!("{:<5}", disk.device),
+                format!("{:<12}", disk.device),
                 Style::default().fg(Color::Cyan),
             ),
             Span::styled(" Serial: ", Style::default().fg(Color::DarkGray)),
@@ -91,6 +91,38 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
             Span::styled("  WrErr: ", Style::default().fg(Color::DarkGray)),
             Span::styled(werr_str, Style::default().fg(werr_color)),
         ]));
+
+        let io_line = match state
+            .io_stats
+            .iter()
+            .find(|stat| stat.device == disk.device)
+        {
+            Some(stat) => Line::from(vec![
+                Span::styled(format!("{:<12}", ""), Style::default()),
+                Span::styled(
+                    format!(" I/O [{}/{}] ", stat.source.label(), stat.scope.label()),
+                    Style::default().fg(Color::DarkGray),
+                ),
+                Span::raw(format!(
+                    "RIOPS {:>6.1} WIOPS {:>6.1} U {:>5.1}% RL {:>7} WL {:>7} QD {:>5.2} A {:>3}",
+                    stat.read_iops,
+                    stat.write_iops,
+                    stat.utilization_percent,
+                    format_latency(stat.average_read_latency_ms),
+                    format_latency(stat.average_write_latency_ms),
+                    stat.average_queue_depth,
+                    stat.ios_in_progress,
+                )),
+            ]),
+            None => Line::from(vec![
+                Span::styled(format!("{:<12}", ""), Style::default()),
+                Span::styled(
+                    " I/O [diskstats/whole] unavailable (baseline/reset/device absent)",
+                    Style::default().fg(Color::DarkGray),
+                ),
+            ]),
+        };
+        lines.push(io_line);
     }
 
     let total_lines = lines.len();
@@ -127,5 +159,22 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
         let hint_area = Rect::new(hint_x, hint_y, hint.len() as u16, 1);
         let p = Paragraph::new(Span::styled(hint, Style::default().fg(Color::DarkGray)));
         f.render_widget(p, hint_area);
+    }
+}
+
+fn format_latency(value: Option<f64>) -> String {
+    value
+        .map(|milliseconds| format!("{milliseconds:.2}ms"))
+        .unwrap_or_else(|| "N/A".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_latency;
+
+    #[test]
+    fn idle_latency_is_unavailable_not_zero() {
+        assert_eq!(format_latency(None), "N/A");
+        assert_eq!(format_latency(Some(0.0)), "0.00ms");
     }
 }

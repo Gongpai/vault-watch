@@ -161,6 +161,45 @@ pub struct IoStats {
     pub device: String,
     pub read_mb_s: f64,
     pub write_mb_s: f64,
+    pub read_iops: f64,
+    pub write_iops: f64,
+    pub utilization_percent: f64,
+    pub average_read_latency_ms: Option<f64>,
+    pub average_write_latency_ms: Option<f64>,
+    pub average_queue_depth: f64,
+    pub ios_in_progress: u64,
+    pub source: IoMetricSource,
+    pub scope: IoMetricScope,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IoMetricSource {
+    ProcDiskstats,
+    #[cfg(test)]
+    LegacyIostatOracle,
+}
+
+impl IoMetricSource {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::ProcDiskstats => "diskstats",
+            #[cfg(test)]
+            Self::LegacyIostatOracle => "iostat-oracle",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IoMetricScope {
+    DirectWholeDevice,
+}
+
+impl IoMetricScope {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::DirectWholeDevice => "whole",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

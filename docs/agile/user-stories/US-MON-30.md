@@ -1,6 +1,6 @@
 # US-MON-30 — Native Block Throughput Backend
 
-**Sprint:** 10B | **Priority:** Must | **Status:** 🚧 In Progress
+**Sprint:** 10B | **Priority:** Must | **Status:** ✅ Done
 
 แทน `iostat` ด้วย `/proc/diskstats` หรือ sysfs `stat` พร้อม delta calculator ที่แยก metric scope ถูกต้อง
 
@@ -19,4 +19,4 @@
 - [x] AC4: UI selects direct whole-device graph subjects; partition/virtual/stacked layers are excluded from presented throughput
 - [x] AC5: malformed, multiple-device, idle, reset, zero-interval, generation change, removal and reappearance fixtures
 - [x] AC6: production runtime reads `/proc/diskstats`; iostat parser is test-only oracle
-- [ ] expose IOPS/utilization/latency/queue scope and availability in redesigned detail UI
+- [x] redesigned Device Details exposes IOPS/utilization/latency/queue depth/in-flight with `diskstats/whole` source+scope; idle latency and missing/reset baselines remain explicitly `N/A`/unavailable

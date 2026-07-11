@@ -1,4 +1,4 @@
-use crate::app::IoStats;
+use crate::app::{IoMetricScope, IoMetricSource, IoStats};
 
 fn parse_iostat_output(output: &str, devices: &[String]) -> Vec<IoStats> {
     // Split output into blocks separated by blank lines
@@ -53,6 +53,15 @@ fn parse_iostat_output(output: &str, devices: &[String]) -> Vec<IoStats> {
             device: fields[0].to_string(),
             read_mb_s: read_kb_s / 1024.0,
             write_mb_s: write_kb_s / 1024.0,
+            read_iops: 0.0,
+            write_iops: 0.0,
+            utilization_percent: 0.0,
+            average_read_latency_ms: None,
+            average_write_latency_ms: None,
+            average_queue_depth: 0.0,
+            ios_in_progress: 0,
+            source: IoMetricSource::LegacyIostatOracle,
+            scope: IoMetricScope::DirectWholeDevice,
         });
     }
 

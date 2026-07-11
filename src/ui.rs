@@ -261,7 +261,7 @@ fn render_status_bar(f: &mut Frame, area: Rect, state: &AppState) {
     };
 
     let smart_scroll_info = if smart_focused {
-        let total = state.disks.len() + 1; // +1 for header
+        let total = state.disks.len() * 2;
         let scroll = state.smart_details_scroll;
         format!("[{}/{} — ↑↓:scroll]", scroll + 1, total.max(1))
     } else {
@@ -286,7 +286,7 @@ fn render_status_bar(f: &mut Frame, area: Rect, state: &AppState) {
         ),
         Span::styled("  ", Style::default()),
         Span::styled(
-            format!("{} SmartDetails {}", smart_bullet, smart_scroll_info),
+            format!("{} DeviceDetails {}", smart_bullet, smart_scroll_info),
             Style::default().fg(smart_color),
         ),
     ]);
