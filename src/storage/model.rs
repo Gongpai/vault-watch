@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet, VecDeque};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StorageKind {
     ScsiLike,
@@ -9,16 +11,85 @@ pub enum StorageKind {
     Other,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Materialization {
+    BlockDevice,
+    Partition,
+    Stacked,
+    Virtual,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IdentityScope {
+    KernelObject,
+    BlockDevice,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IdentitySource {
+    ClassName,
+    DevNumber,
+    DiskSequence,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Confidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IdentityClaim {
+    pub value: String,
+    pub scope: IdentityScope,
+    pub source: IdentitySource,
+    pub confidence: Confidence,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Generation {
+    pub diskseq: Option<u64>,
+    pub dev_t: Option<(u32, u32)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StorageNode {
+    pub id: String,
     pub name: String,
     pub kind: StorageKind,
+    pub materialization: Materialization,
     pub removable: Option<bool>,
+    pub identities: Vec<IdentityClaim>,
+    pub generation: Generation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum StorageEdgeKind {
+    ContainsPartition,
+    BackedBy,
+    MemberOf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StorageEdge {
+    pub from: String,
+    pub to: String,
+    pub kind: StorageEdgeKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GraphViolation {
+    DuplicateNode(String),
+    DanglingEdge { from: String, to: String },
+    PartitionContainsNode(String),
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct StorageInventory {
     pub nodes: Vec<StorageNode>,
+    pub edges: Vec<StorageEdge>,
     pub partial: bool,
 }
 
@@ -32,5 +103,120 @@ impl StorageInventory {
             .iter()
             .filter(|node| node.removable == Some(true))
             .count()
+    }
+
+    pub fn reachable_from(&self, start: &str) -> HashSet<String> {
+        let mut adjacency: HashMap<&str, Vec<&str>> = HashMap::new();
+        for edge in &self.edges {
+            adjacency
+                .entry(edge.from.as_str())
+                .or_default()
+                .push(edge.to.as_str());
+        }
+
+        let mut visited = HashSet::new();
+        let mut queue = VecDeque::from([start]);
+        while let Some(current) = queue.pop_front() {
+            if !visited.insert(current.to_owned()) {
+                continue;
+            }
+            if let Some(neighbours) = adjacency.get(current) {
+                queue.extend(neighbours.iter().copied());
+            }
+        }
+        visited
+    }
+
+    pub fn validate(&self) -> Result<(), GraphViolation> {
+        let mut nodes = HashMap::new();
+        for node in &self.nodes {
+            if nodes.insert(node.id.as_str(), node).is_some() {
+                return Err(GraphViolation::DuplicateNode(node.id.clone()));
+            }
+        }
+
+        for edge in &self.edges {
+            let (Some(from), Some(_)) =
+                (nodes.get(edge.from.as_str()), nodes.get(edge.to.as_str()))
+            else {
+                return Err(GraphViolation::DanglingEdge {
+                    from: edge.from.clone(),
+                    to: edge.to.clone(),
+                });
+            };
+            if from.materialization == Materialization::Partition
+                && edge.kind == StorageEdgeKind::ContainsPartition
+            {
+                return Err(GraphViolation::PartitionContainsNode(from.id.clone()));
+            }
+        }
+
+        // Exercise cycle-safe traversal for every component. Cycles are tolerated
+        // defensively because sysfs is not an atomic snapshot.
+        for node in &self.nodes {
+            self.reachable_from(&node.id);
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn node(id: &str) -> StorageNode {
+        StorageNode {
+            id: id.to_owned(),
+            name: id.to_owned(),
+            kind: StorageKind::Other,
+            materialization: Materialization::BlockDevice,
+            removable: None,
+            identities: Vec::new(),
+            generation: Generation::default(),
+        }
+    }
+
+    #[test]
+    fn traversal_terminates_when_graph_contains_cycle() {
+        let graph = StorageInventory {
+            nodes: vec![node("a"), node("b")],
+            edges: vec![
+                StorageEdge {
+                    from: "a".into(),
+                    to: "b".into(),
+                    kind: StorageEdgeKind::BackedBy,
+                },
+                StorageEdge {
+                    from: "b".into(),
+                    to: "a".into(),
+                    kind: StorageEdgeKind::BackedBy,
+                },
+            ],
+            partial: false,
+        };
+
+        assert_eq!(
+            graph.reachable_from("a"),
+            HashSet::from(["a".into(), "b".into()])
+        );
+        assert_eq!(graph.validate(), Ok(()));
+    }
+
+    #[test]
+    fn validation_rejects_dangling_edges() {
+        let graph = StorageInventory {
+            nodes: vec![node("a")],
+            edges: vec![StorageEdge {
+                from: "a".into(),
+                to: "missing".into(),
+                kind: StorageEdgeKind::BackedBy,
+            }],
+            partial: false,
+        };
+
+        assert!(matches!(
+            graph.validate(),
+            Err(GraphViolation::DanglingEdge { .. })
+        ));
     }
 }

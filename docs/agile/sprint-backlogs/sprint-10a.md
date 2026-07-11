@@ -12,8 +12,8 @@
 - [x] config error ไม่ถูกกลืน; empty Discord table regression test
 - [x] reject command/device/webhook injection จาก config
 - [x] initial whole-block classification สำหรับ SCSI-like/NVMe/MMC/MD/DM/virtual
-- [ ] typed graph edges, scoped identities, confidence และ generation model
-- [ ] fixture-root discovery tests + no-device/partial state
+- [x] typed graph edges, scoped identities, confidence และ generation model
+- [x] fixture-root discovery tests + no-device/partial state
 - [ ] periodic topology reconciliation
 
 ## Exit Gate

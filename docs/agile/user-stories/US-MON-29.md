@@ -13,3 +13,8 @@
 5. no-device/partial-inventory แสดงชัดเจน ไม่ crash
 6. hot-plug event เป็น hint และต้อง periodic reconciliation
 7. ไม่มีการเปิด device node หรือ filesystem content ใน discovery phase
+
+## Implementation Progress
+
+- [x] AC1–AC5, AC7: sysfs fixture root, independent node classification, directed typed graph, cycle-safe traversal, scoped identity claims, `diskseq`/`dev_t` generation และ partial/empty state
+- [ ] AC6: event hints + periodic topology reconciliation
