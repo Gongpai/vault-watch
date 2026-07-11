@@ -4,7 +4,7 @@ use futures::future::join_all;
 use regex::Regex;
 use tokio::process::Command;
 
-use crate::app::DiskInfo;
+use crate::app::{DiskInfo, HealthStatus};
 
 static SERIAL_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"Serial number:\s+(\S+)").unwrap());
@@ -46,17 +46,7 @@ async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> Di
     let stdout = match output {
         Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),
         Err(_) => {
-            return DiskInfo {
-                device,
-                serial: None,
-                temperature_c: None,
-                health_ok: false,
-                power_on_hours: None,
-                grown_defects: None,
-                non_medium_errors: None,
-                read_errors: None,
-                write_errors: None,
-            };
+            return DiskInfo::unavailable(device);
         }
     };
 
@@ -66,12 +56,21 @@ async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> Di
 fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
     let serial = SERIAL_RE.captures(output).map(|c| c[1].to_string());
 
-    let temperature_c = TEMP_RE.captures(output).and_then(|c| c[1].parse().ok());
-
-    let health_ok = HEALTH_RE
+    // Some unsupported SCSI translations report 0 C. Treat that sentinel as
+    // unavailable instead of presenting a physically meaningful temperature.
+    let temperature_c = TEMP_RE
         .captures(output)
-        .map(|c| matches!(c[1].as_ref(), "OK" | "PASSED"))
-        .unwrap_or(false);
+        .and_then(|c| c[1].parse().ok())
+        .filter(|temperature| *temperature > 0);
+
+    let health = HEALTH_RE
+        .captures(output)
+        .map(|capture| match capture[1].as_ref() {
+            "OK" | "PASSED" => HealthStatus::Healthy,
+            "FAIL" | "FAILED" | "BAD" => HealthStatus::Failed,
+            _ => HealthStatus::Unavailable,
+        })
+        .unwrap_or(HealthStatus::Unavailable);
 
     let power_on_hours = HOURS_RE.captures(output).and_then(|c| c[1].parse().ok());
 
@@ -89,7 +88,7 @@ fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
         device: device.to_string(),
         serial,
         temperature_c,
-        health_ok,
+        health,
         power_on_hours,
         grown_defects,
         non_medium_errors,
@@ -119,7 +118,7 @@ write:         0        0         0         0          0         0.000          
         assert_eq!(info.device, "sdc");
         assert_eq!(info.serial, Some("XXXX000000".to_string()));
         assert_eq!(info.temperature_c, Some(53));
-        assert!(info.health_ok);
+        assert_eq!(info.health, HealthStatus::Healthy);
         assert_eq!(info.power_on_hours, Some(12345));
         assert_eq!(info.grown_defects, Some(7));
         assert_eq!(info.non_medium_errors, Some(16373));
@@ -133,13 +132,35 @@ write:         0        0         0         0          0         0.000          
         assert_eq!(info.device, "sdd");
         assert!(info.serial.is_none());
         assert!(info.temperature_c.is_none());
-        assert!(!info.health_ok);
+        assert_eq!(info.health, HealthStatus::Unavailable);
         assert!(info.power_on_hours.is_none());
     }
 
     #[test]
     fn test_health_passed() {
         let info = parse_smart_output("sde", "SMART Health Status: PASSED\n");
-        assert!(info.health_ok);
+        assert_eq!(info.health, HealthStatus::Healthy);
+    }
+
+    #[test]
+    fn missing_health_and_zero_temperature_are_unavailable_not_failed() {
+        let info = parse_smart_output("sda", "Current Drive Temperature:     0 C\n");
+
+        assert_eq!(info.health, HealthStatus::Unavailable);
+        assert_eq!(info.temperature_c, None);
+    }
+
+    #[test]
+    fn explicit_failed_health_remains_failed() {
+        let info = parse_smart_output("sda", "SMART Health Status: FAILED\n");
+
+        assert_eq!(info.health, HealthStatus::Failed);
+    }
+
+    #[test]
+    fn ambiguous_health_is_unavailable_not_failed() {
+        let info = parse_smart_output("sda", "SMART Health Status: UNKNOWN\n");
+
+        assert_eq!(info.health, HealthStatus::Unavailable);
     }
 }

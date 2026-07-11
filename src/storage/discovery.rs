@@ -330,6 +330,35 @@ mod tests {
     }
 
     #[test]
+    fn p4618_fixture_separates_whole_nvme_partitions_and_virtual_nodes() {
+        let fixture = Fixture::new();
+        fixture.block("nvme0n1", None, "259:0", 20);
+        fixture.block("nvme1n1", None, "259:5", 21);
+        for (name, parent, minor) in [
+            ("nvme0n1p1", "nvme0n1", 1),
+            ("nvme0n1p2", "nvme0n1", 2),
+            ("nvme0n1p3", "nvme0n1", 3),
+            ("nvme0n1p5", "nvme0n1", 4),
+            ("nvme1n1p1", "nvme1n1", 6),
+            ("nvme1n1p2", "nvme1n1", 7),
+        ] {
+            fixture.block(name, Some(parent), &format!("259:{minor}"), 20);
+        }
+        for index in 0..32 {
+            fixture.block(&format!("loop{index}"), None, &format!("7:{index}"), 30);
+        }
+
+        let inventory = discover_storage_from(&fixture.root());
+
+        assert!(!inventory.partial);
+        assert_eq!(inventory.nodes.len(), 40);
+        assert_eq!(inventory.count_whole_kind(StorageKind::Nvme), 2);
+        assert_eq!(inventory.partition_count(), 6);
+        assert_eq!(inventory.virtual_count(), 32);
+        assert_eq!(inventory.whole_block_count(), 2);
+    }
+
+    #[test]
     fn missing_root_is_an_empty_partial_inventory() {
         let fixture = Fixture::new();
         let inventory = discover_storage_from(&fixture.0.join("missing"));

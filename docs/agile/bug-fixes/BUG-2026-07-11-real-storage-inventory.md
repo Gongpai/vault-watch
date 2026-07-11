@@ -1,6 +1,6 @@
 # BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618
 
-**Reported:** 2026-07-11 | **Status:** 🐛 Open | **Source:** real-hardware TUI screenshot + `lsblk`
+**Reported:** 2026-07-11 | **Status:** 🚧 4 fixed, 1 open; hardware retest required | **Source:** real-hardware TUI screenshot + `lsblk`
 
 ## Test Hardware
 
@@ -16,7 +16,7 @@
 
 ### BUG-01 — NVMe summary counts namespaces/partitions as drives
 
-**Severity:** High | **Owner:** US-MON-29 / US-MON-32
+**Severity:** High | **Owner:** US-MON-29 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
 
 - Observed: Privacy bar displays `NVMe 8`.
 - Actual: two NVMe controllers/whole namespaces are visible; the remaining six entries are partitions.
@@ -24,7 +24,7 @@
 
 ### BUG-02 — New inventory is not the source of the Disk Summary
 
-**Severity:** High | **Owner:** US-MON-32
+**Severity:** High | **Owner:** US-MON-32 | **Status:** ✅ Fixed; unavailable NVMe rows until native backend
 
 - Observed: Disk Summary contains only `sda`, `sdb`, `sdc`.
 - Actual cause: legacy device selection still includes only `sd*`; discovered NVMe nodes are not routed into collectors/UI rows.
@@ -32,7 +32,7 @@
 
 ### BUG-03 — Collection failure is rendered as disk failure and zero temperature
 
-**Severity:** Critical | **Owner:** US-MON-32 / US-MON-33 / US-MON-34
+**Severity:** Critical | **Owner:** US-MON-32 / US-MON-33 / US-MON-34 | **Status:** ✅ Fixed; awaiting hardware retest
 
 - Observed: `sda` and `sdb` produce red `SMART health FAIL`; all three disks show `0°C` while detailed fields are `--`.
 - Risk: a missing tool, wrong protocol option, permission denial, parse error or unsupported attribute can trigger a false device-failure alert.
@@ -40,14 +40,14 @@
 
 ### BUG-04 — Block-node total is not an operator-meaningful device count
 
-**Severity:** Medium | **Owner:** US-MON-29 / US-MON-32
+**Severity:** Medium | **Owner:** US-MON-29 / US-MON-32 | **Status:** ✅ Fixed; awaiting hardware retest
 
 - Observed: Privacy bar displays `block nodes 47`, dominated by loop devices and partitions.
 - Expected: retain the raw graph-node count for diagnostics, but present operator-facing counts by scope: physical candidates, controller/logical device, whole block device, partition, stacked, virtual and hidden/unsupported.
 
 ### BUG-05 — P4618 needs card grouping without merging controller health
 
-**Severity:** High | **Owner:** US-MON-29 / US-MON-35 / US-MON-38
+**Severity:** High | **Owner:** US-MON-29 / US-MON-35 / US-MON-38 | **Status:** 🐛 Open
 
 - Observed topology: one P4618 card appears as two approximately 3.2 TB NVMe devices.
 - Expected: topology may group both controllers under one PCIe/card placement object, but must preserve separate controller identity, generation, SMART/health, temperature, endurance, media errors and namespace metrics. Never average or silently merge the two health records.
@@ -55,10 +55,10 @@
 
 ## Regression and Hardware Acceptance
 
-- [ ] Fixture: two NVMe whole devices with six partitions reports `controllers=2`, `partitions=6`, never `NVMe=8 drives`.
-- [ ] Fixture: 32 loop devices do not inflate operator-facing physical storage totals.
-- [ ] Disk Summary includes both P4618 controller/namespace subjects before native health exists and labels health availability honestly.
-- [ ] Permission denied, missing external tool and malformed output never emit `SMART FAIL`, `0°C` or a critical disk alert.
+- [x] Fixture: two NVMe whole devices with six partitions reports `NVMe whole=2`, `partitions=6`, never `NVMe=8 drives`.
+- [x] Fixture: 32 loop devices do not inflate operator-facing whole-storage totals.
+- [x] Disk Summary includes both P4618 namespace subjects before native health exists and labels health availability honestly.
+- [x] Permission denied, missing external tool, missing/ambiguous status and malformed output never emit `SMART FAIL`, `0°C` or a critical disk alert.
 - [ ] Native NVMe health is collected and displayed independently for `/dev/nvme0` and `/dev/nvme1`.
 - [ ] UI groups both controllers as one P4618 card only when PCIe/topology evidence supports that relationship.
 - [ ] Manual retest captures TUI screenshot plus redacted controller model/firmware and SMART/Health output for both controllers.

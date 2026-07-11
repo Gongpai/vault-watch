@@ -150,9 +150,12 @@ fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
 
 fn render_security_bar(f: &mut Frame, area: Rect, state: &AppState) {
     let inventory = &state.storage_inventory;
-    let devices = inventory.nodes.len();
-    let nvme = inventory.count_kind(StorageKind::Nvme);
-    let mmc = inventory.count_kind(StorageKind::Mmc);
+    let nodes = inventory.nodes.len();
+    let whole = inventory.whole_block_count();
+    let partitions = inventory.partition_count();
+    let virtual_nodes = inventory.virtual_count();
+    let nvme = inventory.count_whole_kind(StorageKind::Nvme);
+    let mmc = inventory.count_whole_kind(StorageKind::Mmc);
     let removable = inventory.removable_count();
     let partial = if inventory.partial {
         " · inventory PARTIAL"
@@ -170,7 +173,7 @@ fn render_security_bar(f: &mut Frame, area: Rect, state: &AppState) {
         ),
         Span::styled(
             format!(
-                " · block nodes {devices} · NVMe {nvme} · MMC {mmc} · removable {removable}{partial}"
+                " · nodes {nodes} · whole {whole} · NVMe {nvme} · MMC {mmc} · part {partitions} · virtual {virtual_nodes} · removable {removable}{partial}"
             ),
             Style::default().fg(Color::DarkGray),
         ),

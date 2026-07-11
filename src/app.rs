@@ -55,7 +55,7 @@ pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
     }
 
     for disk in &state.disks {
-        if !disk.health_ok {
+        if disk.health == HealthStatus::Failed {
             alerts.push(Alert::DiskFail {
                 device: disk.device.clone(),
             });
@@ -105,12 +105,48 @@ pub struct DiskInfo {
     pub device: String,
     pub serial: Option<String>,
     pub temperature_c: Option<u8>,
-    pub health_ok: bool,
+    pub health: HealthStatus,
     pub power_on_hours: Option<u64>,
     pub grown_defects: Option<u64>,
     pub non_medium_errors: Option<u64>,
     pub read_errors: Option<u64>,
     pub write_errors: Option<u64>,
+}
+
+impl DiskInfo {
+    pub fn unavailable(device: String) -> Self {
+        Self {
+            device,
+            serial: None,
+            temperature_c: None,
+            health: HealthStatus::Unavailable,
+            power_on_hours: None,
+            grown_defects: None,
+            non_medium_errors: None,
+            read_errors: None,
+            write_errors: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HealthStatus {
+    Healthy,
+    Failed,
+    Unavailable,
+}
+
+pub fn merge_inventory_disks(
+    inventory: &StorageInventory,
+    mut collected: Vec<DiskInfo>,
+) -> Vec<DiskInfo> {
+    for device in inventory.whole_device_names() {
+        if !collected.iter().any(|disk| disk.device == device) {
+            collected.push(DiskInfo::unavailable(device));
+        }
+    }
+    collected.sort_by(|left, right| left.device.cmp(&right.device));
+    collected
 }
 
 #[derive(Debug, Clone)]
@@ -215,5 +251,68 @@ impl AppState {
                 .raid_speed_history
                 .values()
                 .any(|h| h.iter().any(|&v| v > 0))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn disk(health: HealthStatus) -> DiskInfo {
+        let mut disk = DiskInfo::unavailable("sda".into());
+        disk.health = health;
+        disk
+    }
+
+    #[test]
+    fn unavailable_health_does_not_create_disk_failure_alert() {
+        let mut state = AppState::new(
+            vec!["sda".into()],
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        );
+        state.disks = vec![disk(HealthStatus::Unavailable)];
+
+        assert!(collect_alerts(&state).is_empty());
+    }
+
+    #[test]
+    fn explicit_health_failure_creates_critical_alert() {
+        let mut state = AppState::new(
+            vec!["sda".into()],
+            StorageInventory::default(),
+            SecurityPosture::new(false),
+        );
+        state.disks = vec![disk(HealthStatus::Failed)];
+
+        let alerts = collect_alerts(&state);
+        assert_eq!(alerts.len(), 1);
+        assert!(alerts[0].is_critical());
+    }
+
+    #[test]
+    fn merge_preserves_uncollected_inventory_devices_as_unavailable() {
+        use crate::storage::{Generation, Materialization, StorageKind, StorageNode};
+
+        let inventory = StorageInventory {
+            nodes: vec![StorageNode {
+                id: "block:nvme0n1".into(),
+                name: "nvme0n1".into(),
+                kind: StorageKind::Nvme,
+                materialization: Materialization::BlockDevice,
+                removable: Some(false),
+                identities: Vec::new(),
+                generation: Generation::default(),
+            }],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        let merged = merge_inventory_disks(&inventory, vec![disk(HealthStatus::Healthy)]);
+
+        assert_eq!(merged.len(), 2);
+        assert_eq!(merged[1].device, "sda");
+        assert_eq!(merged[0].device, "nvme0n1");
+        assert_eq!(merged[0].health, HealthStatus::Unavailable);
     }
 }

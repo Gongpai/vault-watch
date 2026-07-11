@@ -4,6 +4,15 @@
 
 ---
 
+## Unreleased — 2026-07-11
+
+### Fixed (Sprint 10 real-hardware regression)
+
+- Privacy bar แยกจำนวน whole block, NVMe whole devices, partitions และ virtual nodes; partition ของ P4618 ไม่ถูกนับเป็น NVMe drive อีกต่อไป
+- Disk Summary ใช้ graph inventory เติม whole devices ที่ legacy collector ยังไม่รองรับ โดยแสดง health เป็น `N/A` แทนการซ่อน NVMe
+- SMART status เปลี่ยนจาก boolean เป็น `Healthy`/`Failed`/`Unavailable`; missing tool/status, ambiguous output และอุณหภูมิ sentinel `0°C` ไม่สร้าง false critical alert
+- เพิ่ม synthetic Intel DC P4618 fixture: 2 NVMe whole devices, 6 partitions และ 32 loop devices
+
 ## [0.9.0] - 2026-06-17
 
 ### Implemented (Sprint 09 — Tunable Y-Axis Label Offset)

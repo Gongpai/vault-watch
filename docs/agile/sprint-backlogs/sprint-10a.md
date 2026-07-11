@@ -15,7 +15,7 @@
 - [x] typed graph edges, scoped identities, confidence และ generation model
 - [x] fixture-root discovery tests + no-device/partial state
 - [ ] periodic topology reconciliation
-- [ ] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
+- [x] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
 
 ## Exit Gate
 

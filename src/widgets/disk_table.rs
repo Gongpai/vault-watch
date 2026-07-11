@@ -9,7 +9,7 @@ use ratatui::{
     },
 };
 
-use crate::app::{Alert, AppState, FocusedPanel};
+use crate::app::{Alert, AppState, FocusedPanel, HealthStatus};
 use crate::widgets::sparkline_cell::sparkline;
 
 // Column widths: 5+23+18+18+5+8 = 77 + 5 col_spacings = 82 chars (fits in 100-col terminal)
@@ -159,11 +159,10 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
                 Span::styled(write_val, Style::default().fg(Color::Magenta)),
             ]));
 
-            // Health cell (binary OK / FAIL)
-            let (health_str, health_color) = if disk.health_ok {
-                ("OK   ", Color::Green)
-            } else {
-                ("FAIL ", Color::Red)
+            let (health_str, health_color) = match disk.health {
+                HealthStatus::Healthy => ("OK   ", Color::Green),
+                HealthStatus::Failed => ("FAIL ", Color::Red),
+                HealthStatus::Unavailable => ("N/A  ", Color::DarkGray),
             };
             let health_cell =
                 Cell::from(Span::styled(health_str, Style::default().fg(health_color)));

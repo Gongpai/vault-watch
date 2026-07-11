@@ -94,8 +94,45 @@ pub struct StorageInventory {
 }
 
 impl StorageInventory {
-    pub fn count_kind(&self, kind: StorageKind) -> usize {
-        self.nodes.iter().filter(|node| node.kind == kind).count()
+    pub fn count_whole_kind(&self, kind: StorageKind) -> usize {
+        self.nodes
+            .iter()
+            .filter(|node| node.kind == kind && node.materialization != Materialization::Partition)
+            .count()
+    }
+
+    pub fn partition_count(&self) -> usize {
+        self.nodes
+            .iter()
+            .filter(|node| node.materialization == Materialization::Partition)
+            .count()
+    }
+
+    pub fn virtual_count(&self) -> usize {
+        self.nodes
+            .iter()
+            .filter(|node| node.materialization == Materialization::Virtual)
+            .count()
+    }
+
+    pub fn whole_block_count(&self) -> usize {
+        self.nodes
+            .iter()
+            .filter(|node| {
+                !matches!(
+                    node.materialization,
+                    Materialization::Partition | Materialization::Virtual
+                )
+            })
+            .count()
+    }
+
+    pub fn whole_device_names(&self) -> Vec<String> {
+        self.nodes
+            .iter()
+            .filter(|node| node.materialization == Materialization::BlockDevice)
+            .map(|node| node.name.clone())
+            .collect()
     }
 
     pub fn removable_count(&self) -> usize {

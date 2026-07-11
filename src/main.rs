@@ -24,7 +24,7 @@ mod storage;
 mod ui;
 mod widgets;
 
-use app::{AppState, FocusedPanel, HISTORY_SIZE, ViewMode, collect_alerts};
+use app::{AppState, FocusedPanel, HISTORY_SIZE, ViewMode, collect_alerts, merge_inventory_disks};
 
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
 const RENDER_INTERVAL: Duration = Duration::from_millis(250);
@@ -385,7 +385,7 @@ async fn collector_loop(
             });
 
             s.raids = raid_result;
-            s.disks = disks_result;
+            s.disks = merge_inventory_disks(&s.storage_inventory, disks_result);
             s.io_stats = iostat_result;
             s.last_updated = std::time::Instant::now();
             s.last_updated_str = chrono::Local::now().format("%H:%M:%S").to_string();
