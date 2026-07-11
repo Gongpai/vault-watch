@@ -18,6 +18,8 @@
 - [x] periodic topology reconciliation with atomic publish and failed-empty snapshot retention
 - [x] BUG-01/04 fixture: whole-device, partition และ virtual counts แยก scope ชัดเจน
 - [x] live hot-add/hot-remove verification: counts/rows reconcile without restart or crash (sanitized evidence 2026-07-11)
+- [x] unprivileged block-uevent hints + 150 ms burst coalescing; periodic sysfs reconciliation remains mandatory fallback
+- [ ] live event-assisted hot-add/hot-remove latency qualification
 
 ## Exit Gate
 

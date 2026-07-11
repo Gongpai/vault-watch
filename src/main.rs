@@ -59,6 +59,8 @@ async fn main() -> io::Result<()> {
     let security = security::SecurityPosture::new(outbound_notifications);
     let state = Arc::new(Mutex::new(AppState::new(devices, inventory, security)));
     let refresh_notify = Arc::new(Notify::new());
+    #[cfg(target_os = "linux")]
+    storage::spawn_block_event_hints(Arc::clone(&refresh_notify));
 
     // Startup dependency check — results stored in AppState for UI display
     let mut dep_errors = config::check_dependencies(&cfg).await;
@@ -324,8 +326,9 @@ async fn collector_loop(
     let mut native_md = collectors::md_sysfs::MdOperationSampler::default();
 
     loop {
-        // Events will be hints in a later phase; this bounded sysfs resnapshot
-        // is the correctness path for add/remove/replacement reconciliation.
+        // Netlink events and manual refreshes are hints. This bounded sysfs
+        // resnapshot remains the correctness path, with the periodic timer as
+        // a safety net for missed or unavailable events.
         let next_inventory = storage::discover_storage();
         let (devices, throughput_subjects) = {
             let mut s = state.lock().await;

@@ -19,4 +19,6 @@
 - [x] AC1–AC5, AC7: sysfs fixture root, independent node classification, directed typed graph, cycle-safe traversal, scoped identity claims, `diskseq`/`dev_t` generation และ partial/empty state
 - [x] AC6 (periodic path): bounded sysfs resnapshot + atomic topology reconciliation
 - [x] AC6 periodic path verified on live removable storage add/remove without retaining device identifiers
-- [ ] AC6 (event optimization): event hints trigger coalesced resnapshot; periodic path remains mandatory
+- [x] AC6 event core: read-only `NETLINK_KOBJECT_UEVENT` block hints are filtered and coalesced before waking the same transactional sysfs resnapshot; socket/read failure silently retains periodic correctness fallback
+- [x] event parser and burst coalescing fixtures; a burst emits one reconciliation hint
+- [ ] live event-assisted add/remove qualification (confirm response before the 2-second periodic deadline without restart/crash)

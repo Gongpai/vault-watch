@@ -4,6 +4,28 @@
 
 ---
 
+## [0.12.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม unprivileged Linux block-event plane ต่อจาก `0.11.0`; event เป็นเพียง hint และไม่แทน periodic transactional sysfs reconciliation
+
+### Added
+
+- read-only `NETLINK_KOBJECT_UEVENT` listener กรองเฉพาะ `SUBSYSTEM=block` โดยไม่เปิด device node หรืออ่าน user content
+- bounded event channel และ 150 ms debounce/coalescing; event burst ปลุก collector เพียงหนึ่ง reconciliation cycle
+- parser/coalescing tests และ graceful fallback เมื่อเปิดหรืออ่าน netlink ไม่ได้
+
+### Changed
+
+- manual refresh, block events และ periodic timer ใช้ sysfs resnapshot/reconciliation correctness path เดียวกัน
+
+### Security
+
+- uevent payload ไม่ถูกเชื่อเป็น inventory หรือ identity; ใช้เป็น hint ให้สร้าง graph snapshot ใหม่เท่านั้น
+
+### Validated
+
+- event parser/coalescing fixtures ผ่าน; live event-assisted add/remove qualification ยัง pending ก่อนปิด US-MON-29
+
 ## [0.11.0] - 2026-07-11
 
 > **MINOR bump:** เพิ่ม executable privacy/security policy และ operator-visible privileged posture ต่อจาก `0.10.0`; ยังเป็น pre-1.0 และ privileged protocol broker ยังคงปิด
