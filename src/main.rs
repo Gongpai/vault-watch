@@ -137,10 +137,10 @@ async fn handle_key(
     state: &Arc<Mutex<AppState>>,
     refresh_notify: &Arc<Notify>,
 ) -> bool {
-    // Terminals using the enhanced keyboard protocol may report both Press and
-    // Release for one physical key stroke. Acting on Release advances focus a
-    // second time and makes Tab appear to skip panels unpredictably.
-    if !is_actionable_key_event(key.kind) {
+    // View/focus actions are edge-triggered: some terminals emit Repeat almost
+    // immediately (as well as Release), which must not toggle or advance twice.
+    // Only continuous scrolling intentionally accepts keyboard Repeat.
+    if !is_actionable_key_event(&key) {
         return true;
     }
 
@@ -246,8 +246,20 @@ async fn handle_key(
     true
 }
 
-const fn is_actionable_key_event(kind: KeyEventKind) -> bool {
-    matches!(kind, KeyEventKind::Press | KeyEventKind::Repeat)
+const fn is_actionable_key_event(key: &KeyEvent) -> bool {
+    match key.kind {
+        KeyEventKind::Press => true,
+        KeyEventKind::Repeat => matches!(
+            key.code,
+            KeyCode::Up
+                | KeyCode::Down
+                | KeyCode::PageUp
+                | KeyCode::PageDown
+                | KeyCode::Char('j')
+                | KeyCode::Char('k')
+        ),
+        KeyEventKind::Release => false,
+    }
 }
 
 fn next_focused_panel(s: &AppState, backwards: bool) -> FocusedPanel {
@@ -565,20 +577,41 @@ mod tests {
     }
 
     #[test]
-    fn enhanced_keyboard_release_does_not_advance_focus_twice() {
-        assert!(is_actionable_key_event(KeyEventKind::Press));
-        assert!(is_actionable_key_event(KeyEventKind::Repeat));
-        assert!(!is_actionable_key_event(KeyEventKind::Release));
+    fn edge_triggered_tab_ignores_repeat_and_release() {
+        let tab = |kind| KeyEvent::new_with_kind(KeyCode::Tab, KeyModifiers::NONE, kind);
+        assert!(is_actionable_key_event(&tab(KeyEventKind::Press)));
+        assert!(!is_actionable_key_event(&tab(KeyEventKind::Repeat)));
+        assert!(!is_actionable_key_event(&tab(KeyEventKind::Release)));
 
         let mut state = state();
         state.view_mode = ViewMode::Graph;
         state.focused_panel = FocusedPanel::TempGraph;
-        for kind in [KeyEventKind::Press, KeyEventKind::Release] {
-            if is_actionable_key_event(kind) {
+        for kind in [
+            KeyEventKind::Press,
+            KeyEventKind::Repeat,
+            KeyEventKind::Repeat,
+            KeyEventKind::Release,
+        ] {
+            if is_actionable_key_event(&tab(kind)) {
                 state.focused_panel = next_focused_panel(&state, false);
             }
         }
         assert_eq!(state.focused_panel, FocusedPanel::ReadGraph);
+    }
+
+    #[test]
+    fn held_scroll_keys_continue_to_accept_repeat() {
+        for code in [
+            KeyCode::Up,
+            KeyCode::Down,
+            KeyCode::PageUp,
+            KeyCode::PageDown,
+            KeyCode::Char('j'),
+            KeyCode::Char('k'),
+        ] {
+            let key = KeyEvent::new_with_kind(code, KeyModifiers::NONE, KeyEventKind::Repeat);
+            assert!(is_actionable_key_event(&key));
+        }
     }
 
     #[test]

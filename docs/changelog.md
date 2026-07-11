@@ -4,6 +4,20 @@
 
 ---
 
+## [0.17.2] - 2026-07-11
+
+> **PATCH bump:** แก้ held/early Repeat ทำให้ Tab focus ข้าม panel ต่อจาก `0.17.1`
+
+### Fixed
+
+- Tab/Shift+Tab, view toggles, refresh และ quit เป็น edge-triggered และตอบสนองเฉพาะ Press ครั้งแรก
+- Repeat ยังคงเปิดเฉพาะปุ่ม continuous scrolling (`↑`, `↓`, `j`, `k`, Page Up/Down)
+
+### Validated
+
+- regression fixture จำลอง Press ตามด้วย Repeat หลายครั้งและ Release โดย focus ขยับเพียงหนึ่ง panel
+- fixture แยกยืนยันว่าการกดปุ่ม scroll ค้างยังเลื่อนต่อเนื่องได้
+
 ## [0.17.1] - 2026-07-11
 
 > **PATCH bump:** แก้ Graph focus ขยับซ้ำจาก enhanced-keyboard Release event ต่อจาก `0.17.0`
