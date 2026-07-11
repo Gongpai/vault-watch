@@ -243,6 +243,7 @@ pub struct AppState {
     pub smart_details_scroll: usize,
     pub graph_scroll: usize,
     pub topology_scroll: usize,
+    pub topology_selected: usize,
 
     pub panel_rects: HashMap<FocusedPanel, Rect>,
 
@@ -287,6 +288,7 @@ impl AppState {
             smart_details_scroll: 0,
             graph_scroll: 0,
             topology_scroll: 0,
+            topology_selected: 0,
             panel_rects: HashMap::new(),
             alerts: Vec::new(),
             alert_cooldowns: HashMap::new(),

@@ -4,6 +4,24 @@
 
 ---
 
+## [0.14.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม privacy-safe selected-node detail view ต่อจาก `0.13.2`; full availability taxonomy ของ US-MON-32 ยังไม่ครบ
+
+### Added
+
+- Topology แบ่งพื้นที่เป็น scrollable overview และ Selected Node details
+- detail แสดง health availability, source, scope, topology confidence, generation presence และ relation counts
+- row selection ติดตาม keyboard/mouse scrolling และ clamp อย่างปลอดภัยเมื่อ hot-remove ทำให้รายการสั้นลง
+
+### Security
+
+- detail panel ระบุ `Identity values: REDACTED by UI policy` และไม่ render identity claim, raw `dev_t` หรือ `diskseq`
+
+### Validated
+
+- fixtures ยืนยัน partition เป็น `Unsupported/topology-only/partition` และ partial MD เป็น `TemporarilyUnavailable/md-sysfs/array`
+
 ## [0.13.2] - 2026-07-11
 
 > **PATCH bump:** บันทึก live BUG-12 qualification ต่อจาก `0.13.1` โดยไม่มี runtime behavior ใหม่

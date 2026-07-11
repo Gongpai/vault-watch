@@ -5,8 +5,9 @@
 ## Tasks
 
 - [x] topology overview from graph nodes with protocol/layer/confidence/generation-presence/relations
-- [ ] node detail view ตาม scope (identity values remain privacy-controlled)
+- [x] selected-node detail view with scoped health source/availability/confidence (identity values redacted)
 - [ ] availability/confidence/source labels
+- [x] initial node-detail mappings: MD complete/partial/unavailable, legacy whole-device available/temporary, partition/virtual/stacked unsupported
 - [ ] empty/partial/hidden/unsupported/asleep states
 - [ ] scoped graphs และ stacked-counter warning
 - [ ] validated graph-theme config Part B

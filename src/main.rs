@@ -235,7 +235,10 @@ async fn handle_key(
             match s.focused_panel {
                 FocusedPanel::DiskTable => s.disk_table_scroll = 0,
                 FocusedPanel::SmartDetails => s.smart_details_scroll = 0,
-                FocusedPanel::Topology => s.topology_scroll = 0,
+                FocusedPanel::Topology => {
+                    s.topology_scroll = 0;
+                    s.topology_selected = 0;
+                }
                 _ => s.graph_scroll = 0,
             }
         }
@@ -251,7 +254,10 @@ async fn handle_key(
             match s.focused_panel {
                 FocusedPanel::DiskTable => s.disk_table_scroll = max,
                 FocusedPanel::SmartDetails => s.smart_details_scroll = max,
-                FocusedPanel::Topology => s.topology_scroll = max,
+                FocusedPanel::Topology => {
+                    s.topology_scroll = max;
+                    s.topology_selected = max;
+                }
                 _ => s.graph_scroll = max,
             }
         }
@@ -271,6 +277,7 @@ fn scroll_focused(s: &mut AppState, delta: i64) {
         }
         FocusedPanel::Topology => {
             s.topology_scroll = (s.topology_scroll as i64 + delta).max(0) as usize;
+            s.topology_selected = (s.topology_selected as i64 + delta).max(0) as usize;
         }
         _ => {
             s.graph_scroll = (s.graph_scroll as i64 + delta).max(0) as usize;
@@ -295,6 +302,7 @@ async fn handle_mouse(mouse: MouseEvent, state: &Arc<Mutex<AppState>>) {
                 }
                 FocusedPanel::Topology => {
                     s.topology_scroll = s.topology_scroll.saturating_sub(3);
+                    s.topology_selected = s.topology_selected.saturating_sub(3);
                 }
                 _ => {
                     s.graph_scroll = s.graph_scroll.saturating_sub(3);
@@ -313,6 +321,7 @@ async fn handle_mouse(mouse: MouseEvent, state: &Arc<Mutex<AppState>>) {
                 }
                 FocusedPanel::Topology => {
                     s.topology_scroll = s.topology_scroll.saturating_add(3);
+                    s.topology_selected = s.topology_selected.saturating_add(3);
                 }
                 _ => {
                     s.graph_scroll = s.graph_scroll.saturating_add(3);
