@@ -24,7 +24,7 @@
 - [x] BUG-09: 12-column device names และ compact privacy summary สำหรับ terminal <150 columns
 - [x] BUG-10: native throughput labels ใช้ `MiB/s` ตรงกับ binary-unit formula
 - [x] BUG-09/10 live responsive-layout verification (sanitized evidence 2026-07-11)
-- [x] BUG-13 edge-triggered focus/view keys filter Repeat/Release + deterministic conditional RAID focus fixture (live verification pending)
+- [x] BUG-13 request typed all-key events, edge-trigger focus/view keys and cover conditional RAID focus with fixtures (live verification pending)
 
 ## Exit Gate
 

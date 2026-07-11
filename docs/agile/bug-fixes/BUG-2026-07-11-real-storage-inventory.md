@@ -122,8 +122,8 @@
 **Severity:** Medium | **Owner:** US-MON-32 | **Status:** 🧪 Fix implemented; hardware verification pending
 
 - Observed: Tab sometimes cycles Temperature → Read → Write, but sometimes appears to cycle only Temperature → Read.
-- Root cause: enhanced keyboard reporting can emit Press, early Repeat and Release events for one physical Tab press; the first fix ignored Release but still allowed Repeat to advance focus.
-- Fix: focus/view actions accept only the initial Press; Repeat remains enabled only for continuous scroll keys and Release never changes state.
+- Root cause: enhanced keyboard reporting can emit Press, early Repeat and Release events for one physical Tab press; without requesting typed/all-key protocol flags, auto-repeat for plain Tab can arrive as indistinguishable Press events. Earlier filters therefore could not stop every repeated Press.
+- Fix: on supported terminals request typed all-key events, then let focus/view actions accept only the initial Press; Repeat remains enabled only for continuous scroll keys and Release never changes state. Enhancement state is restored on normal and panic exits.
 - RAID note: deterministic fixture tests cover the conditional RAID focus cycle without forcing a real array rebuild.
 - Expected: one physical Tab press advances exactly one visible panel; without RAID the sequence repeats Temperature → Read → Write.
 

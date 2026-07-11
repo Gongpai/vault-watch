@@ -4,6 +4,21 @@
 
 ---
 
+## [0.17.3] - 2026-07-11
+
+> **PATCH bump:** request typed keyboard events เพื่อหยุด repeated Press focus loops ต่อจาก `0.17.2`
+
+### Fixed
+
+- terminal ที่รองรับ keyboard enhancement ถูก request ให้รายงาน Press/Repeat/Release และ encode plain keys อย่างไม่กำกวม
+- enhancement mode ถูก pop คืนเมื่อออกจากโปรแกรมทั้งเส้นทางปกติและ panic cleanup
+- terminal ที่ไม่รองรับยังคงใช้ compatibility path โดยไม่เปิด protocol flags
+
+### Validated
+
+- fixture ยืนยันว่า requested flags มี event types, all-key encoding และ escape disambiguation ครบ
+- edge-triggered focus และ repeat-only scrolling regressions ยังคงผ่าน
+
 ## [0.17.2] - 2026-07-11
 
 > **PATCH bump:** แก้ held/early Repeat ทำให้ Tab focus ข้าม panel ต่อจาก `0.17.1`

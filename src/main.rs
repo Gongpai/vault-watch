@@ -2,15 +2,20 @@ use std::collections::VecDeque;
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use crossterm::{
     ExecutableCommand,
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
-        KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
+        KeyModifiers, KeyboardEnhancementFlags, MouseButton, MouseEvent, MouseEventKind,
+        PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
     },
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{
+        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
+        supports_keyboard_enhancement,
+    },
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::sync::{Mutex, Notify};
@@ -33,6 +38,7 @@ use app::{
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
 const RENDER_INTERVAL: Duration = Duration::from_millis(250);
 const PAGE_SCROLL: usize = 5;
+static KEYBOARD_ENHANCEMENT_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -40,6 +46,9 @@ async fn main() -> io::Result<()> {
     std::panic::set_hook(Box::new(move |info| {
         let _ = disable_raw_mode();
         let mut stdout = io::stdout();
+        if KEYBOARD_ENHANCEMENT_ACTIVE.swap(false, Ordering::SeqCst) {
+            let _ = stdout.execute(PopKeyboardEnhancementFlags);
+        }
         let _ = stdout.execute(LeaveAlternateScreen);
         let _ = stdout.execute(DisableMouseCapture);
         default_hook(info);
@@ -86,6 +95,11 @@ async fn main() -> io::Result<()> {
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
+    let keyboard_enhanced = matches!(supports_keyboard_enhancement(), Ok(true));
+    if keyboard_enhanced {
+        stdout.execute(PushKeyboardEnhancementFlags(keyboard_enhancement_flags()))?;
+        KEYBOARD_ENHANCEMENT_ACTIVE.store(true, Ordering::SeqCst);
+    }
     stdout.execute(EnterAlternateScreen)?;
     stdout.execute(EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
@@ -95,11 +109,21 @@ async fn main() -> io::Result<()> {
     let result = run_app(&mut terminal, state, refresh_notify).await;
 
     let _ = terminal.show_cursor();
+    if keyboard_enhanced {
+        let _ = terminal.backend_mut().execute(PopKeyboardEnhancementFlags);
+        KEYBOARD_ENHANCEMENT_ACTIVE.store(false, Ordering::SeqCst);
+    }
     let _ = disable_raw_mode();
     let _ = terminal.backend_mut().execute(DisableMouseCapture);
     let _ = terminal.backend_mut().execute(LeaveAlternateScreen);
 
     result
+}
+
+const fn keyboard_enhancement_flags() -> KeyboardEnhancementFlags {
+    KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+        .union(KeyboardEnhancementFlags::REPORT_EVENT_TYPES)
+        .union(KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES)
 }
 
 async fn run_app(
@@ -612,6 +636,14 @@ mod tests {
             let key = KeyEvent::new_with_kind(code, KeyModifiers::NONE, KeyEventKind::Repeat);
             assert!(is_actionable_key_event(&key));
         }
+    }
+
+    #[test]
+    fn requested_keyboard_protocol_reports_plain_key_event_types() {
+        let flags = keyboard_enhancement_flags();
+        assert!(flags.contains(KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES));
+        assert!(flags.contains(KeyboardEnhancementFlags::REPORT_EVENT_TYPES));
+        assert!(flags.contains(KeyboardEnhancementFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES));
     }
 
     #[test]
