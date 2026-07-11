@@ -13,3 +13,5 @@
 5. protocol hardware matrix ระบุ pass/fail/unsupported ต่อรุ่น/firmware
 6. threat model, dependency/license audit, fuzz results และ security review ผ่าน
 7. docs/Cargo version/changelog/status sync กับผลจริง
+8. Intel DC P4618 6.4 TB ผ่าน qualification แบบหนึ่ง PCIe card/สอง NVMe controllers โดยตรวจ health, temperature, endurance และ errors แยก controller
+9. real-hardware regression ใน [BUG-2026-07-11](../bug-fixes/BUG-2026-07-11-real-storage-inventory.md) ถูกปิดพร้อมหลักฐาน retest

@@ -10,6 +10,8 @@
 - [ ] scoped graphs และ stacked-counter warning
 - [ ] validated graph-theme config Part B
 - [ ] responsive/focus/scroll regression tests
+- [ ] BUG-01/02/04: scoped device counts และใช้ graph inventory เป็น source ของ Disk Summary
+- [ ] BUG-03: unavailable/permission/parser errors แสดง `UNKNOWN`/`N/A` และห้ามสร้าง health alert
 
 ## Exit Gate
 

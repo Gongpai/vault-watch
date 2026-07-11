@@ -39,6 +39,14 @@
 | US-MON-16: Alpine static binary and size verification | US-MON-38 |
 | US-MON-26 Part B: config-driven graph theme | US-MON-32 / US-MON-38 |
 
+## Open Bug Fixes from Real Hardware
+
+- [BUG-2026-07-11 — Real Storage Inventory and Intel DC P4618](../bug-fixes/BUG-2026-07-11-real-storage-inventory.md)
+  - incorrect NVMe/partition and block-node counts
+  - NVMe inventory not connected to Disk Summary
+  - unavailable legacy SMART incorrectly rendered as `FAIL`/`0°C`
+  - one-card/two-controller P4618 topology and per-controller health qualification
+
 ## Definition of Done for Sprint 10 Umbrella
 
 - [ ] graph-first inventory รองรับ block/partition/MD/DM/NVMe/MMC/SCSI-like/virtual โดยไม่อ้างว่า block node ทุกตัวคือ physical disk
