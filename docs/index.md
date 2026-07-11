@@ -1,14 +1,16 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Status:** Sprint 09 Complete — Tunable Y-Axis Label Offset (Sprints 01–09 ✅ Done)
-**Current Architecture:** Async TUI application (`tokio` runtime + `ratatui` renderer)
+**Status:** Sprint 10 In Progress — Universal Storage Architecture & Security Hardening
+**Current Architecture:** Async TUI migration (`tokio` + `ratatui`, graph-first storage foundation)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
-**Last Updated:** 2026-06-17 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
+**Last Updated:** 2026-07-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
 
 ---
 
 ## Current and Target Status
+
+> Sprints 01–09 delivered the HDD/SAS implementation. Sprint 10 is replacing legacy external collectors and the flat `sd*` model. Items requiring real hardware verification are no longer considered release-complete until US-MON-38 passes.
 
 | Area | Status | Source |
 | :--- | :--- | :--- |
@@ -39,6 +41,9 @@
 | Graph Color Tuning | ✅ Done | [US-MON-25](./agile/user-stories/US-MON-25.md), [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Centralized Theme Constants | ✅ Done | [US-MON-26](./agile/user-stories/US-MON-26.md) Part A, [Sprint 08](./agile/sprint-backlogs/sprint-08.md) |
 | Tunable Y-Axis Label Offset | ✅ Done | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
+| Privacy/security disclosure foundation | 🚧 In Progress | [US-MON-28](./agile/user-stories/US-MON-28.md) |
+| Universal storage inventory graph | 🚧 In Progress | [US-MON-29](./agile/user-stories/US-MON-29.md) |
+| Native protocol backends + privilege broker | 📋 Planned | [Sprint 10](./agile/sprint-backlogs/sprint-10.md) |
 
 ---
 
@@ -62,6 +67,7 @@
 - [sprint-07.md](./agile/sprint-backlogs/sprint-07.md) - Sprint 07 details (Canvas Graph Redesign)
 - [sprint-08.md](./agile/sprint-backlogs/sprint-08.md) - Sprint 08 details (Graph Layout & Color Tuning)
 - [sprint-09.md](./agile/sprint-backlogs/sprint-09.md) - Sprint 09 details (Tunable Y-Axis Label Offset)
+- [sprint-10.md](./agile/sprint-backlogs/sprint-10.md) - Sprint 10 umbrella + sub-sprints 10A–10H (Universal Storage & Security)
 
 ---
 

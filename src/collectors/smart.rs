@@ -34,7 +34,12 @@ pub async fn collect_all(devices: &[String], prog: &str, base_args: &[String]) -
 async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> DiskInfo {
     let dev_path = format!("/dev/{device}");
     let mut args: Vec<String> = base_args;
-    args.extend(["-a".to_string(), "-d".to_string(), "scsi".to_string(), dev_path]);
+    args.extend([
+        "-a".to_string(),
+        "-d".to_string(),
+        "scsi".to_string(),
+        dev_path,
+    ]);
 
     let output = Command::new(&prog).args(&args).output().await;
 
@@ -51,7 +56,7 @@ async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> Di
                 non_medium_errors: None,
                 read_errors: None,
                 write_errors: None,
-            }
+            };
         }
     };
 
@@ -59,34 +64,22 @@ async fn collect_one(device: String, prog: String, base_args: Vec<String>) -> Di
 }
 
 fn parse_smart_output(device: &str, output: &str) -> DiskInfo {
-    let serial = SERIAL_RE
-        .captures(output)
-        .map(|c| c[1].to_string());
+    let serial = SERIAL_RE.captures(output).map(|c| c[1].to_string());
 
-    let temperature_c = TEMP_RE
-        .captures(output)
-        .and_then(|c| c[1].parse().ok());
+    let temperature_c = TEMP_RE.captures(output).and_then(|c| c[1].parse().ok());
 
     let health_ok = HEALTH_RE
         .captures(output)
         .map(|c| matches!(c[1].as_ref(), "OK" | "PASSED"))
         .unwrap_or(false);
 
-    let power_on_hours = HOURS_RE
-        .captures(output)
-        .and_then(|c| c[1].parse().ok());
+    let power_on_hours = HOURS_RE.captures(output).and_then(|c| c[1].parse().ok());
 
-    let grown_defects = DEFECTS_RE
-        .captures(output)
-        .and_then(|c| c[1].parse().ok());
+    let grown_defects = DEFECTS_RE.captures(output).and_then(|c| c[1].parse().ok());
 
-    let non_medium_errors = NME_RE
-        .captures(output)
-        .and_then(|c| c[1].parse().ok());
+    let non_medium_errors = NME_RE.captures(output).and_then(|c| c[1].parse().ok());
 
-    let read_errors = READ_ERR_RE
-        .captures(output)
-        .and_then(|c| c[1].parse().ok());
+    let read_errors = READ_ERR_RE.captures(output).and_then(|c| c[1].parse().ok());
 
     let write_errors = WRITE_ERR_RE
         .captures(output)

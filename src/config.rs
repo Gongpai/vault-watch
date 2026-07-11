@@ -26,7 +26,12 @@ pub struct SystemConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct DiscordConfig {
-    pub webhook_url: String,
+    pub webhook_url: Option<String>,
+}
+
+pub struct LoadedConfig {
+    pub config: Config,
+    pub error: Option<String>,
 }
 
 // ── Config loading ────────────────────────────────────────────────────────────
@@ -39,11 +44,97 @@ fn config_path() -> std::path::PathBuf {
         .join("config.toml")
 }
 
-pub fn load_config() -> Config {
-    std::fs::read_to_string(config_path())
-        .ok()
-        .and_then(|s| toml::from_str(&s).ok())
-        .unwrap_or_default()
+pub fn load_config() -> LoadedConfig {
+    let path = config_path();
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return LoadedConfig {
+            config: Config::default(),
+            error: None,
+        };
+    };
+    match toml::from_str(&content) {
+        Ok(config) => match validate_config(&config) {
+            Ok(()) => LoadedConfig {
+                config,
+                error: None,
+            },
+            Err(error) => LoadedConfig {
+                config: Config::default(),
+                error: Some(format!("Unsafe {}: {error}", path.display())),
+            },
+        },
+        Err(error) => LoadedConfig {
+            config: Config::default(),
+            error: Some(format!("Invalid {}: {error}", path.display())),
+        },
+    }
+}
+
+fn validate_config(config: &Config) -> Result<(), String> {
+    if let Some(system) = &config.system {
+        if let Some(prefix) = system.smartctl_prefix.as_deref()
+            && !matches!(prefix, "" | "sudo" | "doas")
+        {
+            return Err("smartctl_prefix must be sudo, doas, or empty".to_string());
+        }
+        validate_executable(system.smartctl_path.as_deref(), "smartctl")?;
+        validate_executable(system.iostat_path.as_deref(), "iostat")?;
+        if let Some(devices) = &system.devices {
+            for device in devices {
+                if device.is_empty()
+                    || !device
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+                {
+                    return Err(format!(
+                        "invalid device name {device:?}; paths are not allowed"
+                    ));
+                }
+            }
+        }
+    }
+    if let Some(url) = config
+        .discord
+        .as_ref()
+        .and_then(|discord| discord.webhook_url.as_deref())
+        .filter(|url| !url.trim().is_empty())
+        && !url.starts_with("https://discord.com/api/webhooks/")
+    {
+        return Err("webhook_url must be an HTTPS Discord webhook endpoint".to_string());
+    }
+    Ok(())
+}
+
+fn validate_executable(value: Option<&str>, expected_name: &str) -> Result<(), String> {
+    let Some(value) = value else { return Ok(()) };
+    let path = std::path::Path::new(value);
+    let basename = path.file_name().and_then(|name| name.to_str());
+    if basename != Some(expected_name) {
+        return Err(format!(
+            "configured executable must be named {expected_name}"
+        ));
+    }
+    if path.components().count() > 1 {
+        let trusted_parent = path.parent().is_some_and(|parent| {
+            matches!(
+                parent.to_str(),
+                Some(
+                    "/bin"
+                        | "/sbin"
+                        | "/usr/bin"
+                        | "/usr/sbin"
+                        | "/usr/local/bin"
+                        | "/usr/local/sbin"
+                )
+            )
+        });
+        if !path.is_absolute() || !trusted_parent {
+            return Err(format!(
+                "{expected_name} path must be in a trusted system executable directory"
+            ));
+        }
+    }
+    Ok(())
 }
 
 // ── Runtime detection ─────────────────────────────────────────────────────────
@@ -164,7 +255,6 @@ impl Distro {
             Distro::Unknown => "install sysstat (see distro docs)",
         }
     }
-
 }
 
 fn detect_distro() -> Distro {
@@ -225,4 +315,40 @@ pub async fn check_dependencies(config: &Config) -> Vec<DepError> {
     }
 
     missing
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_discord_table_does_not_discard_system_config() {
+        let config: Config = toml::from_str("[system]\ndevices = [\"sda\"]\n[discord]\n").unwrap();
+        assert_eq!(config.system.unwrap().devices.unwrap(), vec!["sda"]);
+        assert!(config.discord.unwrap().webhook_url.is_none());
+    }
+
+    #[test]
+    fn rejects_command_and_device_injection() {
+        let config: Config = toml::from_str(
+            "[system]\nsmartctl_prefix = \"sh\"\ndevices = [\"../../etc/shadow\"]\n",
+        )
+        .unwrap();
+        assert!(validate_config(&config).is_err());
+    }
+
+    #[test]
+    fn rejects_executable_from_untrusted_directory() {
+        let config: Config =
+            toml::from_str("[system]\nsmartctl_path = \"/tmp/smartctl\"\n").unwrap();
+        assert!(validate_config(&config).is_err());
+    }
+
+    #[test]
+    fn rejects_non_discord_webhook() {
+        let config: Config =
+            toml::from_str("[discord]\nwebhook_url = \"https://attacker.invalid/collect\"\n")
+                .unwrap();
+        assert!(validate_config(&config).is_err());
+    }
 }

@@ -4,14 +4,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crossterm::{
+    ExecutableCommand,
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
         MouseButton, MouseEvent, MouseEventKind,
     },
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::sync::{Mutex, Notify};
 use tokio::time;
 
@@ -19,10 +19,12 @@ mod app;
 mod collectors;
 mod config;
 mod notifier;
+mod security;
+mod storage;
 mod ui;
 mod widgets;
 
-use app::{collect_alerts, AppState, FocusedPanel, ViewMode, HISTORY_SIZE};
+use app::{AppState, FocusedPanel, HISTORY_SIZE, ViewMode, collect_alerts};
 
 const COLLECTOR_INTERVAL: Duration = Duration::from_secs(2);
 const RENDER_INTERVAL: Duration = Duration::from_millis(250);
@@ -39,14 +41,29 @@ async fn main() -> io::Result<()> {
         default_hook(info);
     }));
 
-    let cfg = Arc::new(config::load_config());
+    let loaded = config::load_config();
+    let config_error = loaded.error;
+    let cfg = Arc::new(loaded.config);
 
     let devices = config::resolve_devices(&cfg);
-    let state = Arc::new(Mutex::new(AppState::new(devices)));
+    let inventory = storage::discover_storage();
+    let outbound_notifications = cfg
+        .discord
+        .as_ref()
+        .and_then(|discord| discord.webhook_url.as_deref())
+        .is_some_and(|url| !url.trim().is_empty());
+    let security = security::SecurityPosture::new(outbound_notifications);
+    let state = Arc::new(Mutex::new(AppState::new(devices, inventory, security)));
     let refresh_notify = Arc::new(Notify::new());
 
     // Startup dependency check — results stored in AppState for UI display
-    let dep_errors = config::check_dependencies(&cfg).await;
+    let mut dep_errors = config::check_dependencies(&cfg).await;
+    if let Some(error) = config_error {
+        dep_errors.push(app::DepError {
+            tool: "config.toml".to_string(),
+            install_hint: error,
+        });
+    }
     {
         let mut s = state.lock().await;
         s.dep_errors = dep_errors;
@@ -273,10 +290,7 @@ async fn handle_mouse(mouse: MouseEvent, state: &Arc<Mutex<AppState>>) {
 /// Return which panel contains the given terminal cell (col, row), if any.
 fn panel_at(s: &AppState, col: u16, row: u16) -> Option<FocusedPanel> {
     for (panel, rect) in &s.panel_rects {
-        if col >= rect.x
-            && col < rect.x + rect.width
-            && row >= rect.y
-            && row < rect.y + rect.height
+        if col >= rect.x && col < rect.x + rect.width && row >= rect.y && row < rect.y + rect.height
         {
             return Some(*panel);
         }
@@ -293,7 +307,7 @@ async fn poll_event() -> io::Result<Option<Event>> {
         }
     })
     .await
-    .unwrap()
+    .map_err(|error| io::Error::other(format!("event reader task failed: {error}")))?
 }
 
 async fn collector_loop(

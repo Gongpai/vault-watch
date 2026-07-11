@@ -1,22 +1,27 @@
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
     widgets::{
         Block, BorderType, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
     },
-    Frame,
 };
 
 use crate::app::{Alert, AppState, FocusedPanel};
 
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let focused = state.focused_panel == FocusedPanel::SmartDetails;
-    let has_critical = state.alerts.iter().any(|a| matches!(a, Alert::DiskFail { .. }));
-    let has_warn = state
+    let has_critical = state
         .alerts
         .iter()
-        .any(|a| matches!(a, Alert::GrownDefects { .. } | Alert::HighTemperature { .. }));
+        .any(|a| matches!(a, Alert::DiskFail { .. }));
+    let has_warn = state.alerts.iter().any(|a| {
+        matches!(
+            a,
+            Alert::GrownDefects { .. } | Alert::HighTemperature { .. }
+        )
+    });
     let (border_type, border_color) = if focused {
         (BorderType::Double, Color::Cyan)
     } else if has_critical {
@@ -120,10 +125,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
         let hint_x = area.x + area.width.saturating_sub(hint.len() as u16 + 2);
         let hint_y = area.y + area.height - 1;
         let hint_area = Rect::new(hint_x, hint_y, hint.len() as u16, 1);
-        let p = Paragraph::new(Span::styled(
-            hint,
-            Style::default().fg(Color::DarkGray),
-        ));
+        let p = Paragraph::new(Span::styled(hint, Style::default().fg(Color::DarkGray)));
         f.render_widget(p, hint_area);
     }
 }

@@ -1,6 +1,6 @@
 # Sprint Planning & Roadmap
 
-**Last Updated:** 2026-06-17 | **Version:** 1.9
+**Last Updated:** 2026-07-11 | **Version:** 2.0
 
 ยินดีต้อนรับสู่แผนการดำเนินงาน HDD Monitor สำหรับขั้นตอนการพัฒนาต้นแบบ (MVP Development)
 
@@ -17,10 +17,20 @@
 | [sprint-07](./sprint-backlogs/sprint-07.md) | 2026-09-02 → 2026-09-16 | **Canvas Graph Redesign** (temperature zone backgrounds, dark theme I/O graphs, unified style) | ✅ Done |
 | [sprint-08](./sprint-backlogs/sprint-08.md) | 2026-09-16 → 2026-09-30 | **Graph Layout & Color Tuning** (math-based Y-axis positioning, เส้นสว่างขึ้น, zone bg มืดลง 10%) | ✅ Done |
 | [sprint-09](./sprint-backlogs/sprint-09.md) | 2026-09-30 → 2026-10-14 | **Tunable Y-Axis Label Offset** (ตัวแปร `Y_LABEL_OFFSET` ปรับตำแหน่งตัวเลขแกน Y ให้ตรงเส้นแบ่ง zone) | ✅ Done |
+| [sprint-10](./sprint-backlogs/sprint-10.md) | Started 2026-07-11 · sub-sprints 10A–10H | **Universal Storage Architecture & Security Hardening** | 🚧 In Progress |
 
 ---
 
 ## 🚀 Sprint Details
+
+### 🚧 [Sprint 10: Universal Storage Architecture & Security Hardening](./sprint-backlogs/sprint-10.md)
+
+- **เป้าหมาย:** restructure เป็น graph-first storage monitor, ย้าย external collectors ไป native backends, redesign UI และวาง privacy/privilege boundary ก่อน raw protocol access
+- **โครงสร้าง:** 10A Security/Foundation → 10B Counters/MD → 10C UI → 10D SCSI → 10E SATA → 10F NVMe → 10G USB/MMC → 10H Broker/Qualification
+- **Carry-over:** งาน verify/config/theme/static binary ที่ยังไม่จบจาก Sprint 05/06/09 ถูกย้ายเข้า US-MON-38
+- **สถานะปัจจุบัน:** เริ่ม US-MON-28/29; protocol backends ยังไม่เปิดใช้งาน
+
+---
 
 ### ✅ [Sprint 01: Core Data Collectors](./sprint-backlogs/sprint-01.md)
 - **จุดมุ่งหมายหลัก:** พัฒนา async data collector สำหรับทุก data source ที่จำเป็น (`/proc/mdstat`, `smartctl`, `iostat`) พร้อมโครงสร้าง TUI application พื้นฐานที่รัน event loop, keyboard handling และ shared state ได้ครบถ้วน

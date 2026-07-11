@@ -1,6 +1,6 @@
 # HDD Monitor — Product Backlog
 
-**Last Updated:** 2026-06-17 | **Version:** 2.3
+**Last Updated:** 2026-07-11 | **Version:** 3.0
 
 นี่คือรายการ User Story ทั้งหมดของโปรเจค HDD Monitor แบ่งตามลำดับความสำคัญ
 
@@ -89,11 +89,31 @@
 
 ---
 
+## 🔐 Sprint 10 — Universal Storage & Security Hardening
+
+| ID | User Story | Skill / Scope | Estimate | Status |
+|:---|:---|:---|:---|:---|
+| [US-MON-28](./user-stories/US-MON-28.md) | Privacy, consent and security baseline | universal/security | **M** | 🚧 In Progress |
+| [US-MON-29](./user-stories/US-MON-29.md) | Universal storage inventory graph | universal discovery | **L** | 🚧 In Progress |
+| [US-MON-30](./user-stories/US-MON-30.md) | Native block throughput backend | diskstats/sysfs | **M** | 📋 Planned |
+| [US-MON-31](./user-stories/US-MON-31.md) | Native Linux MD RAID backend | md sysfs | **L** | 📋 Planned |
+| [US-MON-32](./user-stories/US-MON-32.md) | Storage-first TUI and scoped metrics | UI/config | **L** | 📋 Planned |
+| [US-MON-33](./user-stories/US-MON-33.md) | Native SAS/SCSI health | SG_IO/SCSI | **XL** | 📋 Planned |
+| [US-MON-34](./user-stories/US-MON-34.md) | Native SATA/ATA health | SAT/ATA SMART | **XL** | 📋 Planned |
+| [US-MON-35](./user-stories/US-MON-35.md) | Native NVMe health | NVMe ioctl | **XL** | 📋 Planned |
+| [US-MON-36](./user-stories/US-MON-36.md) | USB/removable/SD/eMMC | USB/MMC | **XL** | 📋 Planned |
+| [US-MON-37](./user-stories/US-MON-37.md) | Privileged read-only command broker | security boundary | **XL** | 📋 Planned |
+| [US-MON-38](./user-stories/US-MON-38.md) | Carry-over and hardware qualification | release gate | **L** | 📋 Planned |
+
+รายละเอียดและลำดับทำงานอยู่ใน [Sprint 10](./sprint-backlogs/sprint-10.md) งานที่ต้องใช้ raw protocol access ห้ามเริ่มก่อน security gate ของ US-MON-28/37
+
+---
+
 ## 🟢 Nice to Have (Long-term Vision)
 
 | Feature | Description | Status |
 |:---|:---|:---|
-| [US-MON-26](./user-stories/US-MON-26.md) Part B — Config-Driven Theme | โหลดสีเส้น/zone/พื้นหลัง จาก `config.toml [graph]` — ต่อยอดจาก Part A (Sprint 08) | 🟡 Should |
+| [US-MON-26](./user-stories/US-MON-26.md) Part B — Config-Driven Theme | ย้ายเข้า US-MON-32/38 เพื่อทำพร้อม validated config และ UI redesign | ↪ Sprint 10 |
 | Prometheus Exporter | Export metrics ไปยัง Prometheus/Grafana | 🔵 Planned |
 | JSON API Export | HTTP endpoint สำหรับ external tooling | 🔵 Planned |
 | Cockpit Integration | Plugin สำหรับ RHEL/Ubuntu Cockpit web console | 🔵 Planned |

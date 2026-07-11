@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Gauge, Paragraph},
-    Frame,
 };
 
 fn format_eta(minutes: u64) -> String {
@@ -22,7 +22,11 @@ pub fn render(f: &mut Frame, area: Rect, state: &AppState) {
         .alerts
         .iter()
         .any(|a| matches!(a, Alert::RaidDegraded { .. }));
-    let border_color = if raid_degraded { Color::Red } else { Color::White };
+    let border_color = if raid_degraded {
+        Color::Red
+    } else {
+        Color::White
+    };
 
     // Prefer the array that needs attention: rebuilding first, then degraded,
     // then the first one. Title shows how many others exist.

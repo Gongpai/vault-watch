@@ -1,12 +1,13 @@
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 use crate::app::{AppState, FocusedPanel, ViewMode};
+use crate::storage::StorageKind;
 use crate::widgets::{disk_table, error_screen, graph_view, raid_panel, smart_details};
 
 const MIN_WIDTH_TABLE: u16 = 100;
@@ -53,10 +54,7 @@ fn render_resize_message(f: &mut Frame, area: Rect, min_w: u16, min_h: u16) {
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
         )),
-        Line::from(Span::styled(
-            current,
-            Style::default().fg(Color::DarkGray),
-        )),
+        Line::from(Span::styled(current, Style::default().fg(Color::DarkGray))),
     ];
 
     let p = Paragraph::new(lines)
@@ -66,13 +64,20 @@ fn render_resize_message(f: &mut Frame, area: Rect, min_w: u16, min_h: u16) {
 }
 
 fn alert_banner_height(alert_count: usize) -> u16 {
-    if alert_count == 0 { 0 } else { (alert_count.min(2) + 2) as u16 }
+    if alert_count == 0 {
+        0
+    } else {
+        (alert_count.min(2) + 2) as u16
+    }
 }
 
 fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     let alert_h = alert_banner_height(state.alerts.len());
 
-    let mut constraints: Vec<Constraint> = vec![Constraint::Length(1)]; // header
+    let mut constraints: Vec<Constraint> = vec![
+        Constraint::Length(1), // header
+        Constraint::Length(1), // privacy and capability disclosure
+    ];
     if alert_h > 0 {
         constraints.push(Constraint::Length(alert_h));
     }
@@ -92,6 +97,8 @@ fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     let mut idx = 0;
     render_header(f, chunks[idx], state);
     idx += 1;
+    render_security_bar(f, chunks[idx], state);
+    idx += 1;
     if alert_h > 0 {
         render_alert_banner(f, chunks[idx], state);
         idx += 1;
@@ -110,17 +117,23 @@ fn render_table_view(f: &mut Frame, area: Rect, state: &mut AppState) {
 fn render_graph_view(f: &mut Frame, area: Rect, state: &mut AppState) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(1), Constraint::Length(1)])
+        .constraints([
+            Constraint::Length(1),
+            Constraint::Length(1),
+            Constraint::Min(1),
+            Constraint::Length(1),
+        ])
         .split(area);
 
     render_header(f, chunks[0], state);
-    graph_view::render(f, chunks[1], state);
-    render_key_bar(f, chunks[2], state);
+    render_security_bar(f, chunks[1], state);
+    graph_view::render(f, chunks[2], state);
+    render_key_bar(f, chunks[3], state);
 }
 
 fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
     let title = Span::styled(
-        " VaultWatch — HDD Monitor ",
+        " VaultWatch — Storage Monitor ",
         Style::default()
             .fg(Color::Cyan)
             .add_modifier(Modifier::BOLD),
@@ -133,6 +146,36 @@ fn render_header(f: &mut Frame, area: Rect, state: &AppState) {
     let line = Line::from(vec![title, last]);
     let p = Paragraph::new(line);
     f.render_widget(p, area);
+}
+
+fn render_security_bar(f: &mut Frame, area: Rect, state: &AppState) {
+    let inventory = &state.storage_inventory;
+    let devices = inventory.nodes.len();
+    let nvme = inventory.count_kind(StorageKind::Nvme);
+    let mmc = inventory.count_kind(StorageKind::Mmc);
+    let removable = inventory.removable_count();
+    let partial = if inventory.partial {
+        " · inventory PARTIAL"
+    } else {
+        ""
+    };
+    let line = Line::from(vec![
+        Span::styled(
+            " Privacy: ",
+            Style::default().fg(Color::Black).bg(Color::Green),
+        ),
+        Span::styled(
+            state.security.disclosure(),
+            Style::default().fg(Color::Green),
+        ),
+        Span::styled(
+            format!(
+                " · block nodes {devices} · NVMe {nvme} · MMC {mmc} · removable {removable}{partial}"
+            ),
+            Style::default().fg(Color::DarkGray),
+        ),
+    ]);
+    f.render_widget(Paragraph::new(line), area);
 }
 
 fn render_alert_banner(f: &mut Frame, area: Rect, state: &AppState) {
@@ -155,7 +198,11 @@ fn render_alert_banner(f: &mut Frame, area: Rect, state: &AppState) {
         .iter()
         .take(2)
         .map(|alert| {
-            let color = if alert.is_critical() { Color::Red } else { Color::Yellow };
+            let color = if alert.is_critical() {
+                Color::Red
+            } else {
+                Color::Yellow
+            };
             Line::from(Span::styled(
                 alert.message(),
                 Style::default().fg(color).add_modifier(Modifier::BOLD),

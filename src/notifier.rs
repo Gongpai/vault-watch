@@ -55,7 +55,12 @@ pub async fn process_alerts(
     cooldowns: &HashMap<String, Instant>,
     config: &Config,
 ) -> HashMap<String, Instant> {
-    let Some(webhook_url) = config.discord.as_ref().map(|d| d.webhook_url.clone()) else {
+    let Some(webhook_url) = config
+        .discord
+        .as_ref()
+        .and_then(|d| d.webhook_url.clone())
+        .filter(|url| !url.trim().is_empty())
+    else {
         return cooldowns.clone();
     };
 

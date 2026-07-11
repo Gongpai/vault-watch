@@ -32,20 +32,14 @@ pub fn render_dep_error_banner(frame: &mut Frame, errors: &[DepError]) {
     ];
 
     for err in errors {
-        lines.push(Line::from(vec![
-            Span::styled(
-                format!("  ✗ {}", err.tool),
-                Style::default()
-                    .fg(Color::Red)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]));
-        lines.push(Line::from(vec![
-            Span::styled(
-                format!("    Install: {}", err.install_hint),
-                Style::default().fg(Color::Gray),
-            ),
-        ]));
+        lines.push(Line::from(vec![Span::styled(
+            format!("  ✗ {}", err.tool),
+            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+        )]));
+        lines.push(Line::from(vec![Span::styled(
+            format!("    Install: {}", err.install_hint),
+            Style::default().fg(Color::Gray),
+        )]));
     }
 
     lines.push(Line::from(""));

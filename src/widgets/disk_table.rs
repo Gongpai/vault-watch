@@ -1,4 +1,5 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
@@ -6,7 +7,6 @@ use ratatui::{
         Block, BorderType, Borders, Cell, Row, Scrollbar, ScrollbarOrientation, ScrollbarState,
         Table,
     },
-    Frame,
 };
 
 use crate::app::{Alert, AppState, FocusedPanel};
@@ -33,11 +33,16 @@ const DISK_COLORS: [Color; 6] = [
 
 pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
     let focused = state.focused_panel == FocusedPanel::DiskTable;
-    let has_critical = state.alerts.iter().any(|a| matches!(a, Alert::DiskFail { .. }));
-    let has_warn = state
+    let has_critical = state
         .alerts
         .iter()
-        .any(|a| matches!(a, Alert::GrownDefects { .. } | Alert::HighTemperature { .. }));
+        .any(|a| matches!(a, Alert::DiskFail { .. }));
+    let has_warn = state.alerts.iter().any(|a| {
+        matches!(
+            a,
+            Alert::GrownDefects { .. } | Alert::HighTemperature { .. }
+        )
+    });
     let (border_type, border_color) = if focused {
         (BorderType::Double, Color::Cyan)
     } else if has_critical {

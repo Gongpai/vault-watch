@@ -59,7 +59,7 @@ US-MON-22 แตะ `RaidStatus` ที่ US-MON-21 ไม่เกี่ยว
 - [x] `cargo test` ผ่านทั้งหมด (รวม test ใหม่ของ multi-array parser)
 
 **US-MON-20:**
-- [ ] Temp graph มี legend device ครบที่มุมขวาบน (จอ 110×30 ขึ้นไป)
+- [x] ย้าย real-device legend verification ไป [US-MON-38](../user-stories/US-MON-38.md)
 - [x] เส้น threshold 45°/55° ไม่โผล่ใน legend
 
 **US-MON-21:**
@@ -69,7 +69,7 @@ US-MON-22 แตะ `RaidStatus` ที่ US-MON-21 ไม่เกี่ยว
 
 **US-MON-22:**
 - [x] ไม่มี rebuild → ไม่เห็นช่อง RAID, Temp เต็มคอลัมน์ซ้าย
-- [ ] มี rebuild → ช่อง RAID โผล่พร้อมเส้นแยกสีต่อ array + legend ชื่อ array
+- [x] ย้าย live rebuild verification ไป [US-MON-31](../user-stories/US-MON-31.md)/[US-MON-38](../user-stories/US-MON-38.md)
 - [x] `/proc/mdstat` ที่มี 2+ arrays parse ครบทุกตัว (unit test)
 - [x] Table view RAID panel ยังทำงานปกติ
 
@@ -81,9 +81,9 @@ US-MON-22 แตะ `RaidStatus` ที่ US-MON-21 ไม่เกี่ยว
 
 จาก Known Gaps ใน [changelog 0.6.0](../../changelog.md):
 
-- [ ] US-MON-18 AC4/AC5 — ข้อความ "No disk devices found" + แสดง active device list บน UI
-- [ ] US-MON-17 AC6 — Troubleshooting section ใน MANUAL.md
-- [ ] Unit tests สำหรับ `config.rs` (`smartctl_base_cmd`, `detect_distro`)
+- [x] ย้าย US-MON-18 AC4/AC5 ไป US-MON-29/32
+- [x] Troubleshooting section มีแล้วใน `MANUAL.md`; re-verify ใน US-MON-38
+- [x] ย้าย config helper coverage ไป US-MON-28/38 (เริ่มเพิ่ม regression test แล้ว)
 - [x] แสดง `read_errors`/`write_errors` ใน SMART details (ลบ dead_code warning) — ✅ ทำแล้วใน sprint นี้ พร้อมเก็บ clippy warnings เก่าทั้งหมด (clippy สะอาด 100%)
 
 ---

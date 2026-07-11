@@ -1,13 +1,13 @@
+use ratatui::widgets::canvas::{Canvas, Context, Line as CanvasLine};
 use ratatui::{
+    Frame,
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     symbols,
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph, Widget},
-    Frame,
 };
-use ratatui::widgets::canvas::{Canvas, Context, Line as CanvasLine};
 
 use crate::app::{AppState, FocusedPanel};
 
@@ -32,11 +32,11 @@ const DISK_COLORS: [Color; 6] = [
 /// Colors are 10% darker than the original palette to raise line contrast
 /// (US-MON-25). Zones must tile the full [0, TEMP_Y_MAX] range.
 const TEMP_ZONES: [(f64, f64, Color); 5] = [
-    (0.0,  30.0, Color::Rgb(7,  48, 69)), // dark teal
-    (30.0, 40.0, Color::Rgb(2,  50, 14)), // dark green
-    (40.0, 50.0, Color::Rgb(64, 51,  0)), // dark amber
-    (50.0, 60.0, Color::Rgb(58,  0,  0)), // dark red
-    (60.0, 90.0, Color::Rgb(35,  0, 47)), // dark purple
+    (0.0, 30.0, Color::Rgb(7, 48, 69)),  // dark teal
+    (30.0, 40.0, Color::Rgb(2, 50, 14)), // dark green
+    (40.0, 50.0, Color::Rgb(64, 51, 0)), // dark amber
+    (50.0, 60.0, Color::Rgb(58, 0, 0)),  // dark red
+    (60.0, 90.0, Color::Rgb(35, 0, 47)), // dark purple
 ];
 
 /// Solid dark background for I/O and RAID speed graphs.
@@ -146,16 +146,25 @@ pub fn render(f: &mut Frame, area: Rect, state: &mut AppState) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(cols[1]);
 
-    render_io_graph(f, right_rows[0], state, FocusedPanel::ReadGraph, " Read (MB/s) ");
-    render_io_graph(f, right_rows[1], state, FocusedPanel::WriteGraph, " Write (MB/s) ");
+    render_io_graph(
+        f,
+        right_rows[0],
+        state,
+        FocusedPanel::ReadGraph,
+        " Read (MB/s) ",
+    );
+    render_io_graph(
+        f,
+        right_rows[1],
+        state,
+        FocusedPanel::WriteGraph,
+        " Write (MB/s) ",
+    );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-fn history_to_points(
-    history: &std::collections::VecDeque<u64>,
-    scale: f64,
-) -> Vec<(f64, f64)> {
+fn history_to_points(history: &std::collections::VecDeque<u64>, scale: f64) -> Vec<(f64, f64)> {
     let len = history.len();
     history
         .iter()
@@ -303,7 +312,11 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
 
     // 2. Zone backgrounds — overwrites Canvas bg per row, braille chars intact.
     f.render_widget(
-        ZoneBackground { zones: &TEMP_ZONES, y_min: 0.0, y_max: TEMP_Y_MAX },
+        ZoneBackground {
+            zones: &TEMP_ZONES,
+            y_min: 0.0,
+            y_max: TEMP_Y_MAX,
+        },
         canvas_area,
     );
 
@@ -316,12 +329,12 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         f,
         y_col,
         &[
-            (90.0, Color::Gray,    "90"),
+            (90.0, Color::Gray, "90"),
             (60.0, Color::DarkGray, "60"),
             (50.0, Color::DarkGray, "50"),
             (40.0, Color::DarkGray, "40"),
             (30.0, Color::DarkGray, "30"),
-            (0.0,  Color::DarkGray,  "0"),
+            (0.0, Color::DarkGray, "0"),
         ],
         0.0,
         TEMP_Y_MAX,
@@ -401,9 +414,9 @@ fn render_io_graph(
         f,
         y_col,
         &[
-            (IO_Y_MAX,       Color::Gray,    "200"),
+            (IO_Y_MAX, Color::Gray, "200"),
             (IO_Y_MAX / 2.0, Color::DarkGray, "100"),
-            (0.0,            Color::DarkGray,   "0"),
+            (0.0, Color::DarkGray, "0"),
         ],
         0.0,
         IO_Y_MAX,
@@ -478,9 +491,9 @@ fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         f,
         y_col,
         &[
-            (y_max,       Color::Gray,    max_label.as_str()),
+            (y_max, Color::Gray, max_label.as_str()),
             (y_max / 2.0, Color::DarkGray, mid_label.as_str()),
-            (0.0,         Color::DarkGray,           "0"),
+            (0.0, Color::DarkGray, "0"),
         ],
         0.0,
         y_max,

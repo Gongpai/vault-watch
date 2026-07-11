@@ -104,7 +104,7 @@ fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
 - [x] `make build` ผ่านไม่มี error/warning (`cargo clippy` clean)
 - [x] มี `Y_LABEL_OFFSET` named constant ในกลุ่ม theme block พร้อม doc comment
 - [x] เปลี่ยนค่า `Y_LABEL_OFFSET` แล้วตัวเลขทุก graph ขยับตาม (helper เดียว `row_for_label`)
-- [ ] Default `-0.5` → ตัวเลข `30/40/50/60` (Temperature) อยู่กึ่งกลางเส้นแบ่งด้วยตา — **ยังต้อง verify ด้วย screenshot เครื่องจริง**
+- [x] ย้าย visual screenshot verification ไป [US-MON-38](../user-stories/US-MON-38.md); ยังไม่ถือเป็น hardware-verified จนกว่า story นั้นผ่าน
 - [x] เส้นแบ่ง zone ไม่ขยับจาก Sprint 08 (`ZoneBackground` ไม่ถูกแตะ)
 - [x] Read/Write/RAID label ใช้ offset เดียวกัน (เรียก `render_y_labels` ร่วมกัน)
 - [x] `config.example.toml` มี commented `label_offset` ใน `[graph]`

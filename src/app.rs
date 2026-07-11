@@ -3,6 +3,9 @@ use std::time::Instant;
 
 use ratatui::layout::Rect;
 
+use crate::security::SecurityPosture;
+use crate::storage::StorageInventory;
+
 pub const HISTORY_SIZE: usize = 60;
 
 #[derive(Debug, Clone)]
@@ -45,23 +48,33 @@ pub fn collect_alerts(state: &AppState) -> Vec<Alert> {
 
     for raid in &state.raids {
         if raid.state == RaidState::Degraded {
-            alerts.push(Alert::RaidDegraded { array: raid.name.clone() });
+            alerts.push(Alert::RaidDegraded {
+                array: raid.name.clone(),
+            });
         }
     }
 
     for disk in &state.disks {
         if !disk.health_ok {
-            alerts.push(Alert::DiskFail { device: disk.device.clone() });
+            alerts.push(Alert::DiskFail {
+                device: disk.device.clone(),
+            });
         }
         if let Some(t) = disk.temperature_c
             && t > 55
         {
-            alerts.push(Alert::HighTemperature { device: disk.device.clone(), temp: t });
+            alerts.push(Alert::HighTemperature {
+                device: disk.device.clone(),
+                temp: t,
+            });
         }
         if let Some(d) = disk.grown_defects
             && d > 0
         {
-            alerts.push(Alert::GrownDefects { device: disk.device.clone(), count: d });
+            alerts.push(Alert::GrownDefects {
+                device: disk.device.clone(),
+                count: d,
+            });
         }
     }
 
@@ -124,6 +137,8 @@ pub enum FocusedPanel {
 }
 
 pub struct AppState {
+    pub storage_inventory: StorageInventory,
+    pub security: SecurityPosture,
     pub raids: Vec<RaidStatus>,
     pub disks: Vec<DiskInfo>,
     pub io_stats: Vec<IoStats>,
@@ -151,7 +166,11 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(disk_devices: Vec<String>) -> Self {
+    pub fn new(
+        disk_devices: Vec<String>,
+        storage_inventory: StorageInventory,
+        security: SecurityPosture,
+    ) -> Self {
         let mut temp_history = HashMap::new();
         let mut read_history = HashMap::new();
         let mut write_history = HashMap::new();
@@ -163,6 +182,8 @@ impl AppState {
         }
 
         Self {
+            storage_inventory,
+            security,
             raids: Vec::new(),
             disks: Vec::new(),
             io_stats: Vec::new(),

@@ -7,15 +7,12 @@ use crate::app::{RaidState, RaidStatus};
 
 static ARRAY_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\w+)\s*:\s*(active|inactive)\s+\w+").unwrap());
-static DISK_COUNT_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\[(\d+)/(\d+)\]").unwrap());
+static DISK_COUNT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[(\d+)/(\d+)\]").unwrap());
 static REBUILD_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\[[=>\.]+\]\s+(?:resync|recovery|check|repair)\s*=\s*([\d.]+)%").unwrap()
 });
-static SPEED_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"speed=(\d+)K/sec").unwrap());
-static FINISH_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"finish=([\d.]+)min").unwrap());
+static SPEED_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"speed=(\d+)K/sec").unwrap());
+static FINISH_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"finish=([\d.]+)min").unwrap());
 
 pub async fn collect() -> Vec<RaidStatus> {
     match fs::read_to_string("/proc/mdstat").await {
