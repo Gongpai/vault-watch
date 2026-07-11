@@ -114,7 +114,7 @@
 
 | Feature | Description | Status |
 |:---|:---|:---|
-| [US-MON-26](./user-stories/US-MON-26.md) Part B — Config-Driven Theme | ย้ายเข้า US-MON-32/38 เพื่อทำพร้อม validated config และ UI redesign | ↪ Sprint 10 |
+| [US-MON-26](./user-stories/US-MON-26.md) Part B — Config-Driven Theme | validated colors/zones/background/label offset integrated in Sprint 10C | ✅ Done |
 | Prometheus Exporter | Export metrics ไปยัง Prometheus/Grafana | 🔵 Planned |
 | JSON API Export | HTTP endpoint สำหรับ external tooling | 🔵 Planned |
 | Cockpit Integration | Plugin สำหรับ RHEL/Ubuntu Cockpit web console | 🔵 Planned |

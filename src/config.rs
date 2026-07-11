@@ -1,7 +1,8 @@
+use ratatui::style::Color;
 use serde::Deserialize;
 use tokio::process::Command;
 
-use crate::app::DepError;
+use crate::app::{DepError, GraphTheme};
 
 // ── Config structs ────────────────────────────────────────────────────────────
 
@@ -9,6 +10,7 @@ use crate::app::DepError;
 pub struct Config {
     pub system: Option<SystemConfig>,
     pub discord: Option<DiscordConfig>,
+    pub graph: Option<GraphConfig>,
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]
@@ -27,6 +29,20 @@ pub struct SystemConfig {
 #[derive(Debug, Deserialize, Clone)]
 pub struct DiscordConfig {
     pub webhook_url: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default, Clone)]
+pub struct GraphConfig {
+    pub line_colors: Option<Vec<String>>,
+    pub temp_zones: Option<Vec<GraphZoneConfig>>,
+    pub io_background: Option<String>,
+    pub label_offset: Option<f64>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct GraphZoneConfig {
+    pub max: f64,
+    pub color: String,
 }
 
 pub struct LoadedConfig {
@@ -102,7 +118,89 @@ fn validate_config(config: &Config) -> Result<(), String> {
     {
         return Err("webhook_url must be an HTTPS Discord webhook endpoint".to_string());
     }
+    if let Some(graph) = &config.graph {
+        if let Some(colors) = &graph.line_colors
+            && (colors.is_empty()
+                || colors.len() > 16
+                || colors.iter().any(|value| parse_hex(value).is_none()))
+        {
+            return Err("graph.line_colors must contain 1..=16 #RRGGBB colors".into());
+        }
+        if graph
+            .io_background
+            .as_deref()
+            .is_some_and(|value| parse_hex(value).is_none())
+        {
+            return Err("graph.io_background must be #RRGGBB".into());
+        }
+        if graph
+            .label_offset
+            .is_some_and(|value| !value.is_finite() || !(-2.0..=2.0).contains(&value))
+        {
+            return Err("graph.label_offset must be finite and between -2.0 and 2.0".into());
+        }
+        if let Some(zones) = &graph.temp_zones {
+            if zones.is_empty() || zones.len() > 16 {
+                return Err("graph.temp_zones must contain 1..=16 zones".into());
+            }
+            let mut previous = 0.0;
+            for zone in zones {
+                if !zone.max.is_finite()
+                    || zone.max <= previous
+                    || zone.max > 200.0
+                    || parse_hex(&zone.color).is_none()
+                {
+                    return Err(
+                        "graph.temp_zones require increasing max values <= 200 and #RRGGBB colors"
+                            .into(),
+                    );
+                }
+                previous = zone.max;
+            }
+        }
+    }
     Ok(())
+}
+
+fn parse_hex(value: &str) -> Option<Color> {
+    let hex = value.strip_prefix('#')?;
+    if hex.len() != 6 || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    Some(Color::Rgb(
+        u8::from_str_radix(&hex[0..2], 16).ok()?,
+        u8::from_str_radix(&hex[2..4], 16).ok()?,
+        u8::from_str_radix(&hex[4..6], 16).ok()?,
+    ))
+}
+
+pub fn resolve_graph_theme(config: &Config) -> GraphTheme {
+    let mut theme = GraphTheme::default();
+    let Some(graph) = &config.graph else {
+        return theme;
+    };
+    if let Some(colors) = &graph.line_colors {
+        theme.line_colors = colors.iter().filter_map(|value| parse_hex(value)).collect();
+    }
+    if let Some(background) = graph.io_background.as_deref().and_then(parse_hex) {
+        theme.io_background = background;
+    }
+    if let Some(offset) = graph.label_offset {
+        theme.label_offset = offset;
+    }
+    if let Some(zones) = &graph.temp_zones {
+        let mut low = 0.0;
+        theme.temp_zones = zones
+            .iter()
+            .filter_map(|zone| {
+                let color = parse_hex(&zone.color)?;
+                let result = (low, zone.max, color);
+                low = zone.max;
+                Some(result)
+            })
+            .collect();
+    }
+    theme
 }
 
 fn validate_executable(value: Option<&str>, expected_name: &str) -> Result<(), String> {
@@ -314,6 +412,30 @@ mod tests {
         let config: Config =
             toml::from_str("[discord]\nwebhook_url = \"https://attacker.invalid/collect\"\n")
                 .unwrap();
+        assert!(validate_config(&config).is_err());
+    }
+
+    #[test]
+    fn validates_and_resolves_graph_theme() {
+        let config: Config = toml::from_str(
+            "[graph]\nline_colors=['#010203']\nio_background='#0A0B0C'\nlabel_offset=-0.75\ntemp_zones=[{max=40,color='#111111'},{max=90,color='#222222'}]\n",
+        ).unwrap();
+        validate_config(&config).unwrap();
+        let theme = resolve_graph_theme(&config);
+        assert_eq!(theme.line_colors, vec![Color::Rgb(1, 2, 3)]);
+        assert_eq!(theme.io_background, Color::Rgb(10, 11, 12));
+        assert_eq!(theme.temp_zones.len(), 2);
+        assert_eq!(theme.label_offset, -0.75);
+    }
+
+    #[test]
+    fn rejects_invalid_graph_theme_without_silent_fallback() {
+        let config: Config = toml::from_str("[graph]\nline_colors=['red']\n").unwrap();
+        assert!(validate_config(&config).is_err());
+        let config: Config = toml::from_str(
+            "[graph]\ntemp_zones=[{max=50,color='#000000'},{max=40,color='#FFFFFF'}]\n",
+        )
+        .unwrap();
         assert!(validate_config(&config).is_err());
     }
 }

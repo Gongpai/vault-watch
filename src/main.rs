@@ -57,7 +57,9 @@ async fn main() -> io::Result<()> {
         .and_then(|discord| discord.webhook_url.as_deref())
         .is_some_and(|url| !url.trim().is_empty());
     let security = security::SecurityPosture::new(outbound_notifications);
-    let state = Arc::new(Mutex::new(AppState::new(devices, inventory, security)));
+    let mut initial_state = AppState::new(devices, inventory, security);
+    initial_state.graph_theme = config::resolve_graph_theme(&cfg);
+    let state = Arc::new(Mutex::new(initial_state));
     let refresh_notify = Arc::new(Notify::new());
     #[cfg(target_os = "linux")]
     storage::spawn_block_event_hints(Arc::clone(&refresh_notify));

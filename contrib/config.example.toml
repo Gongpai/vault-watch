@@ -29,8 +29,10 @@
 # Remove or comment out this section to disable Discord notifications.
 # webhook_url = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN"
 
-# ── Graph theme (planned — US-MON-26 Part B) ──────────────────────────────────
+# ── Graph theme (optional — validated US-MON-26 Part B) ───────────────────────
 # Override Graph view colors. All fields optional; omit to use built-in defaults.
+# Invalid colors, unordered/non-finite zones or out-of-range label offsets are
+# rejected and reported in the startup error banner; the safe default theme is used.
 # [graph]
 # Per-device line colors (hex). Cycles if fewer than the device count.
 # line_colors = ["#50FAFA", "#FAE65A", "#78FA78", "#FA82FA", "#7AAAFA", "#FA825A"]

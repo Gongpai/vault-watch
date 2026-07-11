@@ -4,6 +4,24 @@
 
 ---
 
+## [0.16.0] - 2026-07-11
+
+> **MINOR bump:** เพิ่ม validated graph-theme configuration ต่อจาก `0.15.1` และปิด US-MON-26 Part B
+
+### Added
+
+- `[graph]` supports optional `line_colors`, `temp_zones`, `io_background` และ `label_offset`
+- runtime Graph canvases, temperature zones, line legends และ label positioning ใช้ resolved theme เดียวกัน
+
+### Security
+
+- รับเฉพาะ `#RRGGBB`; palette/zone count จำกัด 1..=16, zone max ต้อง finite/เพิ่มขึ้น/ไม่เกิน 200 และ label offset ต้อง finite ใน `-2..=2`
+- invalid theme config ถูก reject และแสดง startup error; ไม่มี path, command, escape sequence หรือ arbitrary style payload
+
+### Validated
+
+- config tests ครอบ valid resolution และ invalid color/unordered zones โดยไม่ fallback เงียบ
+
 ## [0.15.1] - 2026-07-11
 
 > **PATCH bump:** บันทึก live typed-availability qualification ต่อจาก `0.15.0` โดยไม่มี runtime behavior ใหม่

@@ -26,5 +26,5 @@
 - [x] typed health availability taxonomy: `Available`, `Unsupported`, `Hidden`, `PermissionDenied`, `Asleep`, `TemporarilyUnavailable`, `Stale`, `Malformed`, `DeviceGone`
 - [x] collector diagnostics and topology context preserve availability reason without creating health-failure alerts
 - [x] live all-device verification: unavailable reasons produce no false `FAIL` alert (sanitized evidence 2026-07-11)
-- [ ] validated graph-theme config Part B
+- [x] validated graph-theme config Part B: line colors, temperature zones, I/O background and label offset
 - [x] topology overview/selection/detail and scroll hardware qualification (sanitized evidence 2026-07-11)

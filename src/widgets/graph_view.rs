@@ -16,43 +16,10 @@ use crate::app::{AppState, FocusedPanel};
 // takes effect across all graphs and their legends. US-MON-26 Part B will let
 // these be overridden from `config.toml [graph]`.
 
-/// Per-device / per-array line colors — used by all 4 graphs and their legends.
-/// Cycles when there are more devices than colors. Bright RGB tones so lines
-/// stand out against the dark zone / IO backgrounds (US-MON-25).
-const DISK_COLORS: [Color; 6] = [
-    Color::Rgb(80, 250, 250),  // bright cyan
-    Color::Rgb(250, 230, 90),  // bright yellow
-    Color::Rgb(120, 250, 120), // bright green
-    Color::Rgb(250, 130, 250), // bright magenta
-    Color::Rgb(122, 170, 250), // bright blue
-    Color::Rgb(250, 130, 90),  // bright orange-red
-];
-
-/// Temperature zone backgrounds: (temp_low, temp_high, fill color).
-/// Colors are 10% darker than the original palette to raise line contrast
-/// (US-MON-25). Zones must tile the full [0, TEMP_Y_MAX] range.
-const TEMP_ZONES: [(f64, f64, Color); 5] = [
-    (0.0, 30.0, Color::Rgb(7, 48, 69)),  // dark teal
-    (30.0, 40.0, Color::Rgb(2, 50, 14)), // dark green
-    (40.0, 50.0, Color::Rgb(64, 51, 0)), // dark amber
-    (50.0, 60.0, Color::Rgb(58, 0, 0)),  // dark red
-    (60.0, 90.0, Color::Rgb(35, 0, 47)), // dark purple
-];
-
-/// Solid dark background for I/O and RAID speed graphs.
-const IO_BG: Color = Color::Rgb(10, 13, 20);
-
 /// Y-axis upper bound for the temperature graph (°C).
 const TEMP_Y_MAX: f64 = 90.0;
 /// Y-axis upper bound for the Read/Write graphs (MiB/s).
 const IO_Y_MAX: f64 = 200.0;
-
-/// Vertical fine-tune offset (in rows) for Y-axis number labels.
-/// A label cell is drawn top-aligned, so its glyph center sits at `row + 0.5`;
-/// `-0.5` shifts it up half a cell so the digit is centered on the boundary
-/// line it names. Tune this (e.g. `-1.0 ..= 0.0`) to nudge the numbers
-/// up/down relative to the zone boundaries per font/terminal.
-const Y_LABEL_OFFSET: f64 = -0.5;
 
 // ── Background widget ─────────────────────────────────────────────────────────
 
@@ -109,13 +76,13 @@ fn row_pos(value: f64, y_min: f64, y_max: f64, height: u16) -> f64 {
 }
 
 /// Clamped integer row for placing a Y-axis number label at `value`.
-/// Applies `Y_LABEL_OFFSET` so the digit centers on the boundary instead of
+/// Applies the validated theme offset so the digit centers on the boundary instead of
 /// sitting top-aligned (half a cell below it). Zone boundary fills compute
 /// their rows separately via `row_pos` in `ZoneBackground` — only label text
 /// uses this.
-fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16) -> u16 {
-    ((row_pos(value, y_min, y_max, height) + Y_LABEL_OFFSET).round() as i32)
-        .clamp(0, height as i32 - 1) as u16
+fn row_for_label(value: f64, y_min: f64, y_max: f64, height: u16, offset: f64) -> u16 {
+    ((row_pos(value, y_min, y_max, height) + offset).round() as i32).clamp(0, height as i32 - 1)
+        as u16
 }
 
 // ── Public entry point ────────────────────────────────────────────────────────
@@ -210,12 +177,13 @@ fn render_y_labels(
     labels: &[(f64, Color, &str)],
     y_min: f64,
     y_max: f64,
+    label_offset: f64,
 ) {
     if y_max <= y_min || area.height == 0 {
         return;
     }
     for &(val, color, text) in labels {
-        let row = row_for_label(val, y_min, y_max, area.height);
+        let row = row_for_label(val, y_min, y_max, area.height, label_offset);
         let row_area = Rect {
             x: area.x,
             y: area.y + row,
@@ -264,6 +232,12 @@ fn render_legend(f: &mut Frame, area: Rect, entries: &[(String, Color)]) {
 // ── Graph renderers ───────────────────────────────────────────────────────────
 
 fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
+    let theme = state.graph_theme.clone();
+    let temp_y_max = theme
+        .temp_zones
+        .last()
+        .map(|zone| zone.1)
+        .unwrap_or(TEMP_Y_MAX);
     let focused = state.focused_panel == FocusedPanel::TempGraph;
     state.panel_rects.insert(FocusedPanel::TempGraph, area);
 
@@ -299,12 +273,12 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     f.render_widget(
         Canvas::default()
             .x_bounds([x_min, 0.0])
-            .y_bounds([0.0, TEMP_Y_MAX])
+            .y_bounds([0.0, temp_y_max])
             .background_color(Color::Reset)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
                 for (i, pts) in data.iter().enumerate() {
-                    draw_line_series(ctx, pts, DISK_COLORS[i % DISK_COLORS.len()]);
+                    draw_line_series(ctx, pts, theme.line_colors[i % theme.line_colors.len()]);
                 }
             }),
         canvas_area,
@@ -313,9 +287,9 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
     // 2. Zone backgrounds — overwrites Canvas bg per row, braille chars intact.
     f.render_widget(
         ZoneBackground {
-            zones: &TEMP_ZONES,
+            zones: &state.graph_theme.temp_zones,
             y_min: 0.0,
-            y_max: TEMP_Y_MAX,
+            y_max: temp_y_max,
         },
         canvas_area,
     );
@@ -337,14 +311,20 @@ fn render_temp_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
             (0.0, Color::DarkGray, "0"),
         ],
         0.0,
-        TEMP_Y_MAX,
+        temp_y_max,
+        state.graph_theme.label_offset,
     );
 
     // 4. Legend.
     let legend: Vec<(String, Color)> = devices
         .iter()
         .enumerate()
-        .map(|(i, d)| (d.clone(), DISK_COLORS[i % DISK_COLORS.len()]))
+        .map(|(i, d)| {
+            (
+                d.clone(),
+                state.graph_theme.line_colors[i % state.graph_theme.line_colors.len()],
+            )
+        })
         .collect();
     render_legend(f, canvas_area, &legend);
 }
@@ -356,6 +336,7 @@ fn render_io_graph(
     panel: FocusedPanel,
     title: &str,
 ) {
+    let theme = state.graph_theme.clone();
     let focused = state.focused_panel == panel;
     state.panel_rects.insert(panel, area);
 
@@ -397,11 +378,11 @@ fn render_io_graph(
         Canvas::default()
             .x_bounds([x_min, 0.0])
             .y_bounds([0.0, IO_Y_MAX])
-            .background_color(IO_BG)
+            .background_color(theme.io_background)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
                 for (i, pts) in data.iter().enumerate() {
-                    draw_line_series(ctx, pts, DISK_COLORS[i % DISK_COLORS.len()]);
+                    draw_line_series(ctx, pts, theme.line_colors[i % theme.line_colors.len()]);
                 }
             }),
         canvas_area,
@@ -421,17 +402,24 @@ fn render_io_graph(
         ],
         0.0,
         IO_Y_MAX,
+        state.graph_theme.label_offset,
     );
 
     let legend: Vec<(String, Color)> = devices
         .iter()
         .enumerate()
-        .map(|(i, d)| (d.clone(), DISK_COLORS[i % DISK_COLORS.len()]))
+        .map(|(i, d)| {
+            (
+                d.clone(),
+                state.graph_theme.line_colors[i % state.graph_theme.line_colors.len()],
+            )
+        })
         .collect();
     render_legend(f, canvas_area, &legend);
 }
 
 fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
+    let theme = state.graph_theme.clone();
     let focused = state.focused_panel == FocusedPanel::RaidGraph;
     state.panel_rects.insert(FocusedPanel::RaidGraph, area);
 
@@ -472,11 +460,11 @@ fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         Canvas::default()
             .x_bounds([x_min, 0.0])
             .y_bounds([0.0, y_max])
-            .background_color(IO_BG)
+            .background_color(theme.io_background)
             .marker(symbols::Marker::Braille)
             .paint(move |ctx| {
                 for (i, pts) in data.iter().enumerate() {
-                    draw_line_series(ctx, pts, DISK_COLORS[i % DISK_COLORS.len()]);
+                    draw_line_series(ctx, pts, theme.line_colors[i % theme.line_colors.len()]);
                 }
             }),
         canvas_area,
@@ -498,12 +486,18 @@ fn render_raid_graph(f: &mut Frame, area: Rect, state: &mut AppState) {
         ],
         0.0,
         y_max,
+        state.graph_theme.label_offset,
     );
 
     let legend: Vec<(String, Color)> = names
         .iter()
         .enumerate()
-        .map(|(i, n)| (n.clone(), DISK_COLORS[i % DISK_COLORS.len()]))
+        .map(|(i, n)| {
+            (
+                n.clone(),
+                state.graph_theme.line_colors[i % state.graph_theme.line_colors.len()],
+            )
+        })
         .collect();
     render_legend(f, canvas_area, &legend);
 }

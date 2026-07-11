@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Version:** 0.15.1
+**Version:** 0.16.0
 **Status:** Sprint 10 In Progress — Universal Storage Architecture & Security Hardening
 **Current Architecture:** Async TUI migration (`tokio` + `ratatui`, graph-first storage foundation)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
@@ -48,7 +48,7 @@
 | Native health backends + privilege broker | 📋 Planned | [Sprint 10](./agile/sprint-backlogs/sprint-10.md) |
 | Native block throughput (`/proc/diskstats`) | ✅ Done | [US-MON-30](./agile/user-stories/US-MON-30.md) |
 | Native MD RAID monitoring (sysfs) | 🚧 In Progress — cutover complete, live rebuild qualification pending | [US-MON-31](./agile/user-stories/US-MON-31.md) |
-| Storage-first topology UI | 🚧 In Progress — overview, node details and typed availability delivered; theme work pending | [US-MON-32](./agile/user-stories/US-MON-32.md) |
+| Storage-first topology UI | 🚧 In Progress — overview, details, availability and validated graph theme delivered | [US-MON-32](./agile/user-stories/US-MON-32.md) |
 
 ---
 

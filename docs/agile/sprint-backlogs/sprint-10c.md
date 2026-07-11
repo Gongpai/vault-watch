@@ -11,7 +11,7 @@
 - [x] empty/partial/stale/hidden/unsupported/asleep/permission/malformed/device-gone states
 - [x] live all-device availability/false-alert verification
 - [ ] scoped graphs และ stacked-counter warning
-- [ ] validated graph-theme config Part B
+- [x] validated graph-theme config Part B integrated into Graph/legends
 - [ ] responsive/focus/scroll regression tests
 - [x] live overview/selection/details/scroll verification without identity disclosure
 - [x] topology row privacy fixture and scrollable focused panel

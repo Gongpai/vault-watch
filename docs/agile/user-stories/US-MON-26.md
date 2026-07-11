@@ -1,6 +1,6 @@
 # US-MON-26: Configurable Graph Theme — Centralized Constants + Config Support
 
-**Sprint:** 08 (Part A) / Backlog (Part B) | **Estimate:** S (3h) + M (config) | **Status:** 🔶 Part A ✅ Done · Part B 📋 Planned
+**Sprint:** 08 (Part A) / 10C (Part B) | **Estimate:** S (3h) + M (config) | **Status:** ✅ Done
 
 ---
 
@@ -48,6 +48,8 @@
 7. Hex string (`"#RRGGBB"`) → parse เป็น `Color::Rgb`; ค่าผิดรูป → fallback default + ไม่ crash
 8. `temp_zones` กำหนดได้ทั้งขอบเขต (°C) และสี; เรียงตาม `max` จากน้อยไปมาก
 9. `config.example.toml` มี `[graph]` section พร้อมคอมเมนต์อธิบาย (commented out)
+
+**Implemented in 0.16.0:** validated `#RRGGBB` colors, bounded line palette, strictly increasing finite temperature zones, bounded finite label offset และ runtime Graph/legend integration; invalid config แสดง error banner และใช้ safe defaults ทั้งชุด
 
 ---
 

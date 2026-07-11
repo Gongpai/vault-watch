@@ -2,11 +2,44 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 
 use ratatui::layout::Rect;
+use ratatui::style::Color;
 
 use crate::security::SecurityPosture;
 use crate::storage::StorageInventory;
 
 pub const HISTORY_SIZE: usize = 60;
+
+#[derive(Debug, Clone)]
+pub struct GraphTheme {
+    pub line_colors: Vec<Color>,
+    pub temp_zones: Vec<(f64, f64, Color)>,
+    pub io_background: Color,
+    pub label_offset: f64,
+}
+
+impl Default for GraphTheme {
+    fn default() -> Self {
+        Self {
+            line_colors: vec![
+                Color::Rgb(80, 250, 250),
+                Color::Rgb(250, 230, 90),
+                Color::Rgb(120, 250, 120),
+                Color::Rgb(250, 130, 250),
+                Color::Rgb(122, 170, 250),
+                Color::Rgb(250, 130, 90),
+            ],
+            temp_zones: vec![
+                (0.0, 30.0, Color::Rgb(7, 48, 69)),
+                (30.0, 40.0, Color::Rgb(2, 50, 14)),
+                (40.0, 50.0, Color::Rgb(64, 51, 0)),
+                (50.0, 60.0, Color::Rgb(58, 0, 0)),
+                (60.0, 90.0, Color::Rgb(35, 0, 47)),
+            ],
+            io_background: Color::Rgb(10, 13, 20),
+            label_offset: -0.5,
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Alert {
@@ -252,6 +285,7 @@ pub enum FocusedPanel {
 }
 
 pub struct AppState {
+    pub graph_theme: GraphTheme,
     pub storage_inventory: StorageInventory,
     pub security: SecurityPosture,
     pub raids: Vec<RaidStatus>,
@@ -300,6 +334,7 @@ impl AppState {
         }
 
         Self {
+            graph_theme: GraphTheme::default(),
             storage_inventory,
             security,
             raids: Vec::new(),
