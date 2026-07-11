@@ -20,4 +20,5 @@
 - [x] AC4 partial: typed progress, kernel speed and checked ETA; delta-speed operation cache remains
 - [x] AC5: `external:*` metadata is explicit and backend is read-only
 - [x] AC6 partial: healthy/member/recovery/external/malformed fixtures; sysfs runs in shadow while `/proc/mdstat` remains primary oracle
+- [x] targeted MD sysfs fixture suite verified by operator (4/4, sanitized evidence 2026-07-11)
 - [ ] state-transition/delta fixtures, semantic oracle comparison, sysfs cutover and live multi-array/rebuild qualification
