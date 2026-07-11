@@ -9,6 +9,7 @@
 - [ ] MD sysfs snapshot/member model + race retries
 - [ ] legacy iostat/mdstat parallel comparison then cutover
 - [ ] fixture/property tests และ live MD qualification handoff
+- [ ] BUG-08: include eligible NVMe whole-device subjects without partition/stack double counting
 
 ## Exit Gate
 

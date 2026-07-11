@@ -9,6 +9,7 @@
 - [ ] sourced vendor/model schema with unknown fallback
 - [ ] bounded USB/controller routing without unknown vendor probes
 - [ ] fixtures/fuzzing/hardware qualification and broker integration
+- [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate
 

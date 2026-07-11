@@ -10,6 +10,7 @@
 - [ ] multipath/NVMe-oF scope and AER-triggered reconciliation
 - [ ] destructive/admin rejection, fuzzing, QEMU and hardware tests
 - [ ] BUG-05: Intel DC P4618 one-card/two-controller topology; health/endurance แยก controller
+- [ ] BUG-07: เชื่อม standard SMART/Health metrics ที่ hardware ยืนยันว่าอ่านได้ แยกทั้งสอง controllers
 
 ## Exit Gate
 
