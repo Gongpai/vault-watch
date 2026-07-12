@@ -3,14 +3,56 @@ use std::io;
 use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::fs::{FileTypeExt, MetadataExt, OpenOptionsExt};
 use std::path::Path;
+use std::sync::{Arc, OnceLock};
+
+use tokio::sync::Semaphore;
+
+use crate::ata::{
+    AtaLogDirectory, AtaMedium, AtaParseError, AtaReadCommand, SmartAttribute, SmartStatus,
+    parse_ata_return_descriptor, parse_identify_device, parse_log_directory,
+    parse_smart_attributes, parse_smart_thresholds, smart_return_status,
+};
+use crate::scsi::sg_uapi::{SgIoCompletion, execute_read_only};
 
 use super::{
-    AuthorizedBrokerRequest, BrokerGeneration, OpenedDeviceEvidence, VerifiedExecutionPlan,
-    revalidate_opened_device,
+    AtaBrokerOperation, AuthorizedBrokerRequest, BrokerGeneration, OpenedDeviceEvidence,
+    VerifiedExecutionPlan, revalidate_opened_device,
 };
 
 const SYSTEM_DEV_ROOT: &str = "/dev";
 const SYSTEM_SYS_DEV_BLOCK_ROOT: &str = "/sys/dev/block";
+const ATA_SENSE_LEN: usize = 64;
+const ATA_STATUS_ERROR_MASK: u8 = 0xa1;
+const MAX_CONCURRENT_ATA_COMMANDS: usize = 4;
+static ATA_EXECUTION_PERMITS: OnceLock<Arc<Semaphore>> = OnceLock::new();
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtaIdentifySummary {
+    pub capacity_bytes: Option<u128>,
+    pub medium: AtaMedium,
+    pub smart_supported: bool,
+    pub general_purpose_logging_supported: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BrokerAtaResponse {
+    Identify(AtaIdentifySummary),
+    SmartData(Vec<SmartAttribute>),
+    SmartThresholds(Vec<(u8, u8)>),
+    SmartStatus(SmartStatus),
+    GplDirectory(AtaLogDirectory),
+}
+
+#[derive(Debug)]
+pub enum BrokerAtaExecutionError {
+    Io(io::Error),
+    InvalidPlan,
+    TransportStatus { scsi: u8, host: u16, driver: u16 },
+    AtaStatus { status: u8, error: u8 },
+    Malformed(AtaParseError),
+    WorkerClosed,
+    WorkerJoin,
+}
 
 /// Owns a read-only whole-device descriptor after generation revalidation.
 /// The descriptor is intentionally not exposed through the public API.
@@ -26,6 +68,99 @@ impl BrokerOpenedDevice {
         // frontend callers. The future in-module executor will consume it.
         let _ = self.file.as_raw_fd();
         &self.plan
+    }
+
+    /// Executes the sealed operation away from the async runtime under a
+    /// process-wide concurrency bound.
+    pub async fn execute_ata(self) -> Result<BrokerAtaResponse, BrokerAtaExecutionError> {
+        let permits = ATA_EXECUTION_PERMITS
+            .get_or_init(|| Arc::new(Semaphore::new(MAX_CONCURRENT_ATA_COMMANDS)))
+            .clone();
+        let permit = permits
+            .acquire_owned()
+            .await
+            .map_err(|_| BrokerAtaExecutionError::WorkerClosed)?;
+        tokio::task::spawn_blocking(move || {
+            let _permit = permit;
+            self.execute_ata_blocking()
+        })
+        .await
+        .map_err(|_| BrokerAtaExecutionError::WorkerJoin)?
+    }
+
+    fn execute_ata_blocking(&self) -> Result<BrokerAtaResponse, BrokerAtaExecutionError> {
+        let command = match self.plan.operation {
+            AtaBrokerOperation::IdentifyDevice => AtaReadCommand::IdentifyDevice,
+            AtaBrokerOperation::SmartReadData => AtaReadCommand::SmartReadData,
+            AtaBrokerOperation::SmartReadThresholds => AtaReadCommand::SmartReadThresholds,
+            AtaBrokerOperation::SmartReturnStatus => AtaReadCommand::SmartReturnStatus,
+            AtaBrokerOperation::ReadGplDirectory => AtaReadCommand::ReadGplDirectory,
+        };
+        let data_len = command.data_len();
+        if data_len != self.plan.response_limit {
+            return Err(BrokerAtaExecutionError::InvalidPlan);
+        }
+        let timeout_ms = u32::try_from(self.plan.timeout.as_millis())
+            .ok()
+            .filter(|timeout| *timeout > 0)
+            .ok_or(BrokerAtaExecutionError::InvalidPlan)?;
+        let completion = execute_read_only(
+            self.file.as_raw_fd(),
+            &command.cdb(),
+            data_len,
+            ATA_SENSE_LEN,
+            timeout_ms,
+        )
+        .map_err(BrokerAtaExecutionError::Io)?;
+        interpret_ata_completion(command, completion)
+    }
+}
+
+fn interpret_ata_completion(
+    command: AtaReadCommand,
+    completion: SgIoCompletion,
+) -> Result<BrokerAtaResponse, BrokerAtaExecutionError> {
+    if completion.host_status != 0
+        || completion.driver_status != 0
+        || !matches!(completion.scsi_status, 0x00 | 0x02)
+    {
+        return Err(BrokerAtaExecutionError::TransportStatus {
+            scsi: completion.scsi_status,
+            host: completion.host_status,
+            driver: completion.driver_status,
+        });
+    }
+    let registers = parse_ata_return_descriptor(&completion.sense)
+        .map_err(BrokerAtaExecutionError::Malformed)?;
+    if registers.status & ATA_STATUS_ERROR_MASK != 0 {
+        return Err(BrokerAtaExecutionError::AtaStatus {
+            status: registers.status,
+            error: registers.error,
+        });
+    }
+    match command {
+        AtaReadCommand::IdentifyDevice => {
+            let identify = parse_identify_device(&completion.data)
+                .map_err(BrokerAtaExecutionError::Malformed)?;
+            Ok(BrokerAtaResponse::Identify(AtaIdentifySummary {
+                capacity_bytes: identify.capacity_bytes,
+                medium: identify.medium,
+                smart_supported: identify.smart_supported,
+                general_purpose_logging_supported: identify.general_purpose_logging_supported,
+            }))
+        }
+        AtaReadCommand::SmartReadData => parse_smart_attributes(&completion.data)
+            .map(BrokerAtaResponse::SmartData)
+            .map_err(BrokerAtaExecutionError::Malformed),
+        AtaReadCommand::SmartReadThresholds => parse_smart_thresholds(&completion.data)
+            .map(BrokerAtaResponse::SmartThresholds)
+            .map_err(BrokerAtaExecutionError::Malformed),
+        AtaReadCommand::SmartReturnStatus => Ok(BrokerAtaResponse::SmartStatus(
+            smart_return_status(registers),
+        )),
+        AtaReadCommand::ReadGplDirectory => parse_log_directory(&completion.data)
+            .map(BrokerAtaResponse::GplDirectory)
+            .map_err(BrokerAtaExecutionError::Malformed),
     }
 }
 
@@ -139,6 +274,27 @@ mod tests {
         }
     }
 
+    fn completion(command: AtaReadCommand) -> SgIoCompletion {
+        let mut sense = vec![0u8; 22];
+        sense[0] = 0x72;
+        sense[7] = 14;
+        sense[8] = 0x09;
+        sense[9] = 0x0c;
+        sense[17] = 0x4f;
+        sense[19] = 0xc2;
+        sense[21] = 0x50;
+        SgIoCompletion {
+            data: vec![0; command.data_len()],
+            sense,
+            scsi_status: 0x02,
+            host_status: 0,
+            driver_status: 0,
+            residual: 0,
+            duration_ms: 1,
+            info: 1,
+        }
+    }
+
     #[test]
     fn unsafe_or_noncanonical_authorized_names_never_reach_open() {
         for node_id in ["sda", "block:", "block:../sda", "block:sda/child"] {
@@ -211,6 +367,46 @@ mod tests {
                 response_limit: 512,
             },
         };
-        assert_eq!(opened.plan().request_id, 1);
+        assert_eq!(opened.plan().request_id(), 1);
+    }
+
+    #[test]
+    fn typed_completion_interpretation_requires_transport_and_ata_success() {
+        let response = interpret_ata_completion(
+            AtaReadCommand::IdentifyDevice,
+            completion(AtaReadCommand::IdentifyDevice),
+        )
+        .unwrap();
+        assert!(matches!(response, BrokerAtaResponse::Identify(_)));
+
+        let status = interpret_ata_completion(
+            AtaReadCommand::SmartReturnStatus,
+            completion(AtaReadCommand::SmartReturnStatus),
+        )
+        .unwrap();
+        assert_eq!(status, BrokerAtaResponse::SmartStatus(SmartStatus::Passed));
+
+        let mut transport = completion(AtaReadCommand::IdentifyDevice);
+        transport.host_status = 1;
+        assert!(matches!(
+            interpret_ata_completion(AtaReadCommand::IdentifyDevice, transport),
+            Err(BrokerAtaExecutionError::TransportStatus { .. })
+        ));
+
+        let mut ata_error = completion(AtaReadCommand::IdentifyDevice);
+        ata_error.sense[21] = 0x51;
+        assert!(matches!(
+            interpret_ata_completion(AtaReadCommand::IdentifyDevice, ata_error),
+            Err(BrokerAtaExecutionError::AtaStatus { .. })
+        ));
+
+        let mut missing = completion(AtaReadCommand::IdentifyDevice);
+        missing.sense.clear();
+        assert!(matches!(
+            interpret_ata_completion(AtaReadCommand::IdentifyDevice, missing),
+            Err(BrokerAtaExecutionError::Malformed(
+                AtaParseError::TruncatedDescriptor
+            ))
+        ));
     }
 }

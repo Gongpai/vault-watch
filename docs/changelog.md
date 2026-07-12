@@ -4,6 +4,31 @@
 
 ---
 
+## [0.36.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม typed bounded ATA/SAT SG_IO executor ต่อจาก `0.35.0`
+
+### Added
+
+- centralized Linux `sg_io_hdr_t` execution boundary จาก host UAPI พร้อม exact ABI checks
+- sealed ATA operation → fixed SAT CDB mapping สำหรับ IDENTIFY, SMART data/threshold/status และ GPL directory
+- process-wide four-command semaphore และ `spawn_blocking` boundary ป้องกัน ioctl block async/TUI executor
+- structured Identify capability, SMART attributes/threshold/status และ GPL directory responses
+
+### Security
+
+- `AuthorizedBrokerRequest` และ verified-plan fields ถูก seal ไม่ให้ caller ประกอบ authorization token ปลอม
+- caller ส่ง raw CDB, data direction, buffer length, sense length หรือ timeout ไม่ได้
+- completion ปฏิเสธ negative/oversized residual, oversized sense, host/driver/SCSI failure, missing ATA descriptor และ ATA BSY/DF/ERR
+- Identify response ไม่ส่ง serial, model หรือ firmware ออกจาก executor API
+- ยืนยัน `SG_DXFER_NONE = -1` จาก Linux `<scsi/sg.h>` แทนค่าคลาดเคลื่อนใน research report
+- ยังไม่มี broker server/TUI integration จึงยังไม่ execute command ระหว่าง `cargo run`
+
+### Validated
+
+- operator ยืนยัน baseline `0.35.0`: device acquisition 4/4, broker 18/18, library 67/67 และ binary 75/75 ผ่านบน openSUSE
+- ATA 13/13, SG UAPI 2/2, broker 19/19, library 69/69, binary 75/75, doc tests และ clippy ผ่าน
+
 ## [0.35.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม broker-owned device opening และ evidence acquisition ต่อจาก `0.34.0`

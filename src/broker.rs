@@ -16,7 +16,10 @@ pub use wire::{
 #[cfg(target_os = "linux")]
 mod device;
 #[cfg(target_os = "linux")]
-pub use device::{BrokerOpenedDevice, open_system_authorized_device};
+pub use device::{
+    AtaIdentifySummary, BrokerAtaExecutionError, BrokerAtaResponse, BrokerOpenedDevice,
+    open_system_authorized_device,
+};
 #[cfg(target_os = "linux")]
 mod unix;
 #[cfg(target_os = "linux")]
@@ -111,12 +114,12 @@ pub enum BrokerDenyReason {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedBrokerRequest {
-    pub request_id: u64,
-    pub node_id: String,
-    pub generation: BrokerGeneration,
-    pub operation: AtaBrokerOperation,
-    pub timeout: Duration,
-    pub response_limit: usize,
+    pub(crate) request_id: u64,
+    pub(crate) node_id: String,
+    pub(crate) generation: BrokerGeneration,
+    pub(crate) operation: AtaBrokerOperation,
+    pub(crate) timeout: Duration,
+    pub(crate) response_limit: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -137,12 +140,22 @@ pub enum ExecutionDenyReason {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedExecutionPlan {
-    pub request_id: u64,
-    pub node_id: String,
-    pub generation: BrokerGeneration,
-    pub operation: AtaBrokerOperation,
-    pub timeout: Duration,
-    pub response_limit: usize,
+    pub(crate) request_id: u64,
+    pub(crate) node_id: String,
+    pub(crate) generation: BrokerGeneration,
+    pub(crate) operation: AtaBrokerOperation,
+    pub(crate) timeout: Duration,
+    pub(crate) response_limit: usize,
+}
+
+impl VerifiedExecutionPlan {
+    pub const fn request_id(&self) -> u64 {
+        self.request_id
+    }
+
+    pub const fn operation(&self) -> AtaBrokerOperation {
+        self.operation
+    }
 }
 
 /// Revalidates broker-owned evidence collected from an already opened file

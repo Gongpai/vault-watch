@@ -28,7 +28,8 @@
     - [x] bounded per-session request budget and privacy-safe decision audit records
     - [x] guarded Unix socket bind/mode/peer-credential/identity-safe cleanup lifecycle
     - [x] broker-owned read-only whole-device open and post-open sysfs/fd evidence acquisition
-    - [ ] typed ioctl executor
+    - [x] typed bounded async ATA/SAT SG_IO executor and structured response interpretation
+    - [ ] broker process/server integration and hardware qualification
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

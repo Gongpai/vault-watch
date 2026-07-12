@@ -22,5 +22,6 @@
 - [x] privacy-safe audit decision records omit node ID, path, generation, serial and payload
 - [x] guarded Unix socket lifecycle, restricted mode, kernel peer credentials and inode-safe cleanup
 - [x] broker-owned read-only whole-device open and post-open generation/partition evidence acquisition
-- [ ] typed ioctl executor
+- [x] typed bounded async ATA/SAT SG_IO executor; no caller-controlled CDB/direction/length/timeout
+- [ ] broker process/server integration and hardware qualification
 - [ ] process separation, seccomp, concurrency limits and hostile integration qualification

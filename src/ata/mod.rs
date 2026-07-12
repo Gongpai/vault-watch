@@ -19,6 +19,7 @@ pub enum AtaReadCommand {
     SmartReadData,
     SmartReadThresholds,
     SmartReturnStatus,
+    ReadGplDirectory,
 }
 
 impl AtaReadCommand {
@@ -30,10 +31,11 @@ impl AtaReadCommand {
     }
 
     pub const fn cdb(self) -> [u8; 16] {
-        let (protocol, transfer, feature, count, lba_mid, lba_high, command) = match self {
-            Self::IdentifyDevice => (4, 0x2e, 0, 1, 0, 0, ATA_IDENTIFY_DEVICE),
+        let (protocol, extend, transfer, feature, count, lba_mid, lba_high, command) = match self {
+            Self::IdentifyDevice => (4, false, 0x2e, 0, 1, 0, 0, ATA_IDENTIFY_DEVICE),
             Self::SmartReadData => (
                 4,
+                false,
                 0x2e,
                 SMART_READ_DATA,
                 1,
@@ -43,6 +45,7 @@ impl AtaReadCommand {
             ),
             Self::SmartReadThresholds => (
                 4,
+                false,
                 0x2e,
                 SMART_READ_THRESHOLDS,
                 1,
@@ -52,6 +55,7 @@ impl AtaReadCommand {
             ),
             Self::SmartReturnStatus => (
                 3,
+                false,
                 0x20,
                 SMART_RETURN_STATUS,
                 0,
@@ -59,10 +63,11 @@ impl AtaReadCommand {
                 SMART_LBA_HIGH,
                 ATA_SMART,
             ),
+            Self::ReadGplDirectory => (4, true, 0x2e, 0, 1, 0, 0, ATA_READ_LOG_EXT),
         };
         [
             ATA_PASS_THROUGH_16,
-            protocol << 1,
+            (protocol << 1) | extend as u8,
             transfer,
             0,
             feature,
@@ -659,6 +664,10 @@ mod tests {
         assert_eq!(status[2], 0x20);
         assert_eq!(status[4], 0xda);
         assert_eq!(AtaReadCommand::SmartReturnStatus.data_len(), 0);
+        let directory = AtaReadCommand::ReadGplDirectory.cdb();
+        assert_eq!(directory[1], (4 << 1) | 1);
+        assert_eq!(directory[14], ATA_READ_LOG_EXT);
+        assert_eq!(AtaReadCommand::ReadGplDirectory.data_len(), 512);
     }
 
     #[test]
