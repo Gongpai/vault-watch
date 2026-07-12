@@ -18,6 +18,7 @@ cargo +nightly fuzz run scsi_pages -- -max_total_time=60
 cargo +nightly fuzz run scsi_sense_completion -- -max_total_time=60
 cargo +nightly fuzz run ata_pages -- -max_total_time=60
 cargo +nightly fuzz run ata_return_descriptor -- -max_total_time=60
+cargo +nightly fuzz run ata_vendor_schema -- -max_total_time=60
 ```
 
 Using `+nightly` selects nightly only for that command; do not run

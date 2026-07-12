@@ -4,6 +4,28 @@
 
 ---
 
+## [0.28.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม safe ATA vendor-schema interpretation framework ต่อจาก `0.27.2`
+
+### Added
+
+- exact model-prefix plus firmware-prefix matching with mandatory document/revision/URL provenance
+- typed raw decoders (`LE u48`, `LE u32`, bounded byte), multiplier, unit and metric direction
+- explicit `NoMatch`/`Ambiguous` unknown fallback and errors for invalid schema, duplicate attributes, bad byte index and overflow
+- standalone `ata_vendor_schema` fuzz target using synthetic identity/rules only
+
+### Security
+
+- ไม่มี real vendor rule ในรุ่นนี้ จึงยังไม่ตีความ SMART raw bytes ของอุปกรณ์จริง
+- registry ที่ไม่ครบ provenance หรือมี rule ซ้ำถูกปฏิเสธทั้งชุด
+- multiple matching schemas ไม่เลือกตามลำดับ และ checked conversion ไม่คืนค่าที่ overflow
+
+### Validated
+
+- synthetic unit tests ครอบ match, firmware mismatch, ambiguity, invalid decoder และ overflow
+- ATA 13/13, library 36/36, binary 75/75, doc tests, checks, formatting, clippy และ nightly fuzz build ผ่าน
+
 ## [0.27.2] - 2026-07-12
 
 > **PATCH bump:** บันทึก completed ATA fuzz qualification และ lock fuzz dependencies ต่อจาก `0.27.1`

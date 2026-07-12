@@ -12,10 +12,13 @@
   - [ ] standardized health log pages and extended fixtures
 - [x] typed SAT builders and strict initial command allowlist (IDENTIFY, SMART READ DATA/THRESHOLDS/RETURN STATUS)
 - [ ] sourced vendor/model schema with unknown fallback
+  - [x] provenance-required exact model/firmware schema framework and typed raw decoders
+  - [ ] reviewed real vendor rules from official documentation
 - [x] evidence-only USB/controller routing without unknown vendor probes
 - [ ] fixtures/fuzzing/hardware qualification and broker integration
   - [x] standalone in-memory fuzz targets for ATA pages and return descriptors
   - [x] bounded nightly/ASan fuzz campaign for both ATA targets
+  - [x] schema matching/conversion fuzz target
   - [ ] curated synthetic seed corpus, hardware qualification and broker integration
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 

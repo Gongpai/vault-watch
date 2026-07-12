@@ -26,7 +26,9 @@
 - [x] capability-gated READ LOG EXT exposes only page 0 directory and preserves unknown page addresses without vendor interpretation
 - [x] standalone fuzz targets cover IDENTIFY/SMART/GPL parsers, threshold evaluation and ATA return descriptors using in-memory bytes only
 - [x] bounded nightly/ASan campaigns complete for both ATA fuzz targets with no crash artifact
-- [ ] standardized health log pages, vendor schemas, curated seeds, broker and hardware qualification
+- [x] vendor schema framework requires model+firmware match, source provenance, typed decoder/unit/direction and checked conversion
+- [x] schema mismatch and multiple matches remain unknown; invalid schema and overflow are explicit errors
+- [ ] standardized health log pages, reviewed real vendor rules, curated seeds, broker and hardware qualification
 
 ## Operator Evidence
 

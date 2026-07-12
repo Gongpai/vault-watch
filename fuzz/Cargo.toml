@@ -39,5 +39,12 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "ata_vendor_schema"
+path = "fuzz_targets/ata_vendor_schema.rs"
+test = false
+doc = false
+bench = false
+
 [workspace]
 members = ["."]

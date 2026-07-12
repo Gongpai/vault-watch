@@ -267,6 +267,180 @@ pub struct SmartAttribute {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RawValueDecoder {
+    LittleEndianU48,
+    LittleEndianU32,
+    Byte(u8),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MetricDirection {
+    Increasing,
+    Decreasing,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VendorAttributeRule<'a> {
+    pub attribute_id: u8,
+    pub metric: &'a str,
+    pub unit: &'a str,
+    pub decoder: RawValueDecoder,
+    pub multiplier: u64,
+    pub direction: MetricDirection,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VendorSchemaSource<'a> {
+    pub document_id: &'a str,
+    pub revision: &'a str,
+    pub url: &'a str,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VendorSchema<'a> {
+    pub schema_id: &'a str,
+    pub model_prefix: &'a str,
+    pub firmware_prefix: &'a str,
+    pub source: VendorSchemaSource<'a>,
+    pub rules: &'a [VendorAttributeRule<'a>],
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InterpretedVendorMetric<'a> {
+    pub attribute_id: u8,
+    pub metric: &'a str,
+    pub value: u64,
+    pub unit: &'a str,
+    pub direction: MetricDirection,
+    pub source: VendorSchemaSource<'a>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnknownSchemaReason {
+    NoMatch,
+    Ambiguous,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VendorInterpretation<'a> {
+    UnknownSchema(UnknownSchemaReason),
+    Matched {
+        schema_id: &'a str,
+        metrics: Vec<InterpretedVendorMetric<'a>>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VendorSchemaError {
+    InvalidSchema,
+    DuplicateAttribute(u8),
+    InvalidByteIndex(u8),
+    ValueOverflow(u8),
+}
+
+pub fn interpret_vendor_attributes<'a>(
+    schemas: &'a [VendorSchema<'a>],
+    identify: &IdentifyDevice,
+    attributes: &[SmartAttribute],
+) -> Result<VendorInterpretation<'a>, VendorSchemaError> {
+    for schema in schemas {
+        validate_vendor_schema(schema)?;
+    }
+    let mut matches = schemas.iter().filter(|schema| {
+        identify.model.starts_with(schema.model_prefix)
+            && identify.firmware.starts_with(schema.firmware_prefix)
+    });
+    let Some(schema) = matches.next() else {
+        return Ok(VendorInterpretation::UnknownSchema(
+            UnknownSchemaReason::NoMatch,
+        ));
+    };
+    if matches.next().is_some() {
+        return Ok(VendorInterpretation::UnknownSchema(
+            UnknownSchemaReason::Ambiguous,
+        ));
+    }
+
+    let mut metrics = Vec::new();
+    for rule in schema.rules {
+        let Some(attribute) = attributes
+            .iter()
+            .find(|value| value.id == rule.attribute_id)
+        else {
+            continue;
+        };
+        let raw = decode_vendor_raw(attribute.raw, rule.decoder)?;
+        let value = raw
+            .checked_mul(rule.multiplier)
+            .ok_or(VendorSchemaError::ValueOverflow(rule.attribute_id))?;
+        metrics.push(InterpretedVendorMetric {
+            attribute_id: rule.attribute_id,
+            metric: rule.metric,
+            value,
+            unit: rule.unit,
+            direction: rule.direction,
+            source: schema.source,
+        });
+    }
+    Ok(VendorInterpretation::Matched {
+        schema_id: schema.schema_id,
+        metrics,
+    })
+}
+
+fn validate_vendor_schema(schema: &VendorSchema<'_>) -> Result<(), VendorSchemaError> {
+    if schema.schema_id.is_empty()
+        || schema.model_prefix.is_empty()
+        || schema.firmware_prefix.is_empty()
+        || schema.source.document_id.is_empty()
+        || schema.source.revision.is_empty()
+        || schema.source.url.is_empty()
+        || schema.rules.is_empty()
+        || schema
+            .rules
+            .iter()
+            .any(|rule| rule.metric.is_empty() || rule.unit.is_empty() || rule.multiplier == 0)
+    {
+        return Err(VendorSchemaError::InvalidSchema);
+    }
+    for (index, rule) in schema.rules.iter().enumerate() {
+        if schema.rules[..index]
+            .iter()
+            .any(|other| other.attribute_id == rule.attribute_id)
+        {
+            return Err(VendorSchemaError::DuplicateAttribute(rule.attribute_id));
+        }
+        if matches!(rule.decoder, RawValueDecoder::Byte(byte) if byte >= 6) {
+            return Err(VendorSchemaError::InvalidByteIndex(match rule.decoder {
+                RawValueDecoder::Byte(byte) => byte,
+                _ => unreachable!(),
+            }));
+        }
+    }
+    Ok(())
+}
+
+fn decode_vendor_raw(raw: [u8; 6], decoder: RawValueDecoder) -> Result<u64, VendorSchemaError> {
+    Ok(match decoder {
+        RawValueDecoder::LittleEndianU48 => {
+            u64::from(raw[0])
+                | (u64::from(raw[1]) << 8)
+                | (u64::from(raw[2]) << 16)
+                | (u64::from(raw[3]) << 24)
+                | (u64::from(raw[4]) << 32)
+                | (u64::from(raw[5]) << 40)
+        }
+        RawValueDecoder::LittleEndianU32 => {
+            u64::from(u32::from_le_bytes([raw[0], raw[1], raw[2], raw[3]]))
+        }
+        RawValueDecoder::Byte(index) => u64::from(
+            *raw.get(usize::from(index))
+                .ok_or(VendorSchemaError::InvalidByteIndex(index))?,
+        ),
+    })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ThresholdState {
     Unavailable,
     NotApplicable,
@@ -604,6 +778,159 @@ mod tests {
         assert_eq!(
             attributes[0].threshold_state(),
             ThresholdState::NotApplicable
+        );
+    }
+
+    #[test]
+    fn vendor_schema_requires_exact_family_firmware_and_provenance() {
+        let mut data = [0u8; 512];
+        set_ata_string(&mut data, 23, 4, "FW-A1");
+        set_ata_string(&mut data, 27, 20, "SYNTH-ENTERPRISE-1");
+        let identify = parse_identify_device(&data).unwrap();
+        let attributes = [SmartAttribute {
+            id: 241,
+            flags: 0,
+            current: Some(100),
+            worst: Some(100),
+            raw: [2, 0, 0, 0, 0, 0],
+            threshold: None,
+        }];
+        let rules = [VendorAttributeRule {
+            attribute_id: 241,
+            metric: "synthetic_host_writes",
+            unit: "bytes",
+            decoder: RawValueDecoder::LittleEndianU48,
+            multiplier: 512,
+            direction: MetricDirection::Increasing,
+        }];
+        let schema = VendorSchema {
+            schema_id: "synthetic-fixture-v1",
+            model_prefix: "SYNTH-ENTERPRISE-",
+            firmware_prefix: "FW-A",
+            source: VendorSchemaSource {
+                document_id: "SYNTH-DOC",
+                revision: "1",
+                url: "https://invalid.example/synthetic",
+            },
+            rules: &rules,
+        };
+        let schemas = [schema];
+        assert_eq!(
+            interpret_vendor_attributes(&schemas, &identify, &attributes).unwrap(),
+            VendorInterpretation::Matched {
+                schema_id: "synthetic-fixture-v1",
+                metrics: vec![InterpretedVendorMetric {
+                    attribute_id: 241,
+                    metric: "synthetic_host_writes",
+                    value: 1024,
+                    unit: "bytes",
+                    direction: MetricDirection::Increasing,
+                    source: schema.source,
+                }],
+            }
+        );
+    }
+
+    #[test]
+    fn vendor_schema_mismatch_and_ambiguity_never_guess_a_metric() {
+        let mut data = [0u8; 512];
+        set_ata_string(&mut data, 23, 4, "OTHER");
+        set_ata_string(&mut data, 27, 20, "SYNTH-MODEL");
+        let identify = parse_identify_device(&data).unwrap();
+        let rules = [VendorAttributeRule {
+            attribute_id: 1,
+            metric: "fixture",
+            unit: "count",
+            decoder: RawValueDecoder::Byte(0),
+            multiplier: 1,
+            direction: MetricDirection::Increasing,
+        }];
+        let source = VendorSchemaSource {
+            document_id: "SYNTH-DOC",
+            revision: "1",
+            url: "https://invalid.example/synthetic",
+        };
+        let schema = VendorSchema {
+            schema_id: "schema-a",
+            model_prefix: "SYNTH-",
+            firmware_prefix: "FW-",
+            source,
+            rules: &rules,
+        };
+        let mismatched_schemas = [schema];
+        assert_eq!(
+            interpret_vendor_attributes(&mismatched_schemas, &identify, &[]).unwrap(),
+            VendorInterpretation::UnknownSchema(UnknownSchemaReason::NoMatch)
+        );
+
+        let matching = VendorSchema {
+            firmware_prefix: "OTHER",
+            ..schema
+        };
+        let duplicate_match = VendorSchema {
+            schema_id: "schema-b",
+            ..matching
+        };
+        let ambiguous_schemas = [matching, duplicate_match];
+        assert_eq!(
+            interpret_vendor_attributes(&ambiguous_schemas, &identify, &[]).unwrap(),
+            VendorInterpretation::UnknownSchema(UnknownSchemaReason::Ambiguous)
+        );
+    }
+
+    #[test]
+    fn invalid_vendor_schema_and_conversion_overflow_are_explicit() {
+        let identify = parse_identify_device(&[0u8; 512]).unwrap();
+        let invalid_rules = [VendorAttributeRule {
+            attribute_id: 1,
+            metric: "fixture",
+            unit: "count",
+            decoder: RawValueDecoder::Byte(6),
+            multiplier: 1,
+            direction: MetricDirection::Increasing,
+        }];
+        let schema = VendorSchema {
+            schema_id: "invalid",
+            model_prefix: "MODEL",
+            firmware_prefix: "FW",
+            source: VendorSchemaSource {
+                document_id: "SYNTH-DOC",
+                revision: "1",
+                url: "https://invalid.example/synthetic",
+            },
+            rules: &invalid_rules,
+        };
+        let invalid_schemas = [schema];
+        assert_eq!(
+            interpret_vendor_attributes(&invalid_schemas, &identify, &[]),
+            Err(VendorSchemaError::InvalidByteIndex(6))
+        );
+
+        let mut matching_data = [0u8; 512];
+        set_ata_string(&mut matching_data, 23, 4, "FW");
+        set_ata_string(&mut matching_data, 27, 20, "MODEL");
+        let matching_identify = parse_identify_device(&matching_data).unwrap();
+        let overflow_rules = [VendorAttributeRule {
+            decoder: RawValueDecoder::Byte(0),
+            multiplier: u64::MAX,
+            ..invalid_rules[0]
+        }];
+        let overflow_schema = VendorSchema {
+            rules: &overflow_rules,
+            ..schema
+        };
+        let attributes = [SmartAttribute {
+            id: 1,
+            flags: 0,
+            current: None,
+            worst: None,
+            raw: [2, 0, 0, 0, 0, 0],
+            threshold: None,
+        }];
+        let overflow_schemas = [overflow_schema];
+        assert_eq!(
+            interpret_vendor_attributes(&overflow_schemas, &matching_identify, &attributes),
+            Err(VendorSchemaError::ValueOverflow(1))
         );
     }
 
