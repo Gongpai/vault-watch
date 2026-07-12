@@ -23,7 +23,8 @@
   - [ ] curated synthetic seed corpus, hardware qualification and broker integration
     - [x] pure typed broker request/grant authorization contract
     - [x] bounded versioned wire envelope, peer policy and replay protection
-    - [ ] Unix peer-credential acquisition, device opening, identity revalidation and ioctl executor
+    - [x] Linux `SO_PEERCRED` acquisition for connected Unix streams
+    - [ ] socket lifecycle/permissions, device opening, identity revalidation and ioctl executor
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

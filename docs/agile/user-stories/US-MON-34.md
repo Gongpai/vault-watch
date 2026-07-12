@@ -32,6 +32,7 @@
 - [x] broker request surface has no raw path/CDB/taskfile/timeout/length fields; execution limits derive from fixed operations
 - [x] versioned exact-length broker wire codec rejects malformed/trailing frames and exposes no arbitrary payload
 - [x] peer UID/GID/PID policy and monotonically increasing per-session request IDs provide authentication/replay gates before authorization
+- [x] Linux `SO_PEERCRED` wrapper validates syscall success, exact `ucred` size and positive PID on an already-connected Unix stream
 - [ ] standardized health log pages, reviewed real vendor rules, curated seeds, broker and hardware qualification
 
 ## Operator Evidence
@@ -45,3 +46,4 @@
 - 2026-07-12: `ata_return_descriptor` completed 60,864,910 executions in 61 seconds (`cov 56`, `ft 80`, peak RSS 502 MiB) without a sanitizer finding
 - 2026-07-12: `fuzz/artifacts/` remained empty; generated corpus is ignored and contains no captured device data
 - 2026-07-12: `ata_vendor_schema` completed 26,657,285 executions in 61 seconds (`cov 86`, `ft 88`, peak RSS 445 MiB) with `DONE` and no sanitizer finding/artifact
+- 2026-07-12: `broker_wire` completed 46,246,856 executions in 61 seconds (`cov 123`, `ft 222`, peak RSS 489 MiB) with `DONE` and no sanitizer finding/artifact

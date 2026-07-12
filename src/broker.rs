@@ -13,6 +13,10 @@ pub use wire::{
     BROKER_WIRE_VERSION, BrokerPeerCredentials, BrokerPeerPolicy, BrokerSession, BrokerWireError,
     decode_request_frame, encode_request_frame,
 };
+#[cfg(target_os = "linux")]
+mod unix;
+#[cfg(target_os = "linux")]
+pub use unix::peer_credentials;
 
 pub const MAX_DEVICE_ID_LEN: usize = 128;
 

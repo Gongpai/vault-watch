@@ -4,6 +4,29 @@
 
 ---
 
+## [0.31.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม Linux kernel-authenticated Unix peer credential acquisition ต่อจาก `0.30.0`
+
+### Added
+
+- small Linux-only `SO_PEERCRED` wrapper สำหรับ connected `UnixStream`
+- exact `libc::ucred` size validation, syscall error propagation และ positive PID validation
+- socket-pair test ที่ยืนยัน kernel-derived peer credentials ก่อนนำเข้า peer policy
+
+### Security
+
+- wrapper ไม่ create/bind/listen/connect socket และไม่รับ UID/GID/PID จาก wire frame
+- `unsafe` จำกัดอยู่ที่ `getsockopt`/initialized `ucred` boundary พร้อมตรวจ pointer lifetime และ returned length
+- ยังไม่มี socket path, filesystem permissions, privileged process, device opening หรือ ioctl
+
+### Validated
+
+- operator regression: broker 7/7, library 56/56 และ binary 75/75 ผ่าน
+- `broker_wire`: 46,246,856 executions/61s, `cov 123`, `ft 222`, peak RSS 489 MiB, `DONE`, ไม่มี sanitizer finding/artifact
+- broker 9/9, library 58/58, binary 75/75, doc tests, checks, formatting, clippy และ nightly fuzz build ผ่าน
+- local sandbox ปฏิเสธ live `SO_PEERCRED` ด้วย `EPERM`; test ยอมรับเฉพาะ denial นี้ ขณะที่ synthetic exact-size/PID validation ต้องผ่านเสมอ
+
 ## [0.30.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม bounded broker wire envelope และ session security policy ต่อจาก `0.29.0`
