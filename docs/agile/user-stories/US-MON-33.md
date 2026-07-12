@@ -28,5 +28,8 @@
 - [x] injectable sysfs block-to-`scsi_generic` discovery preserves zero/one/multiple mappings, no-interface, unreadable and hot-removed states without opening `/dev`
 - [x] block-name traversal and malformed SG entries are rejected; `sgN` remains an ephemeral locator rather than persistent identity
 - [x] operator reran command/routing/completion suite successfully (16/16, sanitized evidence 2026-07-12)
+- [x] operator reran sysfs mapping/routing suite successfully (20/20, sanitized evidence 2026-07-12)
+- [x] private `sg_io_hdr_t` layout matches installed Linux UAPI with compile-time 32/64-bit size/alignment assertions
+- [x] typed request limits bound data/sense/timeout and semaphore-gated `spawn_blocking` worker accepts no raw CDB/direction
 - [ ] standalone fuzz targets and remaining optional VPD/log pages
-- [ ] SG_IO ABI/transport, broker integration and hardware qualification
+- [ ] broker-owned actual SG_IO ioctl, identity revalidation and hardware qualification

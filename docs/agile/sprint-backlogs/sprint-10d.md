@@ -10,7 +10,8 @@
   - [ ] standalone fuzz targets and optional pages
 - [ ] verified SG_IO ABI wrapper in bounded blocking worker
   - [x] pure completion/residual/sense validation before ABI integration
-  - [ ] Linux UAPI layout and broker-owned blocking ioctl worker
+  - [x] private Linux UAPI layout assertions, bounded typed request and semaphore-gated blocking worker foundation
+  - [ ] broker-owned actual ioctl and identity revalidation
 - [x] typed read-only allowlist and unsafe-command rejection tests
 - [ ] capability discovery and SAS/SAT/controller-hidden routing
   - [x] pure evidence routing and advertised-page scheduling
@@ -23,6 +24,7 @@
 - [x] initial pure SCSI suite 6/6 on 2026-07-12; evidence stores no host, path or device identity
 - [x] expanded parser/sense suite 12/12 on 2026-07-12; evidence stores no host, path or device identity
 - [x] command/routing/completion suite 16/16 on 2026-07-12; evidence stores no host, path or device identity
+- [x] sysfs mapping/routing suite 20/20 on 2026-07-12; evidence stores no host, path or device identity
 
 ## Exit Gate
 

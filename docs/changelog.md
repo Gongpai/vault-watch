@@ -4,6 +4,27 @@
 
 ---
 
+## [0.22.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม SG_IO ABI และ bounded typed-worker foundation ต่อจาก `0.21.0`
+
+### Added
+
+- private `#[repr(C)]` Linux `sg_io_hdr_t` layout พร้อม compile-time size/alignment assertions สำหรับ pointer width 32/64
+- typed `SgIoRequest` limits: data ≤64 KiB, sense 1..=252 bytes และ timeout 100 ms..=30 s
+- semaphore-gated `spawn_blocking` worker ที่รับเฉพาะ typed read-only request/executor
+
+### Security
+
+- UAPI pointer structure เป็น private และไม่มี public API รับ pointer, raw CDB หรือ transfer direction
+- worker ไม่มี ioctl implementation, device path หรือ TUI integration; actual raw access ยังถูก block จน US-MON-37 broker gate
+- zero-concurrency worker ถูก reject และ blocking execution ไม่รันบน async executor thread
+
+### Validated
+
+- operator verification ของ sysfs mapping/routing suite ผ่าน 20/20 แบบ sanitized
+- targeted SCSI suite ผ่าน 23/23
+
 ## [0.21.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม native sysfs block-to-SG discovery foundation ต่อจาก `0.20.0`

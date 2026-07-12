@@ -6,6 +6,8 @@
 //! and parse bounded response fixtures.
 
 pub mod mapping;
+pub mod sg_uapi;
+pub mod worker;
 
 const INQUIRY: u8 = 0x12;
 const LOG_SENSE_10: u8 = 0x4d;
@@ -69,6 +71,16 @@ impl ReadOnlyCommand {
                 let [hi, lo] = allocation_len.to_be_bytes();
                 vec![LOG_SENSE_10, 0, page as u8, 0, 0, 0, 0, hi, lo, 0]
             }
+        }
+    }
+
+    pub const fn allocation_len(self) -> usize {
+        match self {
+            Self::TestUnitReady => 0,
+            Self::Inquiry { allocation_len } | Self::InquiryVpd { allocation_len, .. } => {
+                allocation_len as usize
+            }
+            Self::LogSense { allocation_len, .. } => allocation_len as usize,
         }
     }
 }
