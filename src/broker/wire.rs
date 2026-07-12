@@ -7,6 +7,7 @@ const MAGIC: [u8; 4] = *b"VWB1";
 pub const BROKER_WIRE_VERSION: u8 = 1;
 const HEADER_LEN: usize = 34;
 const MAX_FRAME_LEN: usize = HEADER_LEN + MAX_DEVICE_ID_LEN;
+pub const DEFAULT_MAX_REQUESTS_PER_SESSION: u32 = 1_024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BrokerWireError {
@@ -22,6 +23,8 @@ pub enum BrokerWireError {
     InvalidRequest,
     UnauthorizedPeer,
     ReplayedOrOutOfOrder,
+    InvalidSessionLimit,
+    SessionRequestLimitExceeded,
 }
 
 pub fn encode_request_frame(request: &BrokerRequest) -> Result<Vec<u8>, BrokerWireError> {
@@ -139,6 +142,29 @@ impl BrokerPeerPolicy {
 pub struct BrokerSession {
     peer: BrokerPeerCredentials,
     last_request_id: u64,
+    remaining_requests: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BrokerAuditOutcome {
+    Accepted,
+    Rejected(BrokerWireError),
+}
+
+/// Privacy-safe broker event. Device IDs, paths, generations, and payloads are
+/// deliberately absent so this record can be sent to an operator audit sink.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BrokerAuditRecord {
+    pub peer: BrokerPeerCredentials,
+    pub request_id: Option<u64>,
+    pub operation: Option<AtaBrokerOperation>,
+    pub outcome: BrokerAuditOutcome,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BrokerAuditedRequest {
+    pub request: Result<BrokerRequest, BrokerWireError>,
+    pub audit: BrokerAuditRecord,
 }
 
 impl BrokerSession {
@@ -146,12 +172,24 @@ impl BrokerSession {
         policy: BrokerPeerPolicy,
         peer: BrokerPeerCredentials,
     ) -> Result<Self, BrokerWireError> {
+        Self::with_request_limit(policy, peer, DEFAULT_MAX_REQUESTS_PER_SESSION)
+    }
+
+    pub const fn with_request_limit(
+        policy: BrokerPeerPolicy,
+        peer: BrokerPeerCredentials,
+        max_requests: u32,
+    ) -> Result<Self, BrokerWireError> {
         if !policy.accepts(peer) {
             return Err(BrokerWireError::UnauthorizedPeer);
+        }
+        if max_requests == 0 {
+            return Err(BrokerWireError::InvalidSessionLimit);
         }
         Ok(Self {
             peer,
             last_request_id: 0,
+            remaining_requests: max_requests,
         })
     }
 
@@ -159,13 +197,44 @@ impl BrokerSession {
         self.peer
     }
 
+    pub const fn remaining_requests(&self) -> u32 {
+        self.remaining_requests
+    }
+
     pub fn decode_next(&mut self, frame: &[u8]) -> Result<BrokerRequest, BrokerWireError> {
-        let request = decode_request_frame(frame)?;
-        if request.request_id <= self.last_request_id {
-            return Err(BrokerWireError::ReplayedOrOutOfOrder);
+        self.decode_next_audited(frame).request
+    }
+
+    pub fn decode_next_audited(&mut self, frame: &[u8]) -> BrokerAuditedRequest {
+        let decoded = decode_request_frame(frame);
+        let (request_id, operation) = decoded
+            .as_ref()
+            .map(|request| (Some(request.request_id), Some(request.operation)))
+            .unwrap_or((None, None));
+        let request = decoded.and_then(|request| {
+            if request.request_id <= self.last_request_id {
+                return Err(BrokerWireError::ReplayedOrOutOfOrder);
+            }
+            if self.remaining_requests == 0 {
+                return Err(BrokerWireError::SessionRequestLimitExceeded);
+            }
+            self.last_request_id = request.request_id;
+            self.remaining_requests -= 1;
+            Ok(request)
+        });
+        let outcome = match &request {
+            Ok(_) => BrokerAuditOutcome::Accepted,
+            Err(error) => BrokerAuditOutcome::Rejected(*error),
+        };
+        BrokerAuditedRequest {
+            request,
+            audit: BrokerAuditRecord {
+                peer: self.peer,
+                request_id,
+                operation,
+                outcome,
+            },
         }
-        self.last_request_id = request.request_id;
-        Ok(request)
     }
 }
 
@@ -256,6 +325,86 @@ mod tests {
         assert_eq!(
             session.decode_next(&older),
             Err(BrokerWireError::ReplayedOrOutOfOrder)
+        );
+    }
+
+    #[test]
+    fn session_budget_ignores_malformed_and_replayed_frames() {
+        let policy = BrokerPeerPolicy {
+            allowed_uid: 1000,
+            allowed_gid: 1000,
+        };
+        let peer = BrokerPeerCredentials {
+            uid: 1000,
+            gid: 1000,
+            pid: 123,
+        };
+        assert_eq!(
+            BrokerSession::with_request_limit(policy, peer, 0),
+            Err(BrokerWireError::InvalidSessionLimit)
+        );
+        let mut session = BrokerSession::with_request_limit(policy, peer, 2).unwrap();
+        assert_eq!(
+            session.decode_next(b"bad"),
+            Err(BrokerWireError::FrameTooShort)
+        );
+        assert_eq!(session.remaining_requests(), 2);
+
+        let first = encode_request_frame(&request(AtaBrokerOperation::IdentifyDevice, 1)).unwrap();
+        assert!(session.decode_next(&first).is_ok());
+        assert_eq!(session.remaining_requests(), 1);
+        assert_eq!(
+            session.decode_next(&first),
+            Err(BrokerWireError::ReplayedOrOutOfOrder)
+        );
+        assert_eq!(session.remaining_requests(), 1);
+
+        let second = encode_request_frame(&request(AtaBrokerOperation::SmartReadData, 2)).unwrap();
+        assert!(session.decode_next(&second).is_ok());
+        assert_eq!(session.remaining_requests(), 0);
+        let third =
+            encode_request_frame(&request(AtaBrokerOperation::SmartReturnStatus, 3)).unwrap();
+        assert_eq!(
+            session.decode_next(&third),
+            Err(BrokerWireError::SessionRequestLimitExceeded)
+        );
+    }
+
+    #[test]
+    fn audit_records_capture_decisions_without_device_identity() {
+        let policy = BrokerPeerPolicy {
+            allowed_uid: 1000,
+            allowed_gid: 1000,
+        };
+        let peer = BrokerPeerCredentials {
+            uid: 1000,
+            gid: 1000,
+            pid: 123,
+        };
+        let mut session = BrokerSession::with_request_limit(policy, peer, 1).unwrap();
+        let frame = encode_request_frame(&request(AtaBrokerOperation::IdentifyDevice, 7)).unwrap();
+        let accepted = session.decode_next_audited(&frame);
+        assert!(accepted.request.is_ok());
+        assert_eq!(accepted.audit.peer, peer);
+        assert_eq!(accepted.audit.request_id, Some(7));
+        assert_eq!(
+            accepted.audit.operation,
+            Some(AtaBrokerOperation::IdentifyDevice)
+        );
+        assert_eq!(accepted.audit.outcome, BrokerAuditOutcome::Accepted);
+
+        let debug = format!("{:?}", accepted.audit);
+        assert!(!debug.contains("block:sda"));
+        assert!(!debug.contains("diskseq"));
+        assert!(!debug.contains("dev_major"));
+        assert!(!debug.contains("/dev/"));
+
+        let rejected = session.decode_next_audited(b"bad");
+        assert_eq!(rejected.audit.request_id, None);
+        assert_eq!(rejected.audit.operation, None);
+        assert_eq!(
+            rejected.audit.outcome,
+            BrokerAuditOutcome::Rejected(BrokerWireError::FrameTooShort)
         );
     }
 }

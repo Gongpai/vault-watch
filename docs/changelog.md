@@ -4,6 +4,28 @@
 
 ---
 
+## [0.33.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม bounded broker-session budget และ privacy-safe audit contract ต่อจาก `0.32.0`
+
+### Added
+
+- broker-owned default limit 1,024 accepted requests ต่อ session พร้อม explicit zero-limit denial
+- audited decode result ที่บันทึก peer credentials, request ID, typed operation และ accepted/rejected outcome
+- remaining-budget inspection สำหรับ socket lifecycle ที่จะเชื่อมในขั้นถัดไป
+
+### Security
+
+- malformed และ replay/out-of-order frames ไม่กิน request budget
+- audit record ไม่มี node ID, device path, generation, serial, raw command หรือ payload
+- request ที่เกิน budget ถูกปฏิเสธก่อนเปลี่ยน session sequence state
+- ยังไม่มี socket listener, broker-owned device opening หรือ ioctl execution
+
+### Validated
+
+- operator ยืนยัน baseline `0.32.0`: broker 10/10, library 59/59 และ binary 75/75 ผ่าน
+- broker 12/12, library 61/61, binary 75/75, doc tests และ clippy ผ่าน
+
 ## [0.32.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม post-open device identity revalidation gate ต่อจาก `0.31.0`

@@ -25,6 +25,7 @@
     - [x] bounded versioned wire envelope, peer policy and replay protection
     - [x] Linux `SO_PEERCRED` acquisition for connected Unix streams
     - [x] post-open whole-block/read-only/generation revalidation contract
+    - [x] bounded per-session request budget and privacy-safe decision audit records
     - [ ] socket lifecycle/permissions, broker-owned device opening/evidence acquisition and ioctl executor
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
