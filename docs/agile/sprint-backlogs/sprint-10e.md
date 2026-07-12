@@ -27,7 +27,8 @@
     - [x] post-open whole-block/read-only/generation revalidation contract
     - [x] bounded per-session request budget and privacy-safe decision audit records
     - [x] guarded Unix socket bind/mode/peer-credential/identity-safe cleanup lifecycle
-    - [ ] broker-owned device opening/evidence acquisition and ioctl executor
+    - [x] broker-owned read-only whole-device open and post-open sysfs/fd evidence acquisition
+    - [ ] typed ioctl executor
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

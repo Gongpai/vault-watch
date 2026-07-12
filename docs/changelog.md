@@ -4,6 +4,29 @@
 
 ---
 
+## [0.35.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม broker-owned device opening และ evidence acquisition ต่อจาก `0.34.0`
+
+### Added
+
+- Linux whole-device opener ซึ่งสร้าง `/dev` name จาก authorized canonical block node ภายใน broker เท่านั้น
+- read-only/non-blocking/no-follow/close-on-exec flags และ descriptor access-mode verification
+- post-open `fstat` block/dev_t, sysfs partition และ non-zero diskseq evidence ก่อนสร้าง verified execution plan
+- descriptor-owning type ที่ public API เปิดเผยเฉพาะ verified plan ไม่เปิด raw fd หรือ device contents
+
+### Security
+
+- unsafe/path-like/noncanonical node names ถูกปฏิเสธก่อน filesystem open
+- regular file, partition, writable descriptor และ generation mismatch ไม่สามารถเป็น execution descriptor
+- client ยังส่ง raw path, fd, evidence, CDB, taskfile หรือ ioctl ไม่ได้
+- TUI ยังไม่เรียก opener และยังไม่มี ioctl executor
+
+### Validated
+
+- operator ยืนยัน baseline `0.34.0`: Unix lifecycle 4/4, broker 14/14, library 63/63 และ binary 75/75 ผ่านบน openSUSE
+- device acquisition 4/4, broker 18/18, library 67/67, binary 75/75, doc tests และ clippy ผ่าน
+
 ## [0.34.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม guarded Unix broker socket lifecycle ต่อจาก `0.33.0`

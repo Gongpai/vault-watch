@@ -21,5 +21,6 @@
 - [x] fixed per-session request budget; malformed/replayed frames do not consume quota
 - [x] privacy-safe audit decision records omit node ID, path, generation, serial and payload
 - [x] guarded Unix socket lifecycle, restricted mode, kernel peer credentials and inode-safe cleanup
-- [ ] broker-owned open/evidence acquisition and ioctl executor
+- [x] broker-owned read-only whole-device open and post-open generation/partition evidence acquisition
+- [ ] typed ioctl executor
 - [ ] process separation, seccomp, concurrency limits and hostile integration qualification

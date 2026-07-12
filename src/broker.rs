@@ -14,6 +14,10 @@ pub use wire::{
     decode_request_frame, encode_request_frame,
 };
 #[cfg(target_os = "linux")]
+mod device;
+#[cfg(target_os = "linux")]
+pub use device::{BrokerOpenedDevice, open_system_authorized_device};
+#[cfg(target_os = "linux")]
 mod unix;
 #[cfg(target_os = "linux")]
 pub use unix::{BrokerSocket, peer_credentials};
