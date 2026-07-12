@@ -115,6 +115,60 @@ pub struct AuthorizedBrokerRequest {
     pub response_limit: usize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpenedDeviceEvidence {
+    pub is_block_device: bool,
+    pub is_partition: bool,
+    pub opened_read_only: bool,
+    pub generation: BrokerGeneration,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExecutionDenyReason {
+    NotBlockDevice,
+    Partition,
+    NotReadOnly,
+    IdentityChangedAfterOpen,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerifiedExecutionPlan {
+    pub request_id: u64,
+    pub node_id: String,
+    pub generation: BrokerGeneration,
+    pub operation: AtaBrokerOperation,
+    pub timeout: Duration,
+    pub response_limit: usize,
+}
+
+/// Revalidates broker-owned evidence collected from an already opened file
+/// descriptor. No path or client-provided evidence is accepted here.
+pub fn revalidate_opened_device(
+    authorized: &AuthorizedBrokerRequest,
+    evidence: OpenedDeviceEvidence,
+) -> Result<VerifiedExecutionPlan, ExecutionDenyReason> {
+    if !evidence.is_block_device {
+        return Err(ExecutionDenyReason::NotBlockDevice);
+    }
+    if evidence.is_partition {
+        return Err(ExecutionDenyReason::Partition);
+    }
+    if !evidence.opened_read_only {
+        return Err(ExecutionDenyReason::NotReadOnly);
+    }
+    if evidence.generation != authorized.generation {
+        return Err(ExecutionDenyReason::IdentityChangedAfterOpen);
+    }
+    Ok(VerifiedExecutionPlan {
+        request_id: authorized.request_id,
+        node_id: authorized.node_id.clone(),
+        generation: authorized.generation,
+        operation: authorized.operation,
+        timeout: authorized.timeout,
+        response_limit: authorized.response_limit,
+    })
+}
+
 pub fn authorize_ata_request(
     inventory: &StorageInventory,
     grant: &BrokerDeviceGrant,
@@ -346,6 +400,56 @@ mod tests {
                 &request(AtaBrokerOperation::IdentifyDevice),
             ),
             Err(BrokerDenyReason::PartialInventory)
+        );
+    }
+
+    #[test]
+    fn post_open_revalidation_denies_partition_write_access_and_generation_change() {
+        let authorized = authorize_ata_request(
+            &inventory(Materialization::BlockDevice),
+            &grant(),
+            &request(AtaBrokerOperation::SmartReadData),
+        )
+        .unwrap();
+        let valid = OpenedDeviceEvidence {
+            is_block_device: true,
+            is_partition: false,
+            opened_read_only: true,
+            generation: generation(),
+        };
+        assert!(revalidate_opened_device(&authorized, valid).is_ok());
+        assert_eq!(
+            revalidate_opened_device(
+                &authorized,
+                OpenedDeviceEvidence {
+                    is_partition: true,
+                    ..valid
+                },
+            ),
+            Err(ExecutionDenyReason::Partition)
+        );
+        assert_eq!(
+            revalidate_opened_device(
+                &authorized,
+                OpenedDeviceEvidence {
+                    opened_read_only: false,
+                    ..valid
+                },
+            ),
+            Err(ExecutionDenyReason::NotReadOnly)
+        );
+        assert_eq!(
+            revalidate_opened_device(
+                &authorized,
+                OpenedDeviceEvidence {
+                    generation: BrokerGeneration {
+                        diskseq: 43,
+                        ..generation()
+                    },
+                    ..valid
+                },
+            ),
+            Err(ExecutionDenyReason::IdentityChangedAfterOpen)
         );
     }
 }

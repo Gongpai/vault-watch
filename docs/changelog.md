@@ -4,6 +4,28 @@
 
 ---
 
+## [0.32.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม post-open device identity revalidation gate ต่อจาก `0.31.0`
+
+### Added
+
+- broker-owned opened-device evidence สำหรับ block/partition/read-only state และ diskseq/dev_t generation
+- verified execution plan ซึ่งสร้างได้หลัง authorization และ post-open validation ผ่านทั้งสองชั้น
+- explicit denial สำหรับ non-block descriptor, partition, writable open และ identity change หลังเปิด
+
+### Security
+
+- ลด TOCTOU/path-reuse risk โดย generation หลังเปิดต้องตรงกับ authorized plan
+- evidence contract ไม่มี raw path/CDB/taskfile และ client wire format ไม่สามารถส่ง evidence นี้ได้
+- ยังไม่มี broker-owned open/fstat/sysfs acquisition หรือ ioctl execution
+
+### Validated
+
+- operator ยืนยัน openSUSE live `SO_PEERCRED` tests 2/2, library 58/58 และ binary 75/75 ผ่าน
+- synthetic post-open tests ครอบ valid descriptor, partition, writable access และ generation replacement
+- broker 10/10, library 59/59, binary 75/75, doc tests, checks, formatting, clippy และ nightly fuzz build ผ่าน
+
 ## [0.31.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม Linux kernel-authenticated Unix peer credential acquisition ต่อจาก `0.30.0`

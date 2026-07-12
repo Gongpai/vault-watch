@@ -33,6 +33,7 @@
 - [x] versioned exact-length broker wire codec rejects malformed/trailing frames and exposes no arbitrary payload
 - [x] peer UID/GID/PID policy and monotonically increasing per-session request IDs provide authentication/replay gates before authorization
 - [x] Linux `SO_PEERCRED` wrapper validates syscall success, exact `ucred` size and positive PID on an already-connected Unix stream
+- [x] post-open gate requires block-device, non-partition, read-only descriptor evidence and exact diskseq/dev_t match before execution
 - [ ] standardized health log pages, reviewed real vendor rules, curated seeds, broker and hardware qualification
 
 ## Operator Evidence
@@ -47,3 +48,4 @@
 - 2026-07-12: `fuzz/artifacts/` remained empty; generated corpus is ignored and contains no captured device data
 - 2026-07-12: `ata_vendor_schema` completed 26,657,285 executions in 61 seconds (`cov 86`, `ft 88`, peak RSS 445 MiB) with `DONE` and no sanitizer finding/artifact
 - 2026-07-12: `broker_wire` completed 46,246,856 executions in 61 seconds (`cov 123`, `ft 222`, peak RSS 489 MiB) with `DONE` and no sanitizer finding/artifact
+- 2026-07-12: openSUSE live `SO_PEERCRED` socket-pair tests passed 2/2; full library 58/58 and binary 75/75 passed
