@@ -5,6 +5,8 @@
 //! privileged broker story; these types only build an audited command subset
 //! and parse bounded response fixtures.
 
+pub mod mapping;
+
 const INQUIRY: u8 = 0x12;
 const LOG_SENSE_10: u8 = 0x4d;
 const TEST_UNIT_READY: u8 = 0x00;
@@ -146,6 +148,36 @@ pub fn route_backend(evidence: &RoutingEvidence) -> BackendRoute {
     } else {
         BackendRoute::NativeScsi
     }
+}
+
+pub fn route_discovered_mapping(
+    mapping: &mapping::ScsiGenericMapping,
+    inquiry: Option<StandardInquiry>,
+    supported_vpd_pages: Vec<u8>,
+    controller_logical_volume: bool,
+) -> BackendRoute {
+    use mapping::MappingAvailability;
+
+    match mapping.availability {
+        MappingAvailability::DeviceGone | MappingAvailability::Unreadable => {
+            return BackendRoute::InsufficientEvidence;
+        }
+        MappingAvailability::NoScsiGenericInterface if controller_logical_volume => {
+            return BackendRoute::ControllerHidden;
+        }
+        MappingAvailability::NoScsiGenericInterface => return BackendRoute::NoScsiGeneric,
+        MappingAvailability::Complete => {}
+    }
+    if mapping.rejected_entries > 0 {
+        return BackendRoute::AmbiguousScsiMapping;
+    }
+    route_backend(&RoutingEvidence {
+        scsi_generic_count: mapping.entries.len(),
+        inquiry,
+        supported_vpd_pages,
+        transport_available: true,
+        controller_logical_volume,
+    })
 }
 
 pub fn discovered_vpd_command(
@@ -731,6 +763,58 @@ mod tests {
         let mut tape = evidence(1, vec![]);
         tape.inquiry.as_mut().unwrap().peripheral_device_type = 1;
         assert_eq!(route_backend(&tape), BackendRoute::UnsupportedPeripheral(1));
+    }
+
+    #[test]
+    fn discovered_mapping_preserves_missing_partial_and_controller_hidden_states() {
+        use mapping::{MappingAvailability, ScsiGenericMapping};
+
+        let inquiry = Some(StandardInquiry {
+            peripheral_device_type: 0,
+            removable: false,
+            version: 6,
+        });
+        let mapping = |availability, entries: &[&str], rejected_entries| ScsiGenericMapping {
+            entries: entries.iter().map(|entry| (*entry).to_owned()).collect(),
+            rejected_entries,
+            availability,
+        };
+        assert_eq!(
+            route_discovered_mapping(
+                &mapping(MappingAvailability::Complete, &["sg0"], 0),
+                inquiry.clone(),
+                vec![0x83],
+                false,
+            ),
+            BackendRoute::NativeScsi
+        );
+        assert_eq!(
+            route_discovered_mapping(
+                &mapping(MappingAvailability::Complete, &["sg0"], 1),
+                inquiry.clone(),
+                vec![],
+                false,
+            ),
+            BackendRoute::AmbiguousScsiMapping
+        );
+        assert_eq!(
+            route_discovered_mapping(
+                &mapping(MappingAvailability::NoScsiGenericInterface, &[], 0),
+                inquiry.clone(),
+                vec![],
+                true,
+            ),
+            BackendRoute::ControllerHidden
+        );
+        assert_eq!(
+            route_discovered_mapping(
+                &mapping(MappingAvailability::DeviceGone, &[], 0),
+                inquiry,
+                vec![],
+                false,
+            ),
+            BackendRoute::InsufficientEvidence
+        );
     }
 
     #[test]

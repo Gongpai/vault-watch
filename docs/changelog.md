@@ -4,6 +4,27 @@
 
 ---
 
+## [0.21.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม native sysfs block-to-SG discovery foundation ต่อจาก `0.20.0`
+
+### Added
+
+- injectable `/sys/class/block/<name>/device/scsi_generic` discovery สำหรับ zero/one/multiple SG mappings
+- typed mapping availability สำหรับ complete, no interface, device gone และ unreadable
+- routing bridge ที่รักษา controller-hidden, ambiguous/rejected entries และ missing evidence อย่างชัดเจน
+
+### Security
+
+- discovery อ่าน sysfs metadata เท่านั้น ไม่เปิด `/dev`, ไม่เรียก modprobe และไม่ execute command
+- block names ป้องกัน path traversal; รับ SG locator เฉพาะรูปแบบ `sg` ตามด้วยตัวเลข
+- `sgN` ถูกเก็บเป็น ephemeral locator ไม่ใช่ persistent identity
+
+### Validated
+
+- operator verification ของ command/routing/completion suite ผ่าน 16/16 แบบ sanitized
+- targeted SCSI suite ผ่าน 20/20
+
 ## [0.20.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม SCSI command policy, backend routing และ completion validation ต่อจาก `0.19.0`

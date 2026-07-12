@@ -25,5 +25,8 @@
 - [x] untyped raw, data-out and vendor commands are rejected; only advertised VPD/LOG pages can be scheduled
 - [x] pure routing distinguishes native SCSI, SAT, controller-hidden, ambiguous SG mapping, missing evidence and unsupported peripheral types
 - [x] completion validator bounds residual/sense lengths and preserves ioctl/host/driver/SCSI status failures before payload parsing
+- [x] injectable sysfs block-to-`scsi_generic` discovery preserves zero/one/multiple mappings, no-interface, unreadable and hot-removed states without opening `/dev`
+- [x] block-name traversal and malformed SG entries are rejected; `sgN` remains an ephemeral locator rather than persistent identity
+- [x] operator reran command/routing/completion suite successfully (16/16, sanitized evidence 2026-07-12)
 - [ ] standalone fuzz targets and remaining optional VPD/log pages
 - [ ] SG_IO ABI/transport, broker integration and hardware qualification

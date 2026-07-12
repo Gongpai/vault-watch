@@ -14,13 +14,15 @@
 - [x] typed read-only allowlist and unsafe-command rejection tests
 - [ ] capability discovery and SAS/SAT/controller-hidden routing
   - [x] pure evidence routing and advertised-page scheduling
-  - [ ] sysfs SG mapping and runtime capability discovery through broker
+  - [x] injectable sysfs SG mapping with hot-remove/no-interface/ambiguous states
+  - [ ] runtime command capability discovery through broker
 - [ ] integrate through broker only after US-MON-37 gate
 
 ## Live/Operator Verification
 
 - [x] initial pure SCSI suite 6/6 on 2026-07-12; evidence stores no host, path or device identity
 - [x] expanded parser/sense suite 12/12 on 2026-07-12; evidence stores no host, path or device identity
+- [x] command/routing/completion suite 16/16 on 2026-07-12; evidence stores no host, path or device identity
 
 ## Exit Gate
 
