@@ -7,10 +7,11 @@
 - [ ] IDENTIFY/SMART/threshold/return-descriptor pure parsers
   - [x] 512-byte IDENTIFY words/strings/capacity/SMART/rotation foundation
   - [x] checksum-validated SMART attributes/threshold matching and ATA return descriptor/status signatures
-  - [ ] sector-size/capability validity, log pages and extended fixtures
+  - [x] sector-size/capability validity, checked capacity and explicit threshold state
+  - [ ] log pages and extended fixtures
 - [x] typed SAT builders and strict initial command allowlist (IDENTIFY, SMART READ DATA/THRESHOLDS/RETURN STATUS)
 - [ ] sourced vendor/model schema with unknown fallback
-- [ ] bounded USB/controller routing without unknown vendor probes
+- [x] evidence-only USB/controller routing without unknown vendor probes
 - [ ] fixtures/fuzzing/hardware qualification and broker integration
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 

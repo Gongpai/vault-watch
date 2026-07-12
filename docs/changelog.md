@@ -4,6 +4,28 @@
 
 ---
 
+## [0.25.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม ATA capability/geometry validation และ bounded backend routing ต่อจาก `0.24.0`
+
+### Added
+
+- IDENTIFY validity-bit checks สำหรับ SMART, GPL, LBA48 และ logical/physical sector geometry
+- checked byte capacity ที่เลือก non-zero LBA48 ก่อน LBA28 และไม่ใช้ geometry extended ที่ invalid
+- SMART threshold state แบบ `Unavailable`/`NotApplicable`/`Passing`/`Exceeded` โดยไม่ตีความ raw vendor bytes
+- evidence-only routing สำหรับ native SAT, qualified USB SAT, native SCSI, controller-hidden และ ambiguous cases
+
+### Security
+
+- unknown USB bridge ถูกจัดเป็น unsupported โดยไม่ยิง vendor probe หรือ arbitrary taskfile
+- routing ใช้ discovery evidence เท่านั้นและยังไม่มี runtime ioctl/device opening
+- capability bits และข้อมูล geometry ที่ไม่มี validity marker ไม่สามารถเปิด feature โดยปริยาย
+
+### Validated
+
+- operator ยืนยัน ATA foundation เดิมผ่าน 6/6 ก่อนเริ่มชุดนี้
+- ATA targeted 8/8, library 31/31, binary 75/75, doc tests, checks, formatting และ clippy ผ่าน
+
 ## [0.24.0] - 2026-07-12
 
 > **MINOR bump:** เริ่ม native SATA/ATA pure protocol foundation ของ Sprint 10E ต่อจาก `0.23.0`

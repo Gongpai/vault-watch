@@ -102,14 +102,20 @@ pub struct IdentifyDevice {
     pub model: String,
     pub lba28_sectors: u32,
     pub lba48_sectors: Option<u64>,
+    pub logical_sector_bytes: Option<u32>,
+    pub physical_sector_bytes: Option<u64>,
+    pub capacity_bytes: Option<u128>,
     pub medium: AtaMedium,
     pub smart_supported: bool,
+    pub general_purpose_logging_supported: bool,
 }
 
 pub fn parse_identify_device(data: &[u8]) -> Result<IdentifyDevice, AtaParseError> {
     let words = ata_words(data)?;
     let lba28_sectors = u32::from(words[60]) | (u32::from(words[61]) << 16);
-    let lba48_valid = words[83] & (1 << 10) != 0 && words[83] & (1 << 14) != 0;
+    let command_set_1_valid = validity_bits_set(words[83]);
+    let command_set_2_valid = validity_bits_set(words[87]);
+    let lba48_valid = command_set_1_valid && words[83] & (1 << 10) != 0;
     let lba48_sectors = lba48_valid.then(|| {
         u64::from(words[100])
             | (u64::from(words[101]) << 16)
@@ -121,15 +127,48 @@ pub fn parse_identify_device(data: &[u8]) -> Result<IdentifyDevice, AtaParseErro
         rpm @ 0x0401..=0xfffe => AtaMedium::RotationalRpm(rpm),
         _ => AtaMedium::Unknown,
     };
+    let (logical_sector_bytes, physical_sector_bytes) = sector_sizes(&words);
+    let sectors = lba48_sectors
+        .filter(|sectors| *sectors != 0)
+        .or_else(|| (lba28_sectors != 0).then_some(u64::from(lba28_sectors)));
+    let capacity_bytes = sectors
+        .zip(logical_sector_bytes)
+        .map(|(sectors, bytes)| u128::from(sectors) * u128::from(bytes));
     Ok(IdentifyDevice {
         serial: ata_string(data, 10, 10),
         firmware: ata_string(data, 23, 4),
         model: ata_string(data, 27, 20),
         lba28_sectors,
         lba48_sectors,
+        logical_sector_bytes,
+        physical_sector_bytes,
+        capacity_bytes,
         medium,
-        smart_supported: words[82] & 1 != 0,
+        smart_supported: command_set_1_valid && words[82] & 1 != 0,
+        general_purpose_logging_supported: command_set_2_valid && words[84] & (1 << 5) != 0,
     })
+}
+
+const fn validity_bits_set(word: u16) -> bool {
+    word & 0xc000 == 0x4000
+}
+
+fn sector_sizes(words: &[u16; 256]) -> (Option<u32>, Option<u64>) {
+    let geometry_valid = validity_bits_set(words[106]);
+    let logical = if geometry_valid && words[106] & (1 << 12) != 0 {
+        let logical_words = u32::from(words[117]) | (u32::from(words[118]) << 16);
+        logical_words.checked_mul(2).filter(|bytes| *bytes >= 512)
+    } else {
+        Some(512)
+    };
+    let physical = logical.and_then(|logical| {
+        if geometry_valid && words[106] & (1 << 13) != 0 {
+            u64::from(logical).checked_shl(u32::from(words[106] & 0x000f))
+        } else {
+            Some(u64::from(logical))
+        }
+    });
+    (logical, physical)
 }
 
 fn ata_words(data: &[u8]) -> Result<[u16; 256], AtaParseError> {
@@ -167,6 +206,75 @@ pub struct SmartAttribute {
     /// Vendor-specific bytes. No unit or semantic meaning is assigned here.
     pub raw: [u8; 6],
     pub threshold: Option<u8>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ThresholdState {
+    Unavailable,
+    NotApplicable,
+    Passing,
+    Exceeded,
+}
+
+impl SmartAttribute {
+    pub const fn threshold_state(&self) -> ThresholdState {
+        match (self.current, self.threshold) {
+            (_, Some(0)) => ThresholdState::NotApplicable,
+            (Some(current), Some(threshold)) if current <= threshold => ThresholdState::Exceeded,
+            (Some(_), Some(_)) => ThresholdState::Passing,
+            _ => ThresholdState::Unavailable,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AtaBackendRoute {
+    NativeSat,
+    QualifiedUsbSat,
+    NativeScsi,
+    ControllerHidden,
+    UnsupportedUsbBridge,
+    UnsupportedDevice,
+    Ambiguous,
+    InsufficientEvidence,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct AtaRoutingEvidence {
+    pub direct_access_block_device: bool,
+    pub libata_managed: bool,
+    pub ata_information_vpd: bool,
+    pub usb_transport: bool,
+    pub qualified_usb_sat: bool,
+    pub controller_logical_volume: bool,
+    pub native_scsi_evidence: bool,
+}
+
+/// Selects a backend from discovery evidence only; it never probes a device.
+pub const fn route_ata_backend(evidence: AtaRoutingEvidence) -> AtaBackendRoute {
+    if evidence.controller_logical_volume {
+        return AtaBackendRoute::ControllerHidden;
+    }
+    if !evidence.direct_access_block_device {
+        return AtaBackendRoute::UnsupportedDevice;
+    }
+    if evidence.usb_transport {
+        return if evidence.qualified_usb_sat {
+            AtaBackendRoute::QualifiedUsbSat
+        } else {
+            AtaBackendRoute::UnsupportedUsbBridge
+        };
+    }
+    let sat = evidence.libata_managed || evidence.ata_information_vpd;
+    if sat && evidence.native_scsi_evidence {
+        AtaBackendRoute::Ambiguous
+    } else if sat {
+        AtaBackendRoute::NativeSat
+    } else if evidence.native_scsi_evidence {
+        AtaBackendRoute::NativeScsi
+    } else {
+        AtaBackendRoute::InsufficientEvidence
+    }
 }
 
 pub fn parse_smart_attributes(data: &[u8]) -> Result<Vec<SmartAttribute>, AtaParseError> {
@@ -331,14 +439,38 @@ mod tests {
         set_word(&mut data, 61, 0x1234);
         set_word(&mut data, 82, 1);
         set_word(&mut data, 83, (1 << 14) | (1 << 10));
+        set_word(&mut data, 84, 1 << 5);
+        set_word(&mut data, 87, 1 << 14);
         set_word(&mut data, 100, 1);
+        set_word(&mut data, 106, (1 << 14) | (1 << 13) | (1 << 12) | 3);
+        set_word(&mut data, 117, 2048);
         set_word(&mut data, 217, 1);
         let identify = parse_identify_device(&data).unwrap();
         assert_eq!(identify.model, "FIXTURE MODEL");
         assert_eq!(identify.lba28_sectors, 0x1234_5678);
         assert_eq!(identify.lba48_sectors, Some(1));
+        assert_eq!(identify.logical_sector_bytes, Some(4096));
+        assert_eq!(identify.physical_sector_bytes, Some(32768));
+        assert_eq!(identify.capacity_bytes, Some(4096));
         assert_eq!(identify.medium, AtaMedium::SolidState);
         assert!(identify.smart_supported);
+        assert!(identify.general_purpose_logging_supported);
+    }
+
+    #[test]
+    fn invalid_capability_words_do_not_enable_features_or_trust_extended_geometry() {
+        let mut data = [0u8; 512];
+        set_word(&mut data, 60, 2);
+        set_word(&mut data, 82, 1);
+        set_word(&mut data, 84, 1 << 5);
+        set_word(&mut data, 106, (1 << 15) | (1 << 12));
+        set_word(&mut data, 117, 2048);
+        let identify = parse_identify_device(&data).unwrap();
+        assert!(!identify.smart_supported);
+        assert!(!identify.general_purpose_logging_supported);
+        assert_eq!(identify.logical_sector_bytes, Some(512));
+        assert_eq!(identify.physical_sector_bytes, Some(512));
+        assert_eq!(identify.capacity_bytes, Some(1024));
     }
 
     #[test]
@@ -357,6 +489,58 @@ mod tests {
             &parse_smart_thresholds(&thresholds).unwrap(),
         );
         assert_eq!(attributes[0].threshold, Some(10));
+        assert_eq!(attributes[0].threshold_state(), ThresholdState::Passing);
+        attributes[0].current = Some(10);
+        assert_eq!(attributes[0].threshold_state(), ThresholdState::Exceeded);
+        attributes[0].current = None;
+        assert_eq!(attributes[0].threshold_state(), ThresholdState::Unavailable);
+        attributes[0].threshold = Some(0);
+        assert_eq!(
+            attributes[0].threshold_state(),
+            ThresholdState::NotApplicable
+        );
+    }
+
+    #[test]
+    fn routing_requires_explicit_transport_evidence_and_qualified_usb_sat() {
+        let direct = AtaRoutingEvidence {
+            direct_access_block_device: true,
+            ..AtaRoutingEvidence::default()
+        };
+        assert_eq!(
+            route_ata_backend(direct),
+            AtaBackendRoute::InsufficientEvidence
+        );
+        assert_eq!(
+            route_ata_backend(AtaRoutingEvidence {
+                libata_managed: true,
+                ..direct
+            }),
+            AtaBackendRoute::NativeSat
+        );
+        assert_eq!(
+            route_ata_backend(AtaRoutingEvidence {
+                usb_transport: true,
+                ..direct
+            }),
+            AtaBackendRoute::UnsupportedUsbBridge
+        );
+        assert_eq!(
+            route_ata_backend(AtaRoutingEvidence {
+                usb_transport: true,
+                qualified_usb_sat: true,
+                ..direct
+            }),
+            AtaBackendRoute::QualifiedUsbSat
+        );
+        assert_eq!(
+            route_ata_backend(AtaRoutingEvidence {
+                libata_managed: true,
+                native_scsi_evidence: true,
+                ..direct
+            }),
+            AtaBackendRoute::Ambiguous
+        );
     }
 
     #[test]

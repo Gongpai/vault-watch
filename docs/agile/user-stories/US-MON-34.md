@@ -20,4 +20,11 @@
 - [x] SMART parser validates checksum, preserves six raw vendor bytes, keeps invalid normalized values unavailable and matches thresholds by ID
 - [x] descriptor-sense ATA return registers and SMART pass/fail/unknown signatures are bounds checked
 - [x] truncated/missing/bad-checksum responses never become success
-- [ ] sector-size/capability details, logs, vendor schemas, routing, fuzzing, broker and hardware qualification
+- [x] IDENTIFY validity markers gate SMART/GPL/LBA48 and logical/physical sector geometry; capacity uses checked byte arithmetic
+- [x] SMART threshold evaluation distinguishes unavailable/not-applicable/passing/exceeded without assigning raw vendor semantics
+- [x] evidence-only routing distinguishes native SAT, qualified USB SAT, native SCSI, controller-hidden, ambiguous and unsupported USB bridges
+- [ ] log pages, vendor schemas, fuzzing, broker and hardware qualification
+
+## Operator Evidence
+
+- 2026-07-12: sanitized `cargo test --lib ata::tests` foundation run passed 6/6; no device identity was recorded
