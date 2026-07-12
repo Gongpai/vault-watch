@@ -8,7 +8,8 @@
   - [x] 512-byte IDENTIFY words/strings/capacity/SMART/rotation foundation
   - [x] checksum-validated SMART attributes/threshold matching and ATA return descriptor/status signatures
   - [x] sector-size/capability validity, checked capacity and explicit threshold state
-  - [ ] log pages and extended fixtures
+  - [x] capability-gated GPL log-directory command/parser
+  - [ ] standardized health log pages and extended fixtures
 - [x] typed SAT builders and strict initial command allowlist (IDENTIFY, SMART READ DATA/THRESHOLDS/RETURN STATUS)
 - [ ] sourced vendor/model schema with unknown fallback
 - [x] evidence-only USB/controller routing without unknown vendor probes

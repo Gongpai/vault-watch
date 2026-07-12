@@ -23,8 +23,10 @@
 - [x] IDENTIFY validity markers gate SMART/GPL/LBA48 and logical/physical sector geometry; capacity uses checked byte arithmetic
 - [x] SMART threshold evaluation distinguishes unavailable/not-applicable/passing/exceeded without assigning raw vendor semantics
 - [x] evidence-only routing distinguishes native SAT, qualified USB SAT, native SCSI, controller-hidden, ambiguous and unsupported USB bridges
-- [ ] log pages, vendor schemas, fuzzing, broker and hardware qualification
+- [x] capability-gated READ LOG EXT exposes only page 0 directory and preserves unknown page addresses without vendor interpretation
+- [ ] standardized health log pages, vendor schemas, fuzzing, broker and hardware qualification
 
 ## Operator Evidence
 
 - 2026-07-12: sanitized `cargo test --lib ata::tests` foundation run passed 6/6; no device identity was recorded
+- 2026-07-12: operator rerun passed ATA 8/8, library 31/31 and binary 75/75; output contained test names only

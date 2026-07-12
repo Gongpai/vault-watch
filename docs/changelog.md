@@ -4,6 +4,27 @@
 
 ---
 
+## [0.26.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม capability-gated ATA GPL log-directory support ต่อจาก `0.25.0`
+
+### Added
+
+- pure 512-byte GPL log-directory parser ที่เก็บ page address และ sector count โดยไม่ตีความ vendor pages
+- fixed READ LOG EXT directory command ซึ่งสร้างได้ต่อเมื่อ IDENTIFY ประกาศ GPL support
+- tests สำหรับ capability denial, APT-16 EXT/data-in layout, unknown vendor address preservation และ truncated payload
+
+### Security
+
+- API เปิดเฉพาะ page `0x00` directory; caller ไม่สามารถส่ง log address, taskfile, opcode หรือ data-out direction เอง
+- vendor-specific page `0x80–0x9f` ถูกเก็บเป็น address/count เท่านั้นและไม่ถูกร้องขอหรือตีความ
+- ยังไม่มี runtime ioctl หรือ device opening ใน frontend
+
+### Validated
+
+- operator ยืนยันรุ่น `0.25.0`: ATA 8/8, library 31/31 และ binary 75/75 ผ่าน
+- รุ่น `0.26.0`: ATA 10/10, library 33/33, binary 75/75, doc tests, checks, formatting และ clippy ผ่าน
+
 ## [0.25.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม ATA capability/geometry validation และ bounded backend routing ต่อจาก `0.24.0`

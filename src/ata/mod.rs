@@ -6,6 +6,7 @@
 const ATA_PASS_THROUGH_16: u8 = 0x85;
 const ATA_IDENTIFY_DEVICE: u8 = 0xec;
 const ATA_SMART: u8 = 0xb0;
+const ATA_READ_LOG_EXT: u8 = 0x2f;
 const SMART_READ_DATA: u8 = 0xd0;
 const SMART_READ_THRESHOLDS: u8 = 0xd1;
 const SMART_RETURN_STATUS: u8 = 0xda;
@@ -86,6 +87,63 @@ pub enum AtaParseError {
     InvalidChecksum,
     TruncatedDescriptor,
     MissingAtaReturnDescriptor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AtaLogPageSupport {
+    pub address: u8,
+    pub sectors: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtaLogDirectory {
+    pub version: u16,
+    pub supported_pages: Vec<AtaLogPageSupport>,
+}
+
+/// Parses the 512-byte GPL log directory without interpreting vendor pages.
+pub fn parse_log_directory(data: &[u8]) -> Result<AtaLogDirectory, AtaParseError> {
+    let words = ata_words(data)?;
+    let supported_pages = words[1..]
+        .iter()
+        .enumerate()
+        .filter_map(|(index, sectors)| {
+            (*sectors != 0).then_some(AtaLogPageSupport {
+                address: u8::try_from(index + 1).expect("GPL directory has 255 page entries"),
+                sectors: *sectors,
+            })
+        })
+        .collect();
+    Ok(AtaLogDirectory {
+        version: words[0],
+        supported_pages,
+    })
+}
+
+/// Builds only READ LOG EXT page 0 (the directory), and only after IDENTIFY
+/// advertised General Purpose Logging. No caller-controlled address is exposed.
+pub const fn read_log_directory_cdb(identify: &IdentifyDevice) -> Option<[u8; 16]> {
+    if !identify.general_purpose_logging_supported {
+        return None;
+    }
+    Some([
+        ATA_PASS_THROUGH_16,
+        (4 << 1) | 1,
+        0x2e,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0xa0,
+        ATA_READ_LOG_EXT,
+        0,
+    ])
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -471,6 +529,54 @@ mod tests {
         assert_eq!(identify.logical_sector_bytes, Some(512));
         assert_eq!(identify.physical_sector_bytes, Some(512));
         assert_eq!(identify.capacity_bytes, Some(1024));
+        assert_eq!(read_log_directory_cdb(&identify), None);
+    }
+
+    #[test]
+    fn gpl_directory_command_is_fixed_read_only_and_capability_gated() {
+        let mut data = [0u8; 512];
+        set_word(&mut data, 84, 1 << 5);
+        set_word(&mut data, 87, 1 << 14);
+        let identify = parse_identify_device(&data).unwrap();
+        let cdb = read_log_directory_cdb(&identify).unwrap();
+        assert_eq!(cdb[0], ATA_PASS_THROUGH_16);
+        assert_eq!(cdb[1], (4 << 1) | 1);
+        assert_eq!(cdb[2], 0x2e);
+        assert_eq!(cdb[6], 1);
+        assert_eq!(cdb[8], 0);
+        assert_eq!(cdb[14], ATA_READ_LOG_EXT);
+    }
+
+    #[test]
+    fn parses_gpl_directory_and_preserves_unknown_page_addresses() {
+        let mut data = [0u8; 512];
+        set_word(&mut data, 0, 1);
+        set_word(&mut data, 3, 4);
+        set_word(&mut data, 4, 2);
+        set_word(&mut data, 0x80, 7);
+        let directory = parse_log_directory(&data).unwrap();
+        assert_eq!(directory.version, 1);
+        assert_eq!(
+            directory.supported_pages,
+            vec![
+                AtaLogPageSupport {
+                    address: 3,
+                    sectors: 4
+                },
+                AtaLogPageSupport {
+                    address: 4,
+                    sectors: 2
+                },
+                AtaLogPageSupport {
+                    address: 0x80,
+                    sectors: 7
+                },
+            ]
+        );
+        assert!(matches!(
+            parse_log_directory(&data[..511]),
+            Err(AtaParseError::WrongLength { .. })
+        ));
     }
 
     #[test]
