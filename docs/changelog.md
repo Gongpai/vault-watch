@@ -4,6 +4,28 @@
 
 ---
 
+## [0.29.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม pure typed privilege-broker authorization contract ต่อจาก `0.28.1`
+
+### Added
+
+- fixed ATA operation enum สำหรับ IDENTIFY, SMART data/threshold/status และ GPL directory
+- broker-owned device grant พร้อม ATA capability flags, backend และ exact generation binding
+- authorization plan ที่กำหนด timeout/response limit จาก operation ภายในเท่านั้น
+- canonical storage model exports สำหรับ shared inventory/generation validation
+
+### Security
+
+- request ไม่มี raw device path, CDB, taskfile, pointer, timeout, allocation length หรือ capability claim
+- ปฏิเสธ partial inventory, partition, invalid/path-like ID, missing/stale generation, wrong protocol, mismatched grant และ ungranted capability
+- module นี้ยังไม่มี IPC, socket, privilege change, device opening หรือ ioctl
+
+### Validated
+
+- broker unit tests ครอบ authorized plan, stale/hotplug generation, partition/path denial, protocol mismatch และ capability smuggling
+- broker 4/4, library 53/53, binary 75/75, doc tests, checks, formatting, clippy และ nightly fuzz build ผ่าน
+
 ## [0.28.1] - 2026-07-12
 
 > **PATCH bump:** บันทึก completed vendor-schema fuzz qualification โดยไม่เปลี่ยน interpretation behavior จาก `0.28.0`

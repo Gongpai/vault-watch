@@ -286,9 +286,8 @@ fn generation_label(node: &StorageNode) -> String {
 #[cfg(test)]
 mod tests {
     use crate::security::SecurityPosture;
-    use crate::storage::{
-        Generation, IdentityClaim, IdentityScope, IdentitySource, StorageInventory, StorageNode,
-    };
+    use crate::storage::model::{Generation, IdentityClaim, IdentityScope, IdentitySource};
+    use crate::storage::{StorageInventory, StorageNode};
 
     use super::*;
 

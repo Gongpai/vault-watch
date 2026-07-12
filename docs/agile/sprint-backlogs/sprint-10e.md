@@ -21,6 +21,8 @@
   - [x] schema matching/conversion fuzz target
   - [x] bounded nightly/ASan vendor-schema campaign
   - [ ] curated synthetic seed corpus, hardware qualification and broker integration
+    - [x] pure typed broker request/grant authorization contract
+    - [ ] authenticated IPC, device opening, identity revalidation and ioctl executor
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

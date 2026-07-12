@@ -28,6 +28,8 @@
 - [x] bounded nightly/ASan campaigns complete for both ATA fuzz targets with no crash artifact
 - [x] vendor schema framework requires model+firmware match, source provenance, typed decoder/unit/direction and checked conversion
 - [x] schema mismatch and multiple matches remain unknown; invalid schema and overflow are explicit errors
+- [x] typed broker contract binds ATA operations to broker-owned grants, whole-device inventory nodes and exact diskseq/dev_t generations
+- [x] broker request surface has no raw path/CDB/taskfile/timeout/length fields; execution limits derive from fixed operations
 - [ ] standardized health log pages, reviewed real vendor rules, curated seeds, broker and hardware qualification
 
 ## Operator Evidence

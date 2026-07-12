@@ -463,7 +463,8 @@ mod tests {
 
     #[test]
     fn merge_preserves_uncollected_inventory_devices_as_unavailable() {
-        use crate::storage::{Generation, Materialization, StorageKind, StorageNode};
+        use crate::storage::model::Generation;
+        use crate::storage::{Materialization, StorageKind, StorageNode};
 
         let inventory = StorageInventory {
             nodes: vec![StorageNode {
@@ -489,7 +490,8 @@ mod tests {
 
     #[test]
     fn reconciliation_prepares_histories_for_hot_added_whole_device() {
-        use crate::storage::{Generation, Materialization, StorageKind, StorageNode};
+        use crate::storage::model::Generation;
+        use crate::storage::{Materialization, StorageKind, StorageNode};
 
         let mut state = AppState::new(
             Vec::new(),
