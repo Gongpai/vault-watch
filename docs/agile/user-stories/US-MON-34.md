@@ -33,3 +33,4 @@
 - 2026-07-12: operator rerun passed ATA 8/8, library 31/31 and binary 75/75; output contained test names only
 - 2026-07-12: operator rerun passed ATA 10/10, library 33/33 and binary 75/75; output contained test names only
 - 2026-07-12: production checks passed after adding ATA fuzz targets; fuzz build remains pending because `libfuzzer-sys` is not cached offline
+- 2026-07-12: `cargo-fuzz 0.13.2` installed; stable attempts correctly stopped at the nightly-only sanitizer gate before target execution

@@ -3,14 +3,25 @@
 These targets consume arbitrary in-memory bytes only. They do not enumerate
 sysfs, open device nodes, execute CDBs, or perform ioctls.
 
-Run after installing `cargo-fuzz` and allowing Cargo to fetch `libfuzzer-sys`:
+`cargo-fuzz` uses sanitizer and coverage flags that require a nightly Rust
+toolchain. Install it without changing the project's default toolchain:
 
 ```bash
-cargo fuzz run scsi_pages
-cargo fuzz run scsi_sense_completion
-cargo fuzz run ata_pages
-cargo fuzz run ata_return_descriptor
+rustup toolchain install nightly
 ```
+
+Build all targets, then run bounded 60-second campaigns with `+nightly`:
+
+```bash
+cargo +nightly fuzz build
+cargo +nightly fuzz run scsi_pages -- -max_total_time=60
+cargo +nightly fuzz run scsi_sense_completion -- -max_total_time=60
+cargo +nightly fuzz run ata_pages -- -max_total_time=60
+cargo +nightly fuzz run ata_return_descriptor -- -max_total_time=60
+```
+
+Using `+nightly` selects nightly only for that command; do not run
+`rustup default nightly` merely for this project.
 
 Generated corpora, artifacts, coverage and target directories are ignored.
 Never seed the corpus with captures containing serial numbers, VPD identifiers,

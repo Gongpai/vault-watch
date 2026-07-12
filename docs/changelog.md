@@ -4,6 +4,21 @@
 
 ---
 
+## [0.27.1] - 2026-07-12
+
+> **PATCH bump:** แก้ขั้นตอนรัน fuzz ที่ขาด nightly toolchain โดยไม่เปลี่ยน parser behavior จาก `0.27.0`
+
+### Fixed
+
+- ระบุ `rustup toolchain install nightly` ก่อน build fuzz targets
+- ใช้ `cargo +nightly fuzz ...` เพื่อไม่เปลี่ยน default toolchain ของระบบ
+- เพิ่ม `-max_total_time=60` ให้ตัวอย่าง campaign จบเองและเหมาะกับ smoke test
+
+### Validated
+
+- operator ติดตั้ง `cargo-fuzz 0.13.2` สำเร็จ
+- stable-toolchain attempts ทั้งสอง target หยุดก่อน build ด้วย expected `-Zsanitizer` nightly requirement; ไม่มี parser execution หรือ crash
+
 ## [0.27.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม standalone ATA parser fuzz targets ต่อจาก `0.26.0`
