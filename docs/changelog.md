@@ -4,6 +4,28 @@
 
 ---
 
+## [0.19.0] - 2026-07-12
+
+> **MINOR bump:** ขยาย pure SAS/SCSI health parsers และ bounded sense policy ต่อจาก `0.18.0`
+
+### Added
+
+- VPD 0x83 descriptor parser ที่รักษา protocol/code-set/association/designator scope และ VPD B1 rotation parser
+- supported LOG pages, read/write error counters, non-medium errors และ informational-exception parsers
+- bounded sense actions สำหรับ unsupported optional page, Unit Attention, aborted command, not-ready, medium และ hardware errors
+- exhaustive truncated-prefix fixtures สำหรับ VPD/log records
+
+### Security
+
+- parsed identifier bytes ไม่ถูก render/log และ fixtures ใช้ synthetic values เท่านั้น
+- retry policy ไม่สามารถวนไม่จำกัด; media/hardware errors ไม่ถูก retry จนถูกซ่อน
+- runtime ยังไม่มี SG_IO/ioctl/device opening และไม่มี arbitrary CDB/data-out surface
+
+### Validated
+
+- operator verification ของ initial pure SCSI suite ผ่าน 6/6 แบบ sanitized
+- expanded targeted SCSI suite ผ่าน 12/12
+
 ## [0.18.0] - 2026-07-11
 
 > **MINOR bump:** เริ่ม native SAS/SCSI protocol foundation ของ Sprint 10D ต่อจาก `0.17.4`

@@ -18,5 +18,8 @@
 - [x] pure typed command foundation exposes only TEST UNIT READY, standard/selected VPD INQUIRY and selected LOG SENSE with `None`/`FromDevice` directions
 - [x] bounds-checked standard INQUIRY, supported-VPD, temperature LOG SENSE and fixed/descriptor sense parsers with synthetic identity-free fixtures
 - [x] malformed/truncated response and `0xff` unavailable-temperature cases remain explicit and never become healthy zero
-- [ ] remaining VPD descriptors, error/informational-exception LOG SENSE pages, sense policy and fuzz targets
+- [x] VPD 0x83 descriptor scope, B1 rotation, supported/error/non-medium/informational-exception LOG pages and bounded sense-action policy
+- [x] exhaustive truncated-prefix fixture tests reject partial VPD/log records without panic
+- [x] operator reran initial pure SCSI suite successfully (6/6, sanitized evidence 2026-07-12)
+- [ ] standalone fuzz targets and remaining optional VPD/log pages
 - [ ] SG_IO ABI/transport, broker integration and hardware qualification

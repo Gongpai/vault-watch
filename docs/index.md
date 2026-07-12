@@ -1,11 +1,11 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Version:** 0.18.0
+**Version:** 0.19.0
 **Status:** Sprint 10 In Progress — Universal Storage Architecture & Security Hardening
 **Current Architecture:** Async TUI migration (`tokio` + `ratatui`, graph-first storage foundation)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
-**Last Updated:** 2026-07-11 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
+**Last Updated:** 2026-07-12 | **Target Platform:** Ubuntu/Debian · Fedora · Arch · openSUSE · Alpine
 **Feature count:** 31 delivered · 1 in progress · 6 planned (38 Product Backlog stories)
 
 ---

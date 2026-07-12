@@ -78,6 +78,7 @@ pub enum ParseError {
     DeclaredLengthExceedsPayload { declared: usize, actual: usize },
     InvalidPeripheralQualifier(u8),
     TruncatedParameter { offset: usize, declared: usize },
+    InvalidParameterWidth { code: u16, width: usize },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,6 +127,83 @@ pub fn parse_supported_vpd_pages(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     Ok(data[4..end].to_vec())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DeviceIdDescriptor {
+    pub protocol_identifier: u8,
+    pub code_set: u8,
+    pub association: u8,
+    pub designator_type: u8,
+    pub value: Vec<u8>,
+}
+
+pub fn parse_device_identification_vpd(data: &[u8]) -> Result<Vec<DeviceIdDescriptor>, ParseError> {
+    let payload = vpd_payload(data, VpdPage::DeviceIdentification)?;
+    let mut descriptors = Vec::new();
+    let mut offset = 0;
+    while offset < payload.len() {
+        if offset.saturating_add(4) > payload.len() {
+            return Err(ParseError::TruncatedParameter {
+                offset: offset + 4,
+                declared: payload.len() - offset,
+            });
+        }
+        let length = payload[offset + 3] as usize;
+        let value_start = offset + 4;
+        let next = value_start.saturating_add(length);
+        if next > payload.len() {
+            return Err(ParseError::TruncatedParameter {
+                offset: offset + 4,
+                declared: length,
+            });
+        }
+        descriptors.push(DeviceIdDescriptor {
+            protocol_identifier: payload[offset] >> 4,
+            code_set: payload[offset] & 0x0f,
+            association: (payload[offset + 1] >> 4) & 0x03,
+            designator_type: payload[offset + 1] & 0x0f,
+            value: payload[value_start..next].to_vec(),
+        });
+        offset = next;
+    }
+    Ok(descriptors)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MediumRotation {
+    Unknown,
+    SolidState,
+    RotationalRpm(u16),
+}
+
+pub fn parse_block_device_characteristics_vpd(data: &[u8]) -> Result<MediumRotation, ParseError> {
+    let payload = vpd_payload(data, VpdPage::BlockDeviceCharacteristics)?;
+    require_len(payload, 2)?;
+    Ok(match u16::from_be_bytes([payload[0], payload[1]]) {
+        0x0001 => MediumRotation::SolidState,
+        rpm @ 0x0401..=0xfffe => MediumRotation::RotationalRpm(rpm),
+        _ => MediumRotation::Unknown,
+    })
+}
+
+fn vpd_payload(data: &[u8], expected_page: VpdPage) -> Result<&[u8], ParseError> {
+    require_len(data, 4)?;
+    if data[1] != expected_page as u8 {
+        return Err(ParseError::UnexpectedPage {
+            expected: expected_page as u8,
+            actual: data[1],
+        });
+    }
+    let declared = u16::from_be_bytes([data[2], data[3]]) as usize;
+    let end = 4usize.saturating_add(declared);
+    if end > data.len() {
+        return Err(ParseError::DeclaredLengthExceedsPayload {
+            declared: end,
+            actual: data.len(),
+        });
+    }
+    Ok(&data[4..end])
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Temperature {
     pub current_c: Option<u8>,
@@ -151,6 +229,113 @@ pub fn parse_temperature_log(data: &[u8]) -> Result<Temperature, ParseError> {
         }
     }
     Ok(temperature)
+}
+
+pub fn parse_supported_log_pages(data: &[u8]) -> Result<Vec<u8>, ParseError> {
+    require_len(data, 4)?;
+    let actual_page = data[0] & 0x3f;
+    if actual_page != LogPage::Supported as u8 {
+        return Err(ParseError::UnexpectedPage {
+            expected: LogPage::Supported as u8,
+            actual: actual_page,
+        });
+    }
+    let declared = u16::from_be_bytes([data[2], data[3]]) as usize;
+    let end = 4usize.saturating_add(declared);
+    if end > data.len() {
+        return Err(ParseError::DeclaredLengthExceedsPayload {
+            declared: end,
+            actual: data.len(),
+        });
+    }
+    Ok(data[4..end].iter().map(|page| page & 0x3f).collect())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ErrorCounters {
+    pub total_rewrites_or_rereads: Option<u64>,
+    pub total_errors_corrected: Option<u64>,
+    pub correction_algorithm_invocations: Option<u64>,
+    pub total_bytes_processed: Option<u64>,
+    pub total_uncorrected_errors: Option<u64>,
+}
+
+pub fn parse_error_counter_log(data: &[u8], page: LogPage) -> Result<ErrorCounters, ParseError> {
+    if !matches!(page, LogPage::ReadErrors | LogPage::WriteErrors) {
+        return Err(ParseError::UnexpectedPage {
+            expected: LogPage::ReadErrors as u8,
+            actual: page as u8,
+        });
+    }
+    let parameters = parse_log_parameters(data, page as u8)?;
+    let mut counters = ErrorCounters::default();
+    for parameter in parameters {
+        let value = parameter_u64(&parameter)?;
+        match parameter.code {
+            0x0002 => counters.total_rewrites_or_rereads = Some(value),
+            0x0003 => counters.total_errors_corrected = Some(value),
+            0x0004 => counters.correction_algorithm_invocations = Some(value),
+            0x0005 => counters.total_bytes_processed = Some(value),
+            0x0006 => counters.total_uncorrected_errors = Some(value),
+            _ => {}
+        }
+    }
+    Ok(counters)
+}
+
+pub fn parse_non_medium_error_log(data: &[u8]) -> Result<Option<u64>, ParseError> {
+    let parameters = parse_log_parameters(data, LogPage::NonMediumErrors as u8)?;
+    parameters
+        .iter()
+        .find(|parameter| parameter.code == 0)
+        .map(parameter_u64)
+        .transpose()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InformationalException {
+    pub asc: u8,
+    pub ascq: u8,
+    pub temperature_c: Option<u8>,
+}
+
+impl InformationalException {
+    pub const fn failure_predicted(self) -> bool {
+        self.asc == 0x5d
+    }
+}
+
+pub fn parse_informational_exception_log(
+    data: &[u8],
+) -> Result<Option<InformationalException>, ParseError> {
+    let parameters = parse_log_parameters(data, LogPage::InformationalExceptions as u8)?;
+    let Some(parameter) = parameters.iter().find(|parameter| parameter.code == 0) else {
+        return Ok(None);
+    };
+    if parameter.value.len() < 3 {
+        return Err(ParseError::TruncatedParameter {
+            offset: 4,
+            declared: parameter.value.len(),
+        });
+    }
+    Ok(Some(InformationalException {
+        asc: parameter.value[0],
+        ascq: parameter.value[1],
+        temperature_c: (parameter.value[2] != 0xff).then_some(parameter.value[2]),
+    }))
+}
+
+fn parameter_u64(parameter: &LogParameter<'_>) -> Result<u64, ParseError> {
+    match parameter.value {
+        [value] => Ok(u64::from(*value)),
+        [a, b] => Ok(u64::from(u16::from_be_bytes([*a, *b]))),
+        [a, b, c, d] => Ok(u64::from(u32::from_be_bytes([*a, *b, *c, *d]))),
+        [a, b, c, d, e, f, g, h] => Ok(u64::from_be_bytes([*a, *b, *c, *d, *e, *f, *g, *h])),
+        value => Err(ParseError::InvalidParameterWidth {
+            code: parameter.code,
+            width: value.len(),
+        }),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -219,6 +404,33 @@ pub struct SenseData {
     pub sense_key: u8,
     pub asc: u8,
     pub ascq: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SenseAction {
+    Unsupported,
+    RetryOnceRefreshCapabilities,
+    RetryOnce,
+    TemporarilyUnavailable,
+    MediaFailure,
+    HardwareFailure,
+    Report,
+}
+
+pub const fn sense_action(
+    sense: SenseData,
+    optional_command: bool,
+    retry_attempted: bool,
+) -> SenseAction {
+    match (sense.sense_key, sense.asc, sense.ascq) {
+        (0x05, 0x20 | 0x24, 0x00) if optional_command => SenseAction::Unsupported,
+        (0x06, _, _) if !retry_attempted => SenseAction::RetryOnceRefreshCapabilities,
+        (0x0b, _, _) if !retry_attempted => SenseAction::RetryOnce,
+        (0x02, _, _) => SenseAction::TemporarilyUnavailable,
+        (0x03, _, _) => SenseAction::MediaFailure,
+        (0x04, _, _) => SenseAction::HardwareFailure,
+        _ => SenseAction::Report,
+    }
 }
 
 pub fn parse_sense(data: &[u8]) -> Result<SenseData, ParseError> {
@@ -314,6 +526,37 @@ mod tests {
     }
 
     #[test]
+    fn parses_vpd_identifiers_by_scope_without_text_assumptions() {
+        let fixture = [
+            0, 0x83, 0, 12, 0x61, 0x03, 0, 4, 0xde, 0xad, 0xbe, 0xef, 0x12, 0x18, 0, 0,
+        ];
+        let descriptors = parse_device_identification_vpd(&fixture).unwrap();
+        assert_eq!(descriptors.len(), 2);
+        assert_eq!(descriptors[0].protocol_identifier, 6);
+        assert_eq!(descriptors[0].code_set, 1);
+        assert_eq!(descriptors[0].association, 0);
+        assert_eq!(descriptors[0].designator_type, 3);
+        assert_eq!(descriptors[0].value, [0xde, 0xad, 0xbe, 0xef]);
+        assert!(descriptors[1].value.is_empty());
+    }
+
+    #[test]
+    fn parses_rotation_and_supported_log_pages() {
+        assert_eq!(
+            parse_block_device_characteristics_vpd(&[0, 0xb1, 0, 2, 0, 1]),
+            Ok(MediumRotation::SolidState)
+        );
+        assert_eq!(
+            parse_block_device_characteristics_vpd(&[0, 0xb1, 0, 2, 0x1c, 0x20]),
+            Ok(MediumRotation::RotationalRpm(7200))
+        );
+        assert_eq!(
+            parse_supported_log_pages(&[0, 0, 0, 4, 0x02, 0x03, 0x0d, 0x2f]),
+            Ok(vec![0x02, 0x03, 0x0d, 0x2f])
+        );
+    }
+
+    #[test]
     fn temperature_sentinel_is_unavailable_not_zero() {
         let fixture = [0x0d, 0, 0, 12, 0, 0, 0, 2, 0, 42, 0, 1, 0, 2, 0, 0xff];
         assert_eq!(
@@ -332,6 +575,40 @@ mod tests {
             parse_temperature_log(&fixture),
             Err(ParseError::TruncatedParameter { .. })
         ));
+    }
+
+    #[test]
+    fn parses_error_counters_and_rejects_nonstandard_integer_width() {
+        let fixture = [
+            0x03, 0, 0, 16, 0, 3, 0, 4, 0, 0, 0, 9, 0, 6, 0, 4, 0, 0, 0, 2,
+        ];
+        assert_eq!(
+            parse_error_counter_log(&fixture, LogPage::ReadErrors),
+            Ok(ErrorCounters {
+                total_errors_corrected: Some(9),
+                total_uncorrected_errors: Some(2),
+                ..ErrorCounters::default()
+            })
+        );
+        let invalid_width = [0x06, 0, 0, 7, 0, 0, 0, 3, 1, 2, 3];
+        assert!(matches!(
+            parse_non_medium_error_log(&invalid_width),
+            Err(ParseError::InvalidParameterWidth { width: 3, .. })
+        ));
+    }
+
+    #[test]
+    fn informational_exception_is_explicit_and_temperature_can_be_unavailable() {
+        let fixture = [0x2f, 0, 0, 7, 0, 0, 0, 3, 0x5d, 0x01, 0xff];
+        let exception = parse_informational_exception_log(&fixture)
+            .unwrap()
+            .unwrap();
+        assert!(exception.failure_predicted());
+        assert_eq!(exception.temperature_c, None);
+        assert_eq!(
+            parse_informational_exception_log(&[0x2f, 0, 0, 0]),
+            Ok(None)
+        );
     }
 
     #[test]
@@ -362,5 +639,47 @@ mod tests {
             parse_sense(&[0x70, 0, 5]),
             Err(ParseError::Truncated { .. })
         ));
+    }
+
+    #[test]
+    fn sense_policy_is_bounded_and_does_not_hide_media_failure() {
+        let sense = |sense_key, asc| SenseData {
+            format: SenseFormat::Descriptor,
+            sense_key,
+            asc,
+            ascq: 0,
+        };
+        assert_eq!(
+            sense_action(sense(5, 0x24), true, false),
+            SenseAction::Unsupported
+        );
+        assert_eq!(
+            sense_action(sense(6, 0x29), false, false),
+            SenseAction::RetryOnceRefreshCapabilities
+        );
+        assert_eq!(
+            sense_action(sense(6, 0x29), false, true),
+            SenseAction::Report
+        );
+        assert_eq!(
+            sense_action(sense(3, 0x11), false, false),
+            SenseAction::MediaFailure
+        );
+        assert_eq!(
+            sense_action(sense(4, 0x44), false, false),
+            SenseAction::HardwareFailure
+        );
+    }
+
+    #[test]
+    fn every_truncated_prefix_fails_without_panicking() {
+        let vpd = [0, 0x83, 0, 8, 0x61, 0x03, 0, 4, 1, 2, 3, 4];
+        for end in 0..vpd.len() {
+            assert!(parse_device_identification_vpd(&vpd[..end]).is_err());
+        }
+        let log = [0x03, 0, 0, 8, 0, 6, 0, 4, 0, 0, 0, 1];
+        for end in 0..log.len() {
+            assert!(parse_error_counter_log(&log[..end], LogPage::ReadErrors).is_err());
+        }
     }
 }
