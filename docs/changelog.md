@@ -4,6 +4,21 @@
 
 ---
 
+## [0.28.1] - 2026-07-12
+
+> **PATCH bump:** บันทึก completed vendor-schema fuzz qualification โดยไม่เปลี่ยน interpretation behavior จาก `0.28.0`
+
+### Validated
+
+- `ata_vendor_schema` จบด้วย `DONE`: 26,657,285 executions ใน 61 วินาที, `cov 86`, `ft 88`, peak RSS 445 MiB
+- ไม่มี ASan finding, crash, timeout หรือไฟล์ใน `fuzz/artifacts/ata_vendor_schema/`
+- operator regression: ATA 13/13, library 36/36 และ binary 75/75 ผ่าน
+
+### Security
+
+- generated corpus ถูก ignore และไม่ถูก commit
+- fuzz target ใช้ synthetic model, firmware, provenance, rules และ arbitrary bytes เท่านั้น
+
 ## [0.28.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม safe ATA vendor-schema interpretation framework ต่อจาก `0.27.2`

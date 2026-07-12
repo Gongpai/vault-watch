@@ -19,6 +19,7 @@
   - [x] standalone in-memory fuzz targets for ATA pages and return descriptors
   - [x] bounded nightly/ASan fuzz campaign for both ATA targets
   - [x] schema matching/conversion fuzz target
+  - [x] bounded nightly/ASan vendor-schema campaign
   - [ ] curated synthetic seed corpus, hardware qualification and broker integration
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 

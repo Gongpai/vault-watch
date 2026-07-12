@@ -40,3 +40,4 @@
 - 2026-07-12: `ata_pages` completed 14,898,840 executions in 61 seconds (`cov 470`, `ft 853`, peak RSS 501 MiB) without a sanitizer finding
 - 2026-07-12: `ata_return_descriptor` completed 60,864,910 executions in 61 seconds (`cov 56`, `ft 80`, peak RSS 502 MiB) without a sanitizer finding
 - 2026-07-12: `fuzz/artifacts/` remained empty; generated corpus is ignored and contains no captured device data
+- 2026-07-12: `ata_vendor_schema` completed 26,657,285 executions in 61 seconds (`cov 86`, `ft 88`, peak RSS 445 MiB) with `DONE` and no sanitizer finding/artifact
