@@ -71,6 +71,173 @@ impl ReadOnlyCommand {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProposedDirection {
+    None,
+    FromDevice,
+    ToDevice,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandPolicyRejection {
+    RawCdb,
+    DataOut,
+    VendorCommand,
+}
+
+/// Broker-boundary guard for requests that did not originate from the typed
+/// command API. It never converts an opcode into an executable command.
+pub const fn reject_untyped_command(
+    opcode: u8,
+    direction: ProposedDirection,
+) -> CommandPolicyRejection {
+    if matches!(direction, ProposedDirection::ToDevice) {
+        CommandPolicyRejection::DataOut
+    } else if opcode >= 0xc0 {
+        CommandPolicyRejection::VendorCommand
+    } else {
+        CommandPolicyRejection::RawCdb
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BackendRoute {
+    NativeScsi,
+    Sat,
+    ControllerHidden,
+    AmbiguousScsiMapping,
+    UnsupportedPeripheral(u8),
+    NoScsiGeneric,
+    InsufficientEvidence,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RoutingEvidence {
+    pub scsi_generic_count: usize,
+    pub inquiry: Option<StandardInquiry>,
+    pub supported_vpd_pages: Vec<u8>,
+    pub transport_available: bool,
+    pub controller_logical_volume: bool,
+}
+
+pub fn route_backend(evidence: &RoutingEvidence) -> BackendRoute {
+    if evidence.controller_logical_volume && !evidence.transport_available {
+        return BackendRoute::ControllerHidden;
+    }
+    match evidence.scsi_generic_count {
+        0 => return BackendRoute::NoScsiGeneric,
+        1 => {}
+        _ => return BackendRoute::AmbiguousScsiMapping,
+    }
+    if !evidence.transport_available {
+        return BackendRoute::ControllerHidden;
+    }
+    let Some(inquiry) = &evidence.inquiry else {
+        return BackendRoute::InsufficientEvidence;
+    };
+    if inquiry.peripheral_device_type != 0 {
+        return BackendRoute::UnsupportedPeripheral(inquiry.peripheral_device_type);
+    }
+    if evidence
+        .supported_vpd_pages
+        .contains(&(VpdPage::AtaInformation as u8))
+    {
+        BackendRoute::Sat
+    } else {
+        BackendRoute::NativeScsi
+    }
+}
+
+pub fn discovered_vpd_command(
+    page: VpdPage,
+    supported_pages: &[u8],
+    allocation_len: u8,
+) -> Option<ReadOnlyCommand> {
+    supported_pages
+        .contains(&(page as u8))
+        .then_some(ReadOnlyCommand::InquiryVpd {
+            page,
+            allocation_len,
+        })
+}
+
+pub fn discovered_log_command(
+    page: LogPage,
+    supported_pages: &[u8],
+    allocation_len: u16,
+) -> Option<ReadOnlyCommand> {
+    supported_pages
+        .contains(&(page as u8))
+        .then_some(ReadOnlyCommand::LogSense {
+            page,
+            allocation_len,
+        })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TransportCompletion {
+    pub ioctl_succeeded: bool,
+    pub scsi_status: u8,
+    pub host_status: u16,
+    pub driver_status: u16,
+    pub residual: i32,
+    pub requested_len: usize,
+    pub sense_written: usize,
+    pub sense_capacity: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompletionOutcome {
+    DataIn { payload_len: usize },
+    CheckCondition { sense_len: usize },
+    Busy,
+    ReservationConflict,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompletionError {
+    IoctlFailed,
+    HostStatus(u16),
+    DriverStatus(u16),
+    InvalidResidual(i32),
+    InvalidSenseLength { written: usize, capacity: usize },
+    UnexpectedScsiStatus(u8),
+}
+
+pub fn validate_completion(
+    completion: TransportCompletion,
+) -> Result<CompletionOutcome, CompletionError> {
+    if !completion.ioctl_succeeded {
+        return Err(CompletionError::IoctlFailed);
+    }
+    if completion.host_status != 0 {
+        return Err(CompletionError::HostStatus(completion.host_status));
+    }
+    if completion.driver_status != 0 {
+        return Err(CompletionError::DriverStatus(completion.driver_status));
+    }
+    if completion.residual < 0 || completion.residual as usize > completion.requested_len {
+        return Err(CompletionError::InvalidResidual(completion.residual));
+    }
+    if completion.sense_written > completion.sense_capacity {
+        return Err(CompletionError::InvalidSenseLength {
+            written: completion.sense_written,
+            capacity: completion.sense_capacity,
+        });
+    }
+    match completion.scsi_status {
+        0x00 => Ok(CompletionOutcome::DataIn {
+            payload_len: completion.requested_len - completion.residual as usize,
+        }),
+        0x02 => Ok(CompletionOutcome::CheckCondition {
+            sense_len: completion.sense_written,
+        }),
+        0x08 => Ok(CompletionOutcome::Busy),
+        0x18 => Ok(CompletionOutcome::ReservationConflict),
+        status => Err(CompletionError::UnexpectedScsiStatus(status)),
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
     Truncated { needed: usize, actual: usize },
@@ -497,6 +664,121 @@ mod tests {
         assert_eq!(commands[0].cdb()[0], TEST_UNIT_READY);
         assert_eq!(commands[1].cdb()[0], INQUIRY);
         assert_eq!(commands[3].cdb(), [0x4d, 0, 0x0d, 0, 0, 0, 0, 2, 0, 0]);
+    }
+
+    #[test]
+    fn untyped_data_out_vendor_and_other_raw_commands_are_rejected() {
+        assert_eq!(
+            reject_untyped_command(0x2a, ProposedDirection::ToDevice),
+            CommandPolicyRejection::DataOut
+        );
+        assert_eq!(
+            reject_untyped_command(0xc1, ProposedDirection::FromDevice),
+            CommandPolicyRejection::VendorCommand
+        );
+        assert_eq!(
+            reject_untyped_command(0x12, ProposedDirection::FromDevice),
+            CommandPolicyRejection::RawCdb
+        );
+        assert_eq!(
+            reject_untyped_command(0x00, ProposedDirection::None),
+            CommandPolicyRejection::RawCdb
+        );
+    }
+
+    #[test]
+    fn capability_commands_require_advertised_pages() {
+        let vpd = [0x83, 0xb1];
+        assert!(discovered_vpd_command(VpdPage::DeviceIdentification, &vpd, 255).is_some());
+        assert!(discovered_vpd_command(VpdPage::AtaInformation, &vpd, 255).is_none());
+        let logs = [0x03, 0x0d];
+        assert!(discovered_log_command(LogPage::Temperature, &logs, 512).is_some());
+        assert!(discovered_log_command(LogPage::InformationalExceptions, &logs, 512).is_none());
+    }
+
+    #[test]
+    fn routing_distinguishes_native_sat_hidden_ambiguous_and_non_disk() {
+        let direct_disk = StandardInquiry {
+            peripheral_device_type: 0,
+            removable: false,
+            version: 6,
+        };
+        let evidence = |count, pages: Vec<u8>| RoutingEvidence {
+            scsi_generic_count: count,
+            inquiry: Some(direct_disk.clone()),
+            supported_vpd_pages: pages,
+            transport_available: true,
+            controller_logical_volume: false,
+        };
+        assert_eq!(
+            route_backend(&evidence(1, vec![0x83])),
+            BackendRoute::NativeScsi
+        );
+        assert_eq!(
+            route_backend(&evidence(1, vec![0x83, 0x89])),
+            BackendRoute::Sat
+        );
+        assert_eq!(
+            route_backend(&evidence(2, vec![0x83])),
+            BackendRoute::AmbiguousScsiMapping
+        );
+
+        let mut hidden = evidence(0, vec![]);
+        hidden.controller_logical_volume = true;
+        hidden.transport_available = false;
+        assert_eq!(route_backend(&hidden), BackendRoute::ControllerHidden);
+
+        let mut tape = evidence(1, vec![]);
+        tape.inquiry.as_mut().unwrap().peripheral_device_type = 1;
+        assert_eq!(route_backend(&tape), BackendRoute::UnsupportedPeripheral(1));
+    }
+
+    #[test]
+    fn completion_validation_bounds_payload_sense_and_transport_status() {
+        let completion = TransportCompletion {
+            ioctl_succeeded: true,
+            scsi_status: 0,
+            host_status: 0,
+            driver_status: 0,
+            residual: 24,
+            requested_len: 64,
+            sense_written: 0,
+            sense_capacity: 32,
+        };
+        assert_eq!(
+            validate_completion(completion),
+            Ok(CompletionOutcome::DataIn { payload_len: 40 })
+        );
+        assert_eq!(
+            validate_completion(TransportCompletion {
+                residual: -1,
+                ..completion
+            }),
+            Err(CompletionError::InvalidResidual(-1))
+        );
+        assert_eq!(
+            validate_completion(TransportCompletion {
+                scsi_status: 2,
+                residual: 0,
+                sense_written: 18,
+                ..completion
+            }),
+            Ok(CompletionOutcome::CheckCondition { sense_len: 18 })
+        );
+        assert!(matches!(
+            validate_completion(TransportCompletion {
+                host_status: 1,
+                ..completion
+            }),
+            Err(CompletionError::HostStatus(1))
+        ));
+        assert!(matches!(
+            validate_completion(TransportCompletion {
+                sense_written: 33,
+                ..completion
+            }),
+            Err(CompletionError::InvalidSenseLength { .. })
+        ));
     }
 
     #[test]

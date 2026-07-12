@@ -4,6 +4,28 @@
 
 ---
 
+## [0.20.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม SCSI command policy, backend routing และ completion validation ต่อจาก `0.19.0`
+
+### Added
+
+- explicit rejection สำหรับ untyped raw CDB, data-to-device และ vendor opcodes
+- advertised-page gates สำหรับ selected VPD และ LOG SENSE commands
+- pure evidence router แยก native SCSI, SAT, controller-hidden, ambiguous SG mapping, non-disk peripheral และ insufficient evidence
+- completion validator สำหรับ ioctl/host/driver/SCSI status, signed residual และ bounded sense length
+
+### Security
+
+- raw candidate ไม่มีเส้นทางแปลงกลับเป็น executable command; policy คืน rejection เท่านั้น
+- ambiguous/missing/controller-hidden evidence ไม่ถูกเดาเป็น native SAS และไม่เปิด fallback probe
+- payload ถูกยอมรับหลัง transport/status/length validation เท่านั้น
+
+### Validated
+
+- operator verification ของ expanded pure SCSI suite ผ่าน 12/12 แบบ sanitized
+- targeted SCSI suite ผ่าน 16/16
+
 ## [0.19.0] - 2026-07-12
 
 > **MINOR bump:** ขยาย pure SAS/SCSI health parsers และ bounded sense policy ต่อจาก `0.18.0`

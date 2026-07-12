@@ -9,13 +9,18 @@
   - [x] VPD descriptor/rotation, error/non-medium/informational-exception logs, bounded sense actions and truncated-prefix fixtures
   - [ ] standalone fuzz targets and optional pages
 - [ ] verified SG_IO ABI wrapper in bounded blocking worker
-- [ ] typed read-only allowlist and unsafe-command rejection tests
+  - [x] pure completion/residual/sense validation before ABI integration
+  - [ ] Linux UAPI layout and broker-owned blocking ioctl worker
+- [x] typed read-only allowlist and unsafe-command rejection tests
 - [ ] capability discovery and SAS/SAT/controller-hidden routing
+  - [x] pure evidence routing and advertised-page scheduling
+  - [ ] sysfs SG mapping and runtime capability discovery through broker
 - [ ] integrate through broker only after US-MON-37 gate
 
 ## Live/Operator Verification
 
 - [x] initial pure SCSI suite 6/6 on 2026-07-12; evidence stores no host, path or device identity
+- [x] expanded parser/sense suite 12/12 on 2026-07-12; evidence stores no host, path or device identity
 
 ## Exit Gate
 
