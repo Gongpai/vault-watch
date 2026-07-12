@@ -4,6 +4,27 @@
 
 ---
 
+## [0.24.0] - 2026-07-12
+
+> **MINOR bump:** เริ่ม native SATA/ATA pure protocol foundation ของ Sprint 10E ต่อจาก `0.23.0`
+
+### Added
+
+- typed ATA PASS-THROUGH(16) builders สำหรับ IDENTIFY, SMART READ DATA/THRESHOLDS และ SMART RETURN STATUS
+- pure IDENTIFY parser สำหรับ byte-swapped strings, 28/48-bit capacity, SMART support และ SSD/rotation state
+- checksum-validated SMART attribute/threshold parsers ที่จับคู่ด้วย ID และคง raw six bytes แบบ vendor-unknown
+- descriptor-sense ATA return register parser และ SMART status signature decoder
+
+### Security
+
+- ไม่มี arbitrary taskfile/CDB, data-out, write, self-test, firmware, security, sanitize หรือ vendor command API
+- raw SMART bytes ไม่มี unit/name/endurance interpretation จนกว่าจะ match sourced vendor/model schema
+- ไม่มี runtime ioctl/device opening; broker gate ยังคงบังคับใช้
+
+### Validated
+
+- ATA targeted tests 6/6 ผ่าน; truncated, missing descriptor, invalid normalized value และ bad checksum ไม่กลายเป็น success
+
 ## [0.23.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม reusable SCSI library target และ standalone fuzz harness ต่อจาก `0.22.0`

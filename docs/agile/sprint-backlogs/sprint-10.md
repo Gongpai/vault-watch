@@ -22,8 +22,8 @@
 | [**10A — Privacy & Graph Foundation**](sprint-10a.md) | `$universal-linux-storage-monitoring-rust` | [US-MON-28](../user-stories/US-MON-28.md), [US-MON-29](../user-stories/US-MON-29.md) | ✅ Done |
 | [**10B — Native Counters & MD RAID**](sprint-10b.md) | `$linux-disk-monitoring-rust`, `$linux-md-raid-monitoring-rust` | [US-MON-30](../user-stories/US-MON-30.md), [US-MON-31](../user-stories/US-MON-31.md) | ✅ Implementation Done; qualification → 10H |
 | [**10C — Storage-first TUI**](sprint-10c.md) | universal metric/scope model | [US-MON-32](../user-stories/US-MON-32.md) | ✅ Done |
-| [**10D — Native SAS/SCSI**](sprint-10d.md) | `$native-sas-scsi-health-rust` | [US-MON-33](../user-stories/US-MON-33.md) | 🚧 In Progress |
-| [**10E — Native SATA/ATA**](sprint-10e.md) | `$native-sata-ata-health-rust` | [US-MON-34](../user-stories/US-MON-34.md) | 📋 Planned |
+| [**10D — Native SAS/SCSI**](sprint-10d.md) | `$native-sas-scsi-health-rust` | [US-MON-33](../user-stories/US-MON-33.md) | 🚧 Foundation ready; broker/fuzz/hardware pending |
+| [**10E — Native SATA/ATA**](sprint-10e.md) | `$native-sata-ata-health-rust` | [US-MON-34](../user-stories/US-MON-34.md) | 🚧 In Progress |
 | [**10F — Native NVMe**](sprint-10f.md) | `$native-nvme-health-rust` | [US-MON-35](../user-stories/US-MON-35.md) | 📋 Planned |
 | [**10G — USB/Removable/MMC**](sprint-10g.md) | `$linux-usb-removable-storage-rust` | [US-MON-36](../user-stories/US-MON-36.md) | 📋 Planned |
 | [**10H — Privilege Broker & Qualification**](sprint-10h.md) | all storage skills | [US-MON-37](../user-stories/US-MON-37.md), [US-MON-38](../user-stories/US-MON-38.md) | 📋 Planned |
