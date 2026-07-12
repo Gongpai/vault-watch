@@ -1,9 +1,136 @@
 use std::io;
 use std::mem::{MaybeUninit, size_of};
 use std::os::fd::AsRawFd;
-use std::os::unix::net::UnixStream;
+use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
+use std::os::unix::net::{UnixListener, UnixStream};
+use std::path::{Path, PathBuf};
 
 use super::BrokerPeerCredentials;
+
+const BROKER_SOCKET_MODE: u32 = 0o660;
+
+#[derive(Debug)]
+pub struct BrokerSocket {
+    listener: UnixListener,
+    path: PathBuf,
+    device: u64,
+    inode: u64,
+}
+
+impl BrokerSocket {
+    /// Binds a broker socket below an existing broker-owned directory. Existing
+    /// filesystem entries are never removed or replaced.
+    pub fn bind(path: &Path) -> io::Result<Self> {
+        validate_socket_path(path)?;
+        let listener = UnixListener::bind(path)?;
+        let metadata = std::fs::symlink_metadata(path)?;
+        if !metadata.file_type().is_socket() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "bound broker endpoint is not a socket",
+            ));
+        }
+        let device = metadata.dev();
+        let inode = metadata.ino();
+        if let Err(error) =
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(BROKER_SOCKET_MODE))
+        {
+            remove_if_same_socket(path, device, inode);
+            return Err(error);
+        }
+        let secured = match std::fs::symlink_metadata(path) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                remove_if_same_socket(path, device, inode);
+                return Err(error);
+            }
+        };
+        if !secured.file_type().is_socket()
+            || secured.dev() != device
+            || secured.ino() != inode
+            || secured.mode() & 0o777 != BROKER_SOCKET_MODE
+        {
+            remove_if_same_socket(path, device, inode);
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "broker socket identity or permissions changed during bind",
+            ));
+        }
+        Ok(Self {
+            listener,
+            path: path.to_owned(),
+            device,
+            inode,
+        })
+    }
+
+    pub const fn listener(&self) -> &UnixListener {
+        &self.listener
+    }
+
+    /// Accepts one connection and obtains credentials exclusively from the
+    /// kernel. Authorization remains the caller's explicit next step.
+    pub fn accept(&self) -> io::Result<(UnixStream, BrokerPeerCredentials)> {
+        let (stream, _) = self.listener.accept()?;
+        let credentials = peer_credentials(&stream)?;
+        Ok((stream, credentials))
+    }
+}
+
+impl Drop for BrokerSocket {
+    fn drop(&mut self) {
+        remove_if_same_socket(&self.path, self.device, self.inode);
+    }
+}
+
+fn remove_if_same_socket(path: &Path, device: u64, inode: u64) {
+    let Ok(metadata) = std::fs::symlink_metadata(path) else {
+        return;
+    };
+    if metadata.file_type().is_socket() && metadata.dev() == device && metadata.ino() == inode {
+        let _ = std::fs::remove_file(path);
+    }
+}
+
+fn validate_socket_path(path: &Path) -> io::Result<()> {
+    if !path.is_absolute() || path.file_name().is_none() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "broker socket path must be an absolute file path",
+        ));
+    }
+    let parent = path.parent().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidInput, "broker socket has no parent")
+    })?;
+    let metadata = std::fs::symlink_metadata(parent)?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "broker socket parent must be a real directory",
+        ));
+    }
+    if parent.canonicalize()? != parent {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "broker socket parent must not traverse aliases or symlinks",
+        ));
+    }
+    // SAFETY: geteuid has no preconditions and does not dereference memory.
+    let effective_uid = unsafe { libc::geteuid() };
+    if metadata.uid() != effective_uid || metadata.mode() & 0o022 != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "broker socket parent ownership or write permissions are unsafe",
+        ));
+    }
+    if std::fs::symlink_metadata(path).is_ok() {
+        return Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "broker socket path already exists",
+        ));
+    }
+    Ok(())
+}
 
 /// Reads kernel-authenticated credentials for an already connected Unix
 /// stream. This does not create, bind, listen on, or connect a socket.
@@ -67,6 +194,20 @@ fn validated_credentials(
 mod tests {
     use super::*;
     use crate::broker::BrokerPeerPolicy;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn private_test_directory() -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path =
+            std::env::temp_dir().join(format!("vault-watch-broker-{}-{nonce}", std::process::id()));
+        fs::create_dir(&path).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o700)).unwrap();
+        path.canonicalize().unwrap()
+    }
 
     #[test]
     fn socket_pair_credentials_are_kernel_derived_and_policy_compatible() {
@@ -128,5 +269,57 @@ mod tests {
             .kind(),
             io::ErrorKind::InvalidData
         );
+    }
+
+    #[test]
+    fn lifecycle_sets_restricted_mode_refuses_replacement_and_cleans_up() {
+        let directory = private_test_directory();
+        let path = directory.join("broker.sock");
+        {
+            let socket = match BrokerSocket::bind(&path) {
+                Ok(socket) => socket,
+                Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+                    fs::remove_dir(directory).unwrap();
+                    return;
+                }
+                Err(error) => panic!("unexpected broker bind error: {error}"),
+            };
+            assert!(
+                socket
+                    .listener()
+                    .local_addr()
+                    .unwrap()
+                    .as_pathname()
+                    .is_some()
+            );
+            let metadata = fs::symlink_metadata(&path).unwrap();
+            assert!(metadata.file_type().is_socket());
+            assert_eq!(metadata.mode() & 0o777, BROKER_SOCKET_MODE);
+            assert_eq!(
+                BrokerSocket::bind(&path).unwrap_err().kind(),
+                io::ErrorKind::AlreadyExists
+            );
+        }
+        assert!(!path.exists());
+        fs::remove_dir(directory).unwrap();
+    }
+
+    #[test]
+    fn lifecycle_rejects_relative_and_unsafe_parent_paths() {
+        assert_eq!(
+            BrokerSocket::bind(Path::new("broker.sock"))
+                .unwrap_err()
+                .kind(),
+            io::ErrorKind::InvalidInput
+        );
+        let directory = private_test_directory();
+        fs::set_permissions(&directory, fs::Permissions::from_mode(0o722)).unwrap();
+        assert_eq!(
+            BrokerSocket::bind(&directory.join("broker.sock"))
+                .unwrap_err()
+                .kind(),
+            io::ErrorKind::PermissionDenied
+        );
+        fs::remove_dir(directory).unwrap();
     }
 }

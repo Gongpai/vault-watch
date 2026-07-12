@@ -20,5 +20,6 @@
 - [x] versioned bounded wire frames, kernel-derived peer credentials and replay protection
 - [x] fixed per-session request budget; malformed/replayed frames do not consume quota
 - [x] privacy-safe audit decision records omit node ID, path, generation, serial and payload
-- [ ] socket lifecycle/permissions, broker-owned open/evidence acquisition and ioctl executor
+- [x] guarded Unix socket lifecycle, restricted mode, kernel peer credentials and inode-safe cleanup
+- [ ] broker-owned open/evidence acquisition and ioctl executor
 - [ ] process separation, seccomp, concurrency limits and hostile integration qualification

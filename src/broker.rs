@@ -16,7 +16,7 @@ pub use wire::{
 #[cfg(target_os = "linux")]
 mod unix;
 #[cfg(target_os = "linux")]
-pub use unix::peer_credentials;
+pub use unix::{BrokerSocket, peer_credentials};
 
 pub const MAX_DEVICE_ID_LEN: usize = 128;
 

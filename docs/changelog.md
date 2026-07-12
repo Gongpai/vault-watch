@@ -4,6 +4,28 @@
 
 ---
 
+## [0.34.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม guarded Unix broker socket lifecycle ต่อจาก `0.33.0`
+
+### Added
+
+- Linux Unix-listener wrapper สำหรับ bind ใน broker-owned absolute directory และ kernel `SO_PEERCRED` acquisition หลัง accept
+- restricted socket mode `0660` และ explicit rejection สำหรับ relative path, unsafe parent permissions และ existing endpoint
+- device/inode-bound cleanup ซึ่งลบเฉพาะ socket object ที่ instance เดิมสร้าง
+
+### Security
+
+- ไม่ unlink/replace stale path อัตโนมัติ จึงไม่เปิดช่องลบไฟล์หรือ socket ของ process อื่น
+- parent ต้องเป็น real canonical directory, owner ตรง effective UID และไม่มี group/world write
+- authorization ยังคงเป็นขั้นถัดจาก kernel credential acquisition; ยังไม่มี device open หรือ ioctl
+
+### Validated
+
+- operator ยืนยัน baseline `0.33.0`: broker 12/12, library 61/61 และ binary 75/75 ผ่านบน openSUSE
+- Unix lifecycle 4/4, broker 14/14, library 63/63, binary 75/75, doc tests และ clippy ผ่าน
+- local sandbox ปฏิเสธ live bind ด้วย `EPERM`; test ยอมรับเฉพาะ denial นี้ ขณะที่ path-policy tests ต้องผ่านเสมอ
+
 ## [0.33.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม bounded broker-session budget และ privacy-safe audit contract ต่อจาก `0.32.0`
