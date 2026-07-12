@@ -4,6 +4,29 @@
 
 ---
 
+## [0.23.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม reusable SCSI library target และ standalone fuzz harness ต่อจาก `0.22.0`
+
+### Added
+
+- `src/lib.rs` exports pure SCSI components for isolated testing/fuzzing; TUI binary no longer owns a duplicate module instance
+- `scsi_pages` fuzz target ครอบ INQUIRY/VPD/LOG SENSE parsers
+- `scsi_sense_completion` fuzz target ครอบ sense decoding/action และ transport completion validation
+- fuzz README พร้อม privacy-safe corpus policy
+
+### Security
+
+- fuzz targets รับเฉพาะ in-memory bytes ไม่อ่าน sysfs, ไม่เปิด device, ไม่ execute CDB และไม่เรียก ioctl
+- corpus/artifacts/coverage/target ถูก ignore และห้าม seed ด้วย real serial/VPD/WWN/path
+- fuzz crate แยก workspace จึงไม่เพิ่ม `libfuzzer-sys` ใน production dependency graph
+
+### Validated
+
+- operator verification ของ ABI/worker suite ผ่าน 23/23 แบบ sanitized
+- library/bin checks, targeted 23/23, full suite 98/98 และ clippy ผ่าน
+- fuzz campaign ยังไม่ถูก execute เพราะ local cache ไม่มี dependency และไม่มีการอนุญาต network download
+
 ## [0.22.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม SG_IO ABI และ bounded typed-worker foundation ต่อจาก `0.21.0`

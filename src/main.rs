@@ -25,7 +25,6 @@ mod app;
 mod collectors;
 mod config;
 mod notifier;
-pub mod scsi;
 mod security;
 mod storage;
 mod ui;

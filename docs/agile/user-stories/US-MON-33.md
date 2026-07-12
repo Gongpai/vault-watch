@@ -31,5 +31,7 @@
 - [x] operator reran sysfs mapping/routing suite successfully (20/20, sanitized evidence 2026-07-12)
 - [x] private `sg_io_hdr_t` layout matches installed Linux UAPI with compile-time 32/64-bit size/alignment assertions
 - [x] typed request limits bound data/sense/timeout and semaphore-gated `spawn_blocking` worker accepts no raw CDB/direction
-- [ ] standalone fuzz targets and remaining optional VPD/log pages
+- [x] operator reran ABI/worker suite successfully (23/23, sanitized evidence 2026-07-12)
+- [x] standalone `cargo-fuzz` targets cover SCSI page parsers and sense/completion validation without hardware access
+- [ ] execute fuzz campaign after explicit dependency-download approval; remaining optional VPD/log pages
 - [ ] broker-owned actual SG_IO ioctl, identity revalidation and hardware qualification

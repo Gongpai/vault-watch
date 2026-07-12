@@ -7,7 +7,8 @@
 - [ ] pure INQUIRY/VPD/LOG SENSE/sense parsers + fixtures/fuzzing
   - [x] typed read-only CDB builders, standard INQUIRY, supported VPD, temperature LOG SENSE and fixed/descriptor sense foundation
   - [x] VPD descriptor/rotation, error/non-medium/informational-exception logs, bounded sense actions and truncated-prefix fixtures
-  - [ ] standalone fuzz targets and optional pages
+  - [x] standalone fuzz targets for pages and sense/completion (campaign execution pending dependency approval)
+  - [ ] remaining optional pages
 - [ ] verified SG_IO ABI wrapper in bounded blocking worker
   - [x] pure completion/residual/sense validation before ABI integration
   - [x] private Linux UAPI layout assertions, bounded typed request and semaphore-gated blocking worker foundation
@@ -25,6 +26,7 @@
 - [x] expanded parser/sense suite 12/12 on 2026-07-12; evidence stores no host, path or device identity
 - [x] command/routing/completion suite 16/16 on 2026-07-12; evidence stores no host, path or device identity
 - [x] sysfs mapping/routing suite 20/20 on 2026-07-12; evidence stores no host, path or device identity
+- [x] ABI/worker suite 23/23 on 2026-07-12; evidence stores no host, path or device identity
 
 ## Exit Gate
 
