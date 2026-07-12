@@ -15,7 +15,8 @@
 - [x] evidence-only USB/controller routing without unknown vendor probes
 - [ ] fixtures/fuzzing/hardware qualification and broker integration
   - [x] standalone in-memory fuzz targets for ATA pages and return descriptors
-  - [ ] synthetic seed corpus, fuzz campaign, hardware qualification and broker integration
+  - [x] bounded nightly/ASan fuzz campaign for both ATA targets
+  - [ ] curated synthetic seed corpus, hardware qualification and broker integration
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

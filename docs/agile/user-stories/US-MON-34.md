@@ -25,7 +25,8 @@
 - [x] evidence-only routing distinguishes native SAT, qualified USB SAT, native SCSI, controller-hidden, ambiguous and unsupported USB bridges
 - [x] capability-gated READ LOG EXT exposes only page 0 directory and preserves unknown page addresses without vendor interpretation
 - [x] standalone fuzz targets cover IDENTIFY/SMART/GPL parsers, threshold evaluation and ATA return descriptors using in-memory bytes only
-- [ ] standardized health log pages, vendor schemas, fuzz campaign, broker and hardware qualification
+- [x] bounded nightly/ASan campaigns complete for both ATA fuzz targets with no crash artifact
+- [ ] standardized health log pages, vendor schemas, curated seeds, broker and hardware qualification
 
 ## Operator Evidence
 
@@ -34,3 +35,6 @@
 - 2026-07-12: operator rerun passed ATA 10/10, library 33/33 and binary 75/75; output contained test names only
 - 2026-07-12: production checks passed after adding ATA fuzz targets; fuzz build remains pending because `libfuzzer-sys` is not cached offline
 - 2026-07-12: `cargo-fuzz 0.13.2` installed; stable attempts correctly stopped at the nightly-only sanitizer gate before target execution
+- 2026-07-12: `ata_pages` completed 14,898,840 executions in 61 seconds (`cov 470`, `ft 853`, peak RSS 501 MiB) without a sanitizer finding
+- 2026-07-12: `ata_return_descriptor` completed 60,864,910 executions in 61 seconds (`cov 56`, `ft 80`, peak RSS 502 MiB) without a sanitizer finding
+- 2026-07-12: `fuzz/artifacts/` remained empty; generated corpus is ignored and contains no captured device data
