@@ -8,6 +8,12 @@ use std::time::Duration;
 use crate::storage::model::Generation;
 use crate::storage::{Materialization, StorageInventory, StorageKind};
 
+mod wire;
+pub use wire::{
+    BROKER_WIRE_VERSION, BrokerPeerCredentials, BrokerPeerPolicy, BrokerSession, BrokerWireError,
+    decode_request_frame, encode_request_frame,
+};
+
 pub const MAX_DEVICE_ID_LEN: usize = 128;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

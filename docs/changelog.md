@@ -4,6 +4,28 @@
 
 ---
 
+## [0.30.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม bounded broker wire envelope และ session security policy ต่อจาก `0.29.0`
+
+### Added
+
+- versioned `VWB1` exact-length request frame สำหรับ typed ATA operations และ generation-bound node references
+- pure peer credential policy สำหรับ broker-owned allowed UID/GID และ non-zero PID
+- per-session monotonically increasing request-ID gate ป้องกัน replay/out-of-order frames
+- standalone `broker_wire` round-trip fuzz target
+
+### Security
+
+- frame จำกัดขนาดและไม่มี raw path, opcode, CDB, taskfile, pointer, timeout, allocation length หรือ arbitrary payload
+- unknown version/operation, non-zero reserved bytes, invalid UTF-8/ID, truncation และ trailing bytes ถูกปฏิเสธ
+- ยังไม่มี Unix socket, peer-credential syscall, privilege change, device opening หรือ ioctl
+
+### Validated
+
+- unit tests ครบทุก operation และ malformed-prefix/replay/unauthorized-peer cases
+- broker/wire 7/7, library 56/56, binary 75/75, doc tests, checks, formatting, clippy และ nightly fuzz build ผ่าน
+
 ## [0.29.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม pure typed privilege-broker authorization contract ต่อจาก `0.28.1`
