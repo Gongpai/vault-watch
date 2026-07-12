@@ -1,9 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use vault_watch::scsi::{
-    TransportCompletion, parse_sense, sense_action, validate_completion,
-};
+use vault_watch::scsi::{TransportCompletion, parse_sense, sense_action, validate_completion};
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(sense) = parse_sense(data) {

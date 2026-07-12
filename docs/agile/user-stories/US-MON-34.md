@@ -24,9 +24,12 @@
 - [x] SMART threshold evaluation distinguishes unavailable/not-applicable/passing/exceeded without assigning raw vendor semantics
 - [x] evidence-only routing distinguishes native SAT, qualified USB SAT, native SCSI, controller-hidden, ambiguous and unsupported USB bridges
 - [x] capability-gated READ LOG EXT exposes only page 0 directory and preserves unknown page addresses without vendor interpretation
-- [ ] standardized health log pages, vendor schemas, fuzzing, broker and hardware qualification
+- [x] standalone fuzz targets cover IDENTIFY/SMART/GPL parsers, threshold evaluation and ATA return descriptors using in-memory bytes only
+- [ ] standardized health log pages, vendor schemas, fuzz campaign, broker and hardware qualification
 
 ## Operator Evidence
 
 - 2026-07-12: sanitized `cargo test --lib ata::tests` foundation run passed 6/6; no device identity was recorded
 - 2026-07-12: operator rerun passed ATA 8/8, library 31/31 and binary 75/75; output contained test names only
+- 2026-07-12: operator rerun passed ATA 10/10, library 33/33 and binary 75/75; output contained test names only
+- 2026-07-12: production checks passed after adding ATA fuzz targets; fuzz build remains pending because `libfuzzer-sys` is not cached offline

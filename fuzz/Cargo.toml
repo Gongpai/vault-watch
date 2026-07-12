@@ -25,5 +25,19 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "ata_pages"
+path = "fuzz_targets/ata_pages.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ata_return_descriptor"
+path = "fuzz_targets/ata_return_descriptor.rs"
+test = false
+doc = false
+bench = false
+
 [workspace]
 members = ["."]

@@ -4,6 +4,28 @@
 
 ---
 
+## [0.27.0] - 2026-07-12
+
+> **MINOR bump:** เพิ่ม standalone ATA parser fuzz targets ต่อจาก `0.26.0`
+
+### Added
+
+- `ata_pages` fuzz target สำหรับ IDENTIFY, SMART data/threshold, GPL directory และ threshold-state paths
+- `ata_return_descriptor` fuzz target สำหรับ descriptor parsing และ SMART status classification
+- fuzz documentation สำหรับ synthetic-only ATA seeds และคำสั่งรัน target ใหม่
+
+### Security
+
+- fuzz targets รับเฉพาะ byte slice ใน memory; ไม่ enumerate sysfs, เปิด device, execute CDB หรือเรียก ioctl
+- ห้ามใช้ real IDENTIFY/SMART captures ที่อาจมี serial, WWN หรือ identity เป็น corpus
+- corpus, artifacts, coverage และ fuzz target outputs ยังคงถูก ignore
+
+### Validated
+
+- operator ยืนยันรุ่น `0.26.0`: ATA 10/10, library 33/33 และ binary 75/75 ผ่าน
+- รุ่น `0.27.0`: ATA 10/10, library 33/33, binary 75/75, doc tests, checks และ clippy ผ่าน
+- fuzz harness compile/campaign ยังไม่รัน เพราะ local Cargo cache ไม่มี `libfuzzer-sys`; offline check หยุดโดยไม่ดาวน์โหลด dependency
+
 ## [0.26.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม capability-gated ATA GPL log-directory support ต่อจาก `0.25.0`

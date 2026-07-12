@@ -1,4 +1,4 @@
-# SCSI parser fuzzing
+# Storage protocol parser fuzzing
 
 These targets consume arbitrary in-memory bytes only. They do not enumerate
 sysfs, open device nodes, execute CDBs, or perform ioctls.
@@ -8,8 +8,11 @@ Run after installing `cargo-fuzz` and allowing Cargo to fetch `libfuzzer-sys`:
 ```bash
 cargo fuzz run scsi_pages
 cargo fuzz run scsi_sense_completion
+cargo fuzz run ata_pages
+cargo fuzz run ata_return_descriptor
 ```
 
 Generated corpora, artifacts, coverage and target directories are ignored.
 Never seed the corpus with captures containing serial numbers, VPD identifiers,
-WWNs, host paths, or other real device identity.
+WWNs, ATA IDENTIFY captures, SMART pages, host paths, or other real device
+identity. Use synthetic seeds only.
