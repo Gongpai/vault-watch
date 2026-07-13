@@ -315,7 +315,10 @@ broker_enabled = true
 The client accepts only a root broker at `/run/vault-watch/broker.sock`.
 Currently qualified routing is still pending: successful SAT devices use the
 standard SMART return status, while unsupported or unavailable devices retain
-the existing per-device `smartctl` fallback.
+the existing per-device `smartctl` fallback. While `--discover-ata` is active,
+block-device events trigger inventory/grant reconciliation and a five-minute
+periodic pass covers missed events; unchanged device generations are not probed
+again.
 
 ### Recommended: NOPASSWD sudo
 

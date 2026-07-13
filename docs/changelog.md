@@ -4,6 +4,32 @@
 
 ---
 
+## [0.40.0] - 2026-07-13
+
+> **MINOR bump:** เพิ่ม generation-safe runtime broker authorization reconciliation ต่อจาก committed `0.39.0`
+
+### Added
+
+- atomic `BrokerServer` authorization state รวม inventory, grants และ monotonic revision ใน snapshot เดียว
+- validated `reconcile_authorization()` ปฏิเสธ partial/invalid inventory, duplicate grants และ generation-mismatched grants โดยไม่เปลี่ยน state เดิม
+- coalesced block-uevent hints พร้อม five-minute periodic reconciliation fallback ใน standalone broker
+- unchanged `node_id + diskseq + dev_t` retain grant เดิมโดยไม่ probe ซ้ำ; เฉพาะอุปกรณ์ใหม่หรือ replaced generation จึงทำ capability sequence
+- aggregate reconciliation logs มีเฉพาะ revision/node/grant counts ไม่มี device identity
+
+### Security
+
+- request authorization อ่าน inventory และ grant จาก revision เดียว แล้วปล่อย lock ก่อน open/ioctl
+- old generation ถูก deny ทันทีหลัง atomic publish และ new generation ไม่ถูก authorize ด้วย stale grant
+- incomplete discovery หรือ rejected grant set ไม่ลบ last-known valid authorization state
+- runtime reconciliation เปิดเฉพาะเมื่อ operator ระบุ `--discover-ata`; default broker ยังคง zero-grant
+
+### Validated
+
+- full library 92/92, main binary 81/81, broker binary 2/2 และ doc tests ผ่าน
+- broker tests 41/41 ผ่าน รวม unchanged-generation retention, atomic generation swap และ partial/invalid-grant state retention
+- `cargo clippy --all-targets --all-features -- -D warnings`, fuzz workspace build, format และ diff checks ผ่าน
+- hardware qualification และ live event-driven reconciliation ยังเป็นงานค้าง
+
 ## [0.39.0] - 2026-07-13
 
 > **MINOR bump:** เชื่อม opt-in native ATA health จาก broker เข้าสู่ TUI refresh loop ต่อจาก committed `0.38.0`

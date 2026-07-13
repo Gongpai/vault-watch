@@ -27,6 +27,7 @@ const ATA_IDENTIFY_DEVICE_COMMAND: u8 = 0xec;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BrokerCapabilityOutcome {
     GrantedAta,
+    RetainedAta,
     NotCandidate,
     PartialInventory,
     MissingGeneration,
@@ -50,6 +51,15 @@ pub struct BrokerCapabilityReport {
 /// Performs a fixed, broker-owned capability sequence. No path, CDB, timeout,
 /// allocation length, or capability claim is accepted from IPC/configuration.
 pub async fn discover_ata_capabilities(inventory: &StorageInventory) -> BrokerCapabilityReport {
+    reconcile_ata_capabilities(inventory, &[]).await
+}
+
+/// Reuses an already proven grant only for the exact same node generation and
+/// probes fixed capabilities for new or replaced candidates.
+pub async fn reconcile_ata_capabilities(
+    inventory: &StorageInventory,
+    previous_grants: &[BrokerDeviceGrant],
+) -> BrokerCapabilityReport {
     if inventory.partial {
         return BrokerCapabilityReport {
             grants: Vec::new(),
@@ -63,6 +73,14 @@ pub async fn discover_ata_capabilities(inventory: &StorageInventory) -> BrokerCa
         let Some(generation) = candidate_generation(node, &mut outcomes) else {
             continue;
         };
+        if let Some(grant) = previous_grants
+            .iter()
+            .find(|grant| grant.node_id == node.id && grant.generation == generation)
+        {
+            grants.push(grant.clone());
+            outcomes.push(BrokerCapabilityOutcome::RetainedAta);
+            continue;
+        }
         let mapping = match discover_scsi_generic(Path::new(SYSTEM_BLOCK_CLASS_ROOT), &node.name) {
             Ok(mapping) => mapping,
             Err(_) => {
@@ -326,6 +344,36 @@ mod tests {
         .await;
         assert!(report.grants.is_empty());
         assert_eq!(report.outcomes, [BrokerCapabilityOutcome::PartialInventory]);
+    }
+
+    #[tokio::test]
+    async fn unchanged_generation_retains_grant_without_system_probe() {
+        let existing = BrokerDeviceGrant {
+            node_id: "block:sda".into(),
+            generation: BrokerGeneration {
+                diskseq: 42,
+                dev_major: 8,
+                dev_minor: 0,
+            },
+            backend: GrantedBackend::AtaSat,
+            ata: AtaCapabilityGrant {
+                smart: true,
+                smart_thresholds: true,
+                gpl: false,
+            },
+        };
+        let report = reconcile_ata_capabilities(
+            &StorageInventory {
+                nodes: vec![node(StorageKind::ScsiLike, Materialization::BlockDevice)],
+                edges: Vec::new(),
+                partial: false,
+            },
+            std::slice::from_ref(&existing),
+        )
+        .await;
+
+        assert_eq!(report.grants, [existing]);
+        assert_eq!(report.outcomes, [BrokerCapabilityOutcome::RetainedAta]);
     }
 
     #[test]

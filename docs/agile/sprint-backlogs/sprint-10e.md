@@ -35,6 +35,7 @@
     - [x] authenticated typed client transport with monotonic request IDs, bounded response reads and per-operation deadlines
     - [x] opt-in TUI mapping of standard SMART RETURN STATUS with conservative per-device legacy fallback
     - [x] broker process/server/client/TUI refresh integration
+    - [x] runtime capability reconciliation probes only new/replaced generations and atomically publishes grants
     - [ ] hardware qualification
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 

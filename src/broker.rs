@@ -23,7 +23,10 @@ pub use device::{
 #[cfg(target_os = "linux")]
 mod capability;
 #[cfg(target_os = "linux")]
-pub use capability::{BrokerCapabilityOutcome, BrokerCapabilityReport, discover_ata_capabilities};
+pub use capability::{
+    BrokerCapabilityOutcome, BrokerCapabilityReport, discover_ata_capabilities,
+    reconcile_ata_capabilities,
+};
 #[cfg(target_os = "linux")]
 mod client;
 #[cfg(target_os = "linux")]
@@ -40,7 +43,7 @@ mod server;
 #[cfg(target_os = "linux")]
 pub use server::{
     BrokerServer, BrokerServerAuditOutcome, BrokerServerAuditRecord, BrokerServerConfigError,
-    MAX_CONCURRENT_BROKER_SESSIONS,
+    BrokerServerStateSummary, MAX_CONCURRENT_BROKER_SESSIONS,
 };
 #[cfg(target_os = "linux")]
 mod unix;

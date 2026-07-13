@@ -4,13 +4,18 @@ mod linux {
     use std::path::PathBuf;
     use std::process::ExitCode;
     use std::sync::Arc;
+    use std::time::Duration;
 
     use tokio::signal::unix::{SignalKind, signal};
+    use tokio::sync::Notify;
+    use tokio::time::{self, MissedTickBehavior};
     use vault_watch::broker::{
-        BrokerPeerPolicy, BrokerServer, BrokerServerAuditRecord, BrokerSocket,
-        DEFAULT_BROKER_SOCKET_PATH, discover_ata_capabilities,
+        BrokerDeviceGrant, BrokerPeerPolicy, BrokerServer, BrokerServerAuditRecord, BrokerSocket,
+        DEFAULT_BROKER_SOCKET_PATH, discover_ata_capabilities, reconcile_ata_capabilities,
     };
     use vault_watch::storage;
+
+    const RECONCILE_INTERVAL: Duration = Duration::from_secs(5 * 60);
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct Options {
@@ -57,6 +62,7 @@ mod linux {
             Vec::new()
         };
         let grant_count = grants.len();
+        let reconciliation_grants = grants.clone();
         let peer_policy = BrokerPeerPolicy {
             allowed_uid: options.allowed_uid,
             allowed_gid: options.allowed_gid,
@@ -69,11 +75,21 @@ mod linux {
             .map_err(|error| format!("cannot bind {}: {error}", options.socket.display()))?;
         let mut terminate = signal(SignalKind::terminate())
             .map_err(|error| format!("cannot install SIGTERM handler: {error}"))?;
+        let reconciliation = if options.discover_ata {
+            let hints = Arc::new(Notify::new());
+            storage::spawn_block_event_hints(Arc::clone(&hints));
+            let server = Arc::clone(&server);
+            Some(tokio::spawn(async move {
+                reconcile_authorization_loop(server, reconciliation_grants, hints).await;
+            }))
+        } else {
+            None
+        };
 
         eprintln!(
             "vault-watch-broker: listening with {grant_count} broker-owned ATA capability grants"
         );
-        server
+        let result = Arc::clone(&server)
             .serve_socket(
                 &socket,
                 async move {
@@ -86,8 +102,51 @@ mod linux {
                 },
                 audit_record,
             )
-            .await
-            .map_err(|error| format!("server loop failed: {error}"))
+            .await;
+        if let Some(reconciliation) = reconciliation {
+            reconciliation.abort();
+            let _ = reconciliation.await;
+        }
+        result.map_err(|error| format!("server loop failed: {error}"))
+    }
+
+    async fn reconcile_authorization_loop(
+        server: Arc<BrokerServer>,
+        mut grants: Vec<BrokerDeviceGrant>,
+        hints: Arc<Notify>,
+    ) {
+        let start = time::Instant::now() + RECONCILE_INTERVAL;
+        let mut periodic = time::interval_at(start, RECONCILE_INTERVAL);
+        periodic.set_missed_tick_behavior(MissedTickBehavior::Skip);
+        loop {
+            tokio::select! {
+                _ = periodic.tick() => {}
+                _ = hints.notified() => {}
+            }
+            let inventory = storage::discover_storage();
+            if inventory.partial || inventory.validate().is_err() {
+                eprintln!(
+                    "vault-watch-broker: retained authorization state after incomplete inventory reconciliation"
+                );
+                continue;
+            }
+            let report = reconcile_ata_capabilities(&inventory, &grants).await;
+            let next_grants = report.grants;
+            match server.reconcile_authorization(inventory, next_grants.clone()) {
+                Ok(summary) => {
+                    grants = next_grants;
+                    eprintln!(
+                        "vault-watch-broker: authorization revision={} nodes={} grants={}",
+                        summary.revision, summary.node_count, summary.grant_count
+                    );
+                }
+                Err(_) => {
+                    eprintln!(
+                        "vault-watch-broker: retained authorization state after rejected reconciliation"
+                    );
+                }
+            }
+        }
     }
 
     fn audit_record(record: BrokerServerAuditRecord) {

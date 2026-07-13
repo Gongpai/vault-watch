@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::io;
 use std::os::unix::net::UnixStream as StdUnixStream;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -14,9 +14,10 @@ use crate::storage::StorageInventory;
 use super::BrokerSocket;
 use super::wire::{request_frame_len, request_header_len};
 use super::{
-    AtaBrokerOperation, BrokerDeviceGrant, BrokerPeerCredentials, BrokerPeerPolicy,
-    BrokerResponseError, BrokerResponseFrame, BrokerSession, authorize_ata_request,
-    decode_request_frame, encode_response_frame, open_system_authorized_device, peer_credentials,
+    AtaBrokerOperation, AuthorizedBrokerRequest, BrokerDeviceGrant, BrokerPeerCredentials,
+    BrokerPeerPolicy, BrokerResponseError, BrokerResponseFrame, BrokerSession,
+    authorize_ata_request, decode_request_frame, encode_response_frame,
+    open_system_authorized_device, peer_credentials,
 };
 
 pub const MAX_CONCURRENT_BROKER_SESSIONS: usize = 16;
@@ -25,6 +26,15 @@ pub const MAX_CONCURRENT_BROKER_SESSIONS: usize = 16;
 pub enum BrokerServerConfigError {
     InvalidInventory,
     DuplicateGrant,
+    InvalidGrant,
+    StateUnavailable,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BrokerServerStateSummary {
+    pub revision: u64,
+    pub node_count: usize,
+    pub grant_count: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,9 +59,15 @@ pub struct BrokerServerAuditRecord {
 
 #[derive(Debug)]
 pub struct BrokerServer {
+    authorization: RwLock<BrokerAuthorizationState>,
+    peer_policy: BrokerPeerPolicy,
+}
+
+#[derive(Debug)]
+struct BrokerAuthorizationState {
+    revision: u64,
     inventory: StorageInventory,
     grants: Vec<BrokerDeviceGrant>,
-    peer_policy: BrokerPeerPolicy,
 }
 
 impl BrokerServer {
@@ -60,22 +76,43 @@ impl BrokerServer {
         grants: Vec<BrokerDeviceGrant>,
         peer_policy: BrokerPeerPolicy,
     ) -> Result<Self, BrokerServerConfigError> {
-        if inventory.partial || inventory.validate().is_err() {
-            return Err(BrokerServerConfigError::InvalidInventory);
-        }
-        for (index, grant) in grants.iter().enumerate() {
-            if grants[..index]
-                .iter()
-                .any(|existing| existing.node_id == grant.node_id)
-            {
-                return Err(BrokerServerConfigError::DuplicateGrant);
-            }
-        }
+        validate_authorization_state(&inventory, &grants)?;
         Ok(Self {
-            inventory,
-            grants,
+            authorization: RwLock::new(BrokerAuthorizationState {
+                revision: 1,
+                inventory,
+                grants,
+            }),
             peer_policy,
         })
+    }
+
+    /// Atomically replaces inventory and grants after validating the complete
+    /// snapshot. Failed or partial snapshots leave the current state intact.
+    pub fn reconcile_authorization(
+        &self,
+        inventory: StorageInventory,
+        grants: Vec<BrokerDeviceGrant>,
+    ) -> Result<BrokerServerStateSummary, BrokerServerConfigError> {
+        validate_authorization_state(&inventory, &grants)?;
+        let mut state = self
+            .authorization
+            .write()
+            .map_err(|_| BrokerServerConfigError::StateUnavailable)?;
+        let revision = state.revision.saturating_add(1);
+        *state = BrokerAuthorizationState {
+            revision,
+            inventory,
+            grants,
+        };
+        Ok(state.summary())
+    }
+
+    pub fn state_summary(&self) -> Result<BrokerServerStateSummary, BrokerServerConfigError> {
+        self.authorization
+            .read()
+            .map(|state| state.summary())
+            .map_err(|_| BrokerServerConfigError::StateUnavailable)
     }
 
     /// Runs the broker accept loop until shutdown. The listener is duplicated
@@ -221,19 +258,7 @@ impl BrokerServer {
             }
         };
 
-        let Some(grant) = self
-            .grants
-            .iter()
-            .find(|grant| grant.node_id == request.device.node_id)
-        else {
-            return denied(
-                session.peer(),
-                &request,
-                BrokerResponseError::AuthorizationDenied,
-                BrokerServerAuditOutcome::AuthorizationDenied,
-            );
-        };
-        let authorized = match authorize_ata_request(&self.inventory, grant, &request) {
+        let authorized = match self.authorize_request(&request) {
             Ok(authorized) => authorized,
             Err(_) => {
                 return denied(
@@ -273,6 +298,64 @@ impl BrokerServer {
             audit_record(session.peer(), Some(&request), outcome),
         )
     }
+
+    fn authorize_request(
+        &self,
+        request: &super::BrokerRequest,
+    ) -> Result<AuthorizedBrokerRequest, super::BrokerDenyReason> {
+        let state = self
+            .authorization
+            .read()
+            .map_err(|_| super::BrokerDenyReason::UnknownDevice)?;
+        let grant = state
+            .grants
+            .iter()
+            .find(|grant| grant.node_id == request.device.node_id)
+            .ok_or(super::BrokerDenyReason::UnknownDevice)?;
+        authorize_ata_request(&state.inventory, grant, request)
+    }
+}
+
+impl BrokerAuthorizationState {
+    const fn summary(&self) -> BrokerServerStateSummary {
+        BrokerServerStateSummary {
+            revision: self.revision,
+            node_count: self.inventory.nodes.len(),
+            grant_count: self.grants.len(),
+        }
+    }
+}
+
+fn validate_authorization_state(
+    inventory: &StorageInventory,
+    grants: &[BrokerDeviceGrant],
+) -> Result<(), BrokerServerConfigError> {
+    if inventory.partial || inventory.validate().is_err() {
+        return Err(BrokerServerConfigError::InvalidInventory);
+    }
+    for (index, grant) in grants.iter().enumerate() {
+        if grants[..index]
+            .iter()
+            .any(|existing| existing.node_id == grant.node_id)
+        {
+            return Err(BrokerServerConfigError::DuplicateGrant);
+        }
+    }
+    for grant in grants {
+        let matching = inventory
+            .nodes
+            .iter()
+            .filter(|node| node.id == grant.node_id)
+            .collect::<Vec<_>>();
+        if matching.len() != 1
+            || matching[0].kind != crate::storage::StorageKind::ScsiLike
+            || matching[0].materialization != crate::storage::Materialization::BlockDevice
+            || super::broker_generation(&matching[0].generation) != Some(grant.generation)
+        {
+            return Err(BrokerServerConfigError::InvalidGrant);
+        }
+    }
+    Ok(())
 }
 
 async fn accept_ready(
@@ -348,6 +431,8 @@ mod tests {
         AtaCapabilityGrant, BrokerDeviceRef, BrokerGeneration, BrokerRequest, BrokerWireError,
         decode_response_frame, encode_request_frame,
     };
+    use crate::storage::model::Generation;
+    use crate::storage::{Materialization, StorageKind, StorageNode};
 
     fn peer_policy() -> BrokerPeerPolicy {
         BrokerPeerPolicy {
@@ -359,17 +444,53 @@ mod tests {
     }
 
     fn request(request_id: u64) -> BrokerRequest {
+        request_for_generation(request_id, 42)
+    }
+
+    fn request_for_generation(request_id: u64, diskseq: u64) -> BrokerRequest {
         BrokerRequest {
             request_id,
             device: BrokerDeviceRef {
                 node_id: "block:sda".to_owned(),
                 generation: BrokerGeneration {
-                    diskseq: 42,
+                    diskseq,
                     dev_major: 8,
                     dev_minor: 0,
                 },
             },
             operation: AtaBrokerOperation::IdentifyDevice,
+        }
+    }
+
+    fn inventory_for_generation(diskseq: u64) -> StorageInventory {
+        StorageInventory {
+            nodes: vec![StorageNode {
+                id: "block:sda".into(),
+                name: "sda".into(),
+                kind: StorageKind::ScsiLike,
+                materialization: Materialization::BlockDevice,
+                removable: Some(false),
+                identities: Vec::new(),
+                generation: Generation {
+                    diskseq: Some(diskseq),
+                    dev_t: Some((8, 0)),
+                },
+            }],
+            edges: Vec::new(),
+            partial: false,
+        }
+    }
+
+    fn grant_for_generation(diskseq: u64) -> BrokerDeviceGrant {
+        BrokerDeviceGrant {
+            node_id: "block:sda".into(),
+            generation: BrokerGeneration {
+                diskseq,
+                dev_major: 8,
+                dev_minor: 0,
+            },
+            backend: super::super::GrantedBackend::AtaSat,
+            ata: AtaCapabilityGrant::default(),
         }
     }
 
@@ -415,6 +536,80 @@ mod tests {
             ),
             Err(BrokerServerConfigError::DuplicateGrant)
         ));
+    }
+
+    #[test]
+    fn reconciliation_atomically_swaps_generation_and_retains_on_invalid_snapshot() {
+        let server = BrokerServer::new(
+            inventory_for_generation(42),
+            vec![grant_for_generation(42)],
+            peer_policy(),
+        )
+        .unwrap();
+        assert_eq!(
+            server.state_summary().unwrap(),
+            BrokerServerStateSummary {
+                revision: 1,
+                node_count: 1,
+                grant_count: 1,
+            }
+        );
+        assert!(
+            server
+                .authorize_request(&request_for_generation(1, 42))
+                .is_ok()
+        );
+        assert!(
+            server
+                .authorize_request(&request_for_generation(2, 43))
+                .is_err()
+        );
+
+        let summary = server
+            .reconcile_authorization(inventory_for_generation(43), vec![grant_for_generation(43)])
+            .unwrap();
+        assert_eq!(summary.revision, 2);
+        assert!(
+            server
+                .authorize_request(&request_for_generation(3, 42))
+                .is_err()
+        );
+        assert!(
+            server
+                .authorize_request(&request_for_generation(4, 43))
+                .is_ok()
+        );
+
+        assert_eq!(
+            server.reconcile_authorization(
+                StorageInventory {
+                    partial: true,
+                    ..StorageInventory::default()
+                },
+                Vec::new(),
+            ),
+            Err(BrokerServerConfigError::InvalidInventory)
+        );
+        assert_eq!(server.state_summary().unwrap(), summary);
+        assert!(
+            server
+                .authorize_request(&request_for_generation(5, 43))
+                .is_ok()
+        );
+
+        assert_eq!(
+            server.reconcile_authorization(
+                inventory_for_generation(44),
+                vec![grant_for_generation(43)],
+            ),
+            Err(BrokerServerConfigError::InvalidGrant)
+        );
+        assert_eq!(server.state_summary().unwrap(), summary);
+        assert!(
+            server
+                .authorize_request(&request_for_generation(6, 43))
+                .is_ok()
+        );
     }
 
     #[tokio::test]

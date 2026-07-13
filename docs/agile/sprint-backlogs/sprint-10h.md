@@ -10,7 +10,8 @@
   - [x] connect conservative ATA SMART status collection/state mapping through the client with per-device legacy fallback
 - [ ] peer auth, DeviceId+generation binding, allowlists, audit and limits
   - [x] peer credentials, generation-bound grants, fixed ATA allowlist, replay/session/concurrency limits and sanitized audit foundation
-  - [ ] process resource limits and runtime grant reconciliation
+  - [x] event-hinted plus periodic atomic inventory/grant reconciliation with unchanged-generation grant retention
+  - [ ] process resource limits
 - [ ] malicious IPC/config/path-reuse security tests
 - [ ] Alpine/static/config/theme/UI carry-over verification
 - [ ] complete protocol hardware matrix, fuzz/license/security review
