@@ -25,6 +25,10 @@ mod capability;
 #[cfg(target_os = "linux")]
 pub use capability::{BrokerCapabilityOutcome, BrokerCapabilityReport, discover_ata_capabilities};
 #[cfg(target_os = "linux")]
+mod client;
+#[cfg(target_os = "linux")]
+pub use client::{BrokerClient, BrokerClientError};
+#[cfg(target_os = "linux")]
 mod response;
 #[cfg(target_os = "linux")]
 pub use response::{

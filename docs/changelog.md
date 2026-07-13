@@ -4,6 +4,31 @@
 
 ---
 
+## [0.38.0] - 2026-07-13
+
+> **MINOR bump:** เพิ่ม authenticated typed broker client transport ต่อจาก committed `0.37.0`
+
+### Added
+
+- reusable Linux `BrokerClient` ซึ่งสร้าง monotonic request ID ภายใน client และรับเฉพาะ typed device reference/operation
+- fixed two-second connect deadline และ operation timeout พร้อม one-second transport grace
+- bounded response-header length validation ก่อน allocate payload และ exact request ID/operation correlation ก่อนคืนผล
+- kernel `SO_PEERCRED` verification ของ broker process ตาม explicit expected UID/GID policy
+
+### Security
+
+- timeout, transport failure, malformed/oversized response และ correlation mismatch ทำให้ connection ใช้ต่อไม่ได้
+- caller ส่ง raw IPC frame, request ID, CDB, timeout, response length หรือ payload ไม่ได้
+- valid broker denial ยังคงเป็น typed sanitized outcome และ connection ใช้ต่อได้
+- TUI health mapping และ legacy fallback policy ยังไม่เชื่อมใน release slice นี้
+
+### Validated
+
+- broker tests 38/38 ผ่าน รวม monotonic IDs, response correlation, timeout poisoning, server identity policy และ pre-allocation response bounds
+- full library 89/89, main binary 75/75, broker binary 2/2 และ doc tests ผ่าน
+- `cargo clippy --all-targets --all-features -- -D warnings` ผ่าน
+- Unix socket tests รองรับ sandbox ที่ปฏิเสธ `SO_PEERCRED` ด้วย `EPERM`; pure framing boundary test ยังรันเสมอ
+
 ## [0.37.0] - 2026-07-13
 
 > **MINOR bump:** เพิ่ม typed broker response protocol และ authenticated connection dispatcher ต่อจาก `0.36.0`

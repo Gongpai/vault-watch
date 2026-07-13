@@ -103,7 +103,7 @@
 | [US-MON-34](./user-stories/US-MON-34.md) | Native SATA/ATA health | SAT/ATA SMART | **XL** | 📋 Planned |
 | [US-MON-35](./user-stories/US-MON-35.md) | Native NVMe health | NVMe ioctl | **XL** | 📋 Planned |
 | [US-MON-36](./user-stories/US-MON-36.md) | USB/removable/SD/eMMC | USB/MMC | **XL** | 📋 Planned |
-| [US-MON-37](./user-stories/US-MON-37.md) | Privileged read-only command broker | security boundary | **XL** | 📋 Planned |
+| [US-MON-37](./user-stories/US-MON-37.md) | Privileged read-only command broker | security boundary | **XL** | 🚧 In Progress |
 | [US-MON-38](./user-stories/US-MON-38.md) | Carry-over and hardware qualification | release gate | **L** | 📋 Planned |
 
 รายละเอียดและลำดับทำงานอยู่ใน [Sprint 10](./sprint-backlogs/sprint-10.md) งานที่ต้องใช้ raw protocol access ห้ามเริ่มก่อน security gate ของ US-MON-28/37

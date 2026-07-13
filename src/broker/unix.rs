@@ -155,7 +155,7 @@ fn validate_socket_path(path: &Path) -> io::Result<()> {
 
 /// Reads kernel-authenticated credentials for an already connected Unix
 /// stream. This does not create, bind, listen on, or connect a socket.
-pub fn peer_credentials(stream: &UnixStream) -> io::Result<BrokerPeerCredentials> {
+pub fn peer_credentials(stream: &impl AsRawFd) -> io::Result<BrokerPeerCredentials> {
     let mut credentials = MaybeUninit::<libc::ucred>::uninit();
     let mut length = libc::socklen_t::try_from(size_of::<libc::ucred>())
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "ucred size overflow"))?;

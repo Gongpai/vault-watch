@@ -26,5 +26,6 @@
 - [x] typed bounded response frames and authenticated connection dispatcher with replay/budget/authorization/open/execute gates
 - [x] standalone default-deny broker process requires explicit peer UID/GID, bounds concurrent sessions and handles SIGTERM/Ctrl+C cleanup
 - [x] broker-owned opt-in capability discovery creates generation-bound ATA grants without accepting paths, CDBs or capability claims from IPC/config
-- [ ] broker process/server integration and hardware qualification
+- [x] typed client owns monotonic request IDs, authenticates broker credentials and enforces bounded response framing, deadlines and correlation
+- [ ] TUI collector integration and hardware qualification
 - [ ] process separation, seccomp, concurrency limits and hostile integration qualification

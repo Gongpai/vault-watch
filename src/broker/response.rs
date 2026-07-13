@@ -118,6 +118,24 @@ pub fn decode_response_frame(frame: &[u8]) -> Result<BrokerResponseFrame, Broker
     })
 }
 
+pub(super) const fn response_header_len() -> usize {
+    HEADER_LEN
+}
+
+pub(super) fn response_frame_len(header: &[u8]) -> Result<usize, BrokerResponseWireError> {
+    if header.len() != HEADER_LEN {
+        return Err(BrokerResponseWireError::FrameTooShort);
+    }
+    let payload_len = usize::try_from(u32::from_le_bytes(
+        header[16..20].try_into().expect("bounded header"),
+    ))
+    .map_err(|_| BrokerResponseWireError::PayloadTooLarge)?;
+    if payload_len > MAX_PAYLOAD_LEN {
+        return Err(BrokerResponseWireError::PayloadTooLarge);
+    }
+    Ok(HEADER_LEN + payload_len)
+}
+
 fn encode_payload(
     operation: AtaBrokerOperation,
     response: &BrokerAtaResponse,

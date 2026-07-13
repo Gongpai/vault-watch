@@ -1,7 +1,7 @@
 # HDD Monitor — Project Index
 
 **Project:** HDD Monitor (Rust TUI)
-**Version:** 0.37.0
+**Version:** 0.38.0
 **Status:** Sprint 10 In Progress — Universal Storage Architecture & Security Hardening
 **Current Architecture:** Async TUI migration (`tokio` + `ratatui`, graph-first storage foundation)
 **Tech Stack:** Rust, ratatui, crossterm, tokio, serde, reqwest, toml, regex
@@ -45,7 +45,7 @@
 | Tunable Y-Axis Label Offset | ✅ Done | [US-MON-27](./agile/user-stories/US-MON-27.md), [Sprint 09](./agile/sprint-backlogs/sprint-09.md) |
 | Privacy/security disclosure foundation | ✅ Done | [US-MON-28](./agile/user-stories/US-MON-28.md) |
 | Universal storage inventory graph | ✅ Done | [US-MON-29](./agile/user-stories/US-MON-29.md) |
-| Native health backends + privilege broker | 📋 Planned | [Sprint 10](./agile/sprint-backlogs/sprint-10.md) |
+| Native health backends + privilege broker | 🚧 In Progress — standalone broker and authenticated typed client transport implemented; collector integration and qualification pending | [Sprint 10](./agile/sprint-backlogs/sprint-10.md) |
 | Native block throughput (`/proc/diskstats`) | ✅ Done | [US-MON-30](./agile/user-stories/US-MON-30.md) |
 | Native MD RAID monitoring (sysfs) | 🚧 Implementation complete — multi-array qualification carried to US-MON-38 | [US-MON-31](./agile/user-stories/US-MON-31.md) |
 | Storage-first topology UI | ✅ Done — scoped Graph/Topology views, typed availability, validated theme and responsive interaction tests | [US-MON-32](./agile/user-stories/US-MON-32.md) |
