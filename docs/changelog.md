@@ -4,6 +4,44 @@
 
 ---
 
+## [0.37.0] - 2026-07-13
+
+> **MINOR bump:** เพิ่ม typed broker response protocol และ authenticated connection dispatcher ต่อจาก `0.36.0`
+
+### Added
+
+- bounded versioned response frames สำหรับ Identify summary, SMART attributes/threshold/status และ GPL directory
+- authenticated per-connection dispatcher ที่เชื่อม session replay/budget gate, inventory/grant authorization, broker-owned device open/revalidation และ ATA executor
+- standalone `vault-watch-broker` binary พร้อม strict socket/UID/GID options, SIGTERM/Ctrl+C shutdown และ inode-safe endpoint cleanup
+- Tokio `AsyncFd` accept loop จำกัดพร้อมกัน 16 sessions และแยก client/session failure ไม่ให้ล้ม listener
+- package `default-run` ยังคงชี้ `vault-watch` เพื่อไม่ให้ workflow `cargo run` เดิมกำกวมหลังมี binary ที่สอง
+- opt-in `--discover-ata` startup flow: whole SCSI-like generation → one SG mapping → standard INQUIRY → advertised VPD 0x89 → validated SAT prefix → typed ATA IDENTIFY
+- generation-bound ATA grants derive SMART/GPL bits from IDENTIFY; optional thresholds/GPL directory are granted only after their fixed read-only command parses successfully
+- bounded ATA Information VPD prefix parser validates SAT page length 568, direct-access type, qualifier และ IDENTIFY DEVICE command โดยไม่อ้างว่า INQUIRY(6) คืน IDENTIFY payload 512 ไบต์ครบ
+- sanitized server audit records แยก completed, invalid request, authorization denial, device unavailable และ execution failure
+- strict response round-trip, malformed payload, collection bound, replay และ Unix socket-pair denial tests
+- broker wire fuzz target ครอบทั้ง request และ response decode/re-encode invariants
+- SCSI page fuzz target ครอบ ATA Information VPD prefix parser ใหม่
+
+### Security
+
+- response protocol ไม่ส่ง device ID, generation, path, serial, model, firmware, raw CDB หรือ OS/transport error detail
+- error response มีเฉพาะ typed coarse outcome และไม่มี payload
+- request framing จำกัด node ID ที่ 128 bytes ก่อน allocate และ malformed/truncated transport ถูกปิด connection พร้อม audit เมื่อระบุได้
+- server ปฏิเสธ partial/invalid inventory และ duplicate grants ก่อนรับงาน
+- standalone process ที่ไม่ระบุ `--discover-ata` เริ่มด้วย capability grant ว่าง จึงรับ IPC ได้แต่ปฏิเสธ device execution
+- `--discover-ata` เป็น explicit operator opt-in; default startup ยังมี zero grants และ native SCSI/ATAPI/ambiguous/malformed evidence ไม่ได้รับ ATA grant
+- listener ตรวจ socket inode/owner/group/mode กับ configured peer policy ก่อน accept และ fail closed ถ้า UID/GID ที่อนุญาตเข้า endpoint `0660` ไม่ได้
+- TUI client integration, runtime grant reconciliation, seccomp/resource limits และ hardware qualification ยังเป็นงานค้าง
+
+### Validated
+
+- response/server tests 9/9, broker tests 33/33 และ broker binary option tests 2/2 ผ่าน
+- full library 84/84, main binary 75/75, broker binary 2/2 และ doc tests ผ่าน
+- fuzz workspace build ผ่านหลังเพิ่ม response decoder boundary
+- `cargo clippy --all-targets --all-features -- -D warnings` ผ่าน
+- sandbox smoke test ไปถึง guarded Unix bind และถูก environment ปฏิเสธด้วย `EPERM`; ยังต้อง rerun live lifecycle บน host
+
 ## [0.36.0] - 2026-07-12
 
 > **MINOR bump:** เพิ่ม typed bounded ATA/SAT SG_IO executor ต่อจาก `0.35.0`

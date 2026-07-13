@@ -29,6 +29,9 @@
     - [x] guarded Unix socket bind/mode/peer-credential/identity-safe cleanup lifecycle
     - [x] broker-owned read-only whole-device open and post-open sysfs/fd evidence acquisition
     - [x] typed bounded async ATA/SAT SG_IO executor and structured response interpretation
+    - [x] bounded typed response wire codec and authenticated per-connection request dispatcher
+    - [x] standalone default-deny broker binary with bounded session loop and signal shutdown
+    - [x] opt-in broker-owned SAT discovery and generation-bound grant construction from VPD/IDENTIFY evidence
     - [ ] broker process/server integration and hardware qualification
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 

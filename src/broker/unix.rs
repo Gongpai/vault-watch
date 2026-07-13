@@ -5,7 +5,7 @@ use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 
-use super::BrokerPeerCredentials;
+use super::{BrokerPeerCredentials, BrokerPeerPolicy};
 
 const BROKER_SOCKET_MODE: u32 = 0o660;
 
@@ -74,6 +74,27 @@ impl BrokerSocket {
         let (stream, _) = self.listener.accept()?;
         let credentials = peer_credentials(&stream)?;
         Ok((stream, credentials))
+    }
+
+    pub(super) fn permits_peer_policy(&self, policy: BrokerPeerPolicy) -> io::Result<bool> {
+        let metadata = std::fs::symlink_metadata(&self.path)?;
+        if !metadata.file_type().is_socket()
+            || metadata.dev() != self.device
+            || metadata.ino() != self.inode
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "broker socket identity changed",
+            ));
+        }
+        if policy.allowed_uid == 0 {
+            return Ok(true);
+        }
+        let mode = metadata.mode();
+        Ok(
+            (metadata.uid() == policy.allowed_uid && mode & 0o600 == 0o600)
+                || (metadata.gid() == policy.allowed_gid && mode & 0o060 == 0o060),
+        )
     }
 }
 
@@ -295,6 +316,22 @@ mod tests {
             let metadata = fs::symlink_metadata(&path).unwrap();
             assert!(metadata.file_type().is_socket());
             assert_eq!(metadata.mode() & 0o777, BROKER_SOCKET_MODE);
+            assert!(
+                socket
+                    .permits_peer_policy(BrokerPeerPolicy {
+                        allowed_uid: metadata.uid(),
+                        allowed_gid: metadata.gid(),
+                    })
+                    .unwrap()
+            );
+            assert!(
+                !socket
+                    .permits_peer_policy(BrokerPeerPolicy {
+                        allowed_uid: metadata.uid().saturating_add(1),
+                        allowed_gid: metadata.gid().saturating_add(1),
+                    })
+                    .unwrap()
+            );
             assert_eq!(
                 BrokerSocket::bind(&path).unwrap_err().kind(),
                 io::ErrorKind::AlreadyExists

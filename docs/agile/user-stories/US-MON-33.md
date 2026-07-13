@@ -33,5 +33,6 @@
 - [x] typed request limits bound data/sense/timeout and semaphore-gated `spawn_blocking` worker accepts no raw CDB/direction
 - [x] operator reran ABI/worker suite successfully (23/23, sanitized evidence 2026-07-12)
 - [x] standalone `cargo-fuzz` targets cover SCSI page parsers and sense/completion validation without hardware access
+- [x] broker runtime discovery queries only direct-access nodes with one SG mapping, advertised VPD 0x89 and a valid SAT prefix before ATA passthrough
 - [ ] execute fuzz campaign after explicit dependency-download approval; remaining optional VPD/log pages
-- [ ] broker-owned actual SG_IO ioctl, identity revalidation and hardware qualification
+- [ ] broker-owned native SCSI health execution and hardware qualification

@@ -116,7 +116,7 @@ impl BrokerOpenedDevice {
     }
 }
 
-fn interpret_ata_completion(
+pub(super) fn interpret_ata_completion(
     command: AtaReadCommand,
     completion: SgIoCompletion,
 ) -> Result<BrokerAtaResponse, BrokerAtaExecutionError> {
@@ -182,10 +182,48 @@ fn open_authorized_device_at(
     dev_root: &Path,
     sys_dev_block_root: &Path,
 ) -> io::Result<BrokerOpenedDevice> {
-    let device_name = authorized.node_id.strip_prefix("block:").ok_or_else(|| {
+    let (file, evidence) =
+        open_revalidated_file(&authorized.node_id, dev_root, sys_dev_block_root)?;
+    let plan = revalidate_opened_device(authorized, evidence).map_err(|reason| {
+        io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            format!("opened device failed broker revalidation: {reason:?}"),
+        )
+    })?;
+    Ok(BrokerOpenedDevice { file, plan })
+}
+
+pub(super) fn open_system_probe_device(
+    node_id: &str,
+    generation: BrokerGeneration,
+) -> io::Result<File> {
+    let (file, evidence) = open_revalidated_file(
+        node_id,
+        Path::new(SYSTEM_DEV_ROOT),
+        Path::new(SYSTEM_SYS_DEV_BLOCK_ROOT),
+    )?;
+    if !evidence.is_block_device
+        || evidence.is_partition
+        || !evidence.opened_read_only
+        || evidence.generation != generation
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "capability probe device failed generation or whole-device revalidation",
+        ));
+    }
+    Ok(file)
+}
+
+fn open_revalidated_file(
+    node_id: &str,
+    dev_root: &Path,
+    sys_dev_block_root: &Path,
+) -> io::Result<(File, OpenedDeviceEvidence)> {
+    let device_name = node_id.strip_prefix("block:").ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
-            "authorized node is not a canonical block node",
+            "broker node is not a canonical block node",
         )
     })?;
     if device_name.is_empty()
@@ -219,13 +257,7 @@ fn open_authorized_device_at(
             dev_minor,
         },
     };
-    let plan = revalidate_opened_device(authorized, evidence).map_err(|reason| {
-        io::Error::new(
-            io::ErrorKind::PermissionDenied,
-            format!("opened device failed broker revalidation: {reason:?}"),
-        )
-    })?;
-    Ok(BrokerOpenedDevice { file, plan })
+    Ok((file, evidence))
 }
 
 fn descriptor_flags(fd: RawFd) -> io::Result<libc::c_int> {

@@ -96,6 +96,21 @@ pub fn decode_request_frame(frame: &[u8]) -> Result<BrokerRequest, BrokerWireErr
     })
 }
 
+pub(super) const fn request_header_len() -> usize {
+    HEADER_LEN
+}
+
+pub(super) fn request_frame_len(header: &[u8]) -> Result<usize, BrokerWireError> {
+    if header.len() != HEADER_LEN {
+        return Err(BrokerWireError::FrameTooShort);
+    }
+    let node_len = usize::from(u16::from_le_bytes([header[32], header[33]]));
+    if node_len == 0 || node_len > MAX_DEVICE_ID_LEN {
+        return Err(BrokerWireError::InvalidNodeLength);
+    }
+    Ok(HEADER_LEN + node_len)
+}
+
 const fn operation_code(operation: AtaBrokerOperation) -> u8 {
     match operation {
         AtaBrokerOperation::IdentifyDevice => 1,

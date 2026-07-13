@@ -290,6 +290,7 @@ pub enum ParseError {
     InvalidPeripheralQualifier(u8),
     TruncatedParameter { offset: usize, declared: usize },
     InvalidParameterWidth { code: u16, width: usize },
+    InvalidPageLength { expected: usize, actual: usize },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -336,6 +337,46 @@ pub fn parse_supported_vpd_pages(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         });
     }
     Ok(data[4..end].to_vec())
+}
+
+const ATA_INFORMATION_PAGE_LENGTH: usize = 568;
+const ATA_INFORMATION_PREFIX_LENGTH: usize = 60;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AtaInformationVpdPrefix {
+    pub peripheral_device_type: u8,
+    pub command_code: u8,
+}
+
+/// Validates the bounded prefix available through INQUIRY(6). SAT defines a
+/// 568-byte payload, but INQUIRY's one-byte allocation length cannot return the
+/// full 572-byte page. The prefix still includes the declared page length and
+/// ATA command code; IDENTIFY data is obtained separately via typed APT-16.
+pub fn parse_ata_information_vpd_prefix(
+    data: &[u8],
+) -> Result<AtaInformationVpdPrefix, ParseError> {
+    require_len(data, ATA_INFORMATION_PREFIX_LENGTH)?;
+    if data[1] != VpdPage::AtaInformation as u8 {
+        return Err(ParseError::UnexpectedPage {
+            expected: VpdPage::AtaInformation as u8,
+            actual: data[1],
+        });
+    }
+    let declared = usize::from(u16::from_be_bytes([data[2], data[3]]));
+    if declared != ATA_INFORMATION_PAGE_LENGTH {
+        return Err(ParseError::InvalidPageLength {
+            expected: ATA_INFORMATION_PAGE_LENGTH,
+            actual: declared,
+        });
+    }
+    let qualifier = data[0] >> 5;
+    if qualifier > 3 {
+        return Err(ParseError::InvalidPeripheralQualifier(qualifier));
+    }
+    Ok(AtaInformationVpdPrefix {
+        peripheral_device_type: data[0] & 0x1f,
+        command_code: data[56],
+    })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -900,6 +941,33 @@ mod tests {
         assert!(matches!(
             parse_supported_vpd_pages(&fixture[..6]),
             Err(ParseError::DeclaredLengthExceedsPayload { .. })
+        ));
+    }
+
+    #[test]
+    fn ata_information_prefix_requires_sat_length_and_identify_command_evidence() {
+        let mut prefix = [0u8; ATA_INFORMATION_PREFIX_LENGTH];
+        prefix[1] = VpdPage::AtaInformation as u8;
+        prefix[2..4].copy_from_slice(&(ATA_INFORMATION_PAGE_LENGTH as u16).to_be_bytes());
+        prefix[56] = 0xec;
+        assert_eq!(
+            parse_ata_information_vpd_prefix(&prefix),
+            Ok(AtaInformationVpdPrefix {
+                peripheral_device_type: 0,
+                command_code: 0xec,
+            })
+        );
+        assert!(parse_ata_information_vpd_prefix(&prefix[..59]).is_err());
+        prefix[3] = 1;
+        assert!(matches!(
+            parse_ata_information_vpd_prefix(&prefix),
+            Err(ParseError::InvalidPageLength { .. })
+        ));
+        prefix[3] = (ATA_INFORMATION_PAGE_LENGTH as u16).to_be_bytes()[1];
+        prefix[0] = 0xe0;
+        assert!(matches!(
+            parse_ata_information_vpd_prefix(&prefix),
+            Err(ParseError::InvalidPeripheralQualifier(7))
         ));
     }
 

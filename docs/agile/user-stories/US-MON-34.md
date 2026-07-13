@@ -34,6 +34,7 @@
 - [x] peer UID/GID/PID policy and monotonically increasing per-session request IDs provide authentication/replay gates before authorization
 - [x] Linux `SO_PEERCRED` wrapper validates syscall success, exact `ucred` size and positive PID on an already-connected Unix stream
 - [x] post-open gate requires block-device, non-partition, read-only descriptor evidence and exact diskseq/dev_t match before execution
+- [x] opt-in runtime SAT discovery requires full sysfs generation, one SG mapping, direct-access INQUIRY, advertised ATA Information VPD and IDENTIFY DEVICE evidence before grant creation
 - [ ] standardized health log pages, reviewed real vendor rules, curated seeds, broker and hardware qualification
 
 ## Operator Evidence

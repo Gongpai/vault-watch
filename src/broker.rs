@@ -21,6 +21,24 @@ pub use device::{
     open_system_authorized_device,
 };
 #[cfg(target_os = "linux")]
+mod capability;
+#[cfg(target_os = "linux")]
+pub use capability::{BrokerCapabilityOutcome, BrokerCapabilityReport, discover_ata_capabilities};
+#[cfg(target_os = "linux")]
+mod response;
+#[cfg(target_os = "linux")]
+pub use response::{
+    BROKER_RESPONSE_WIRE_VERSION, BrokerResponseError, BrokerResponseFrame,
+    BrokerResponseWireError, decode_response_frame, encode_response_frame,
+};
+#[cfg(target_os = "linux")]
+mod server;
+#[cfg(target_os = "linux")]
+pub use server::{
+    BrokerServer, BrokerServerAuditOutcome, BrokerServerAuditRecord, BrokerServerConfigError,
+    MAX_CONCURRENT_BROKER_SESSIONS,
+};
+#[cfg(target_os = "linux")]
 mod unix;
 #[cfg(target_os = "linux")]
 pub use unix::{BrokerSocket, peer_credentials};
@@ -240,7 +258,7 @@ pub fn authorize_ata_request(
     })
 }
 
-const fn broker_generation(generation: &Generation) -> Option<BrokerGeneration> {
+pub(super) const fn broker_generation(generation: &Generation) -> Option<BrokerGeneration> {
     match (generation.diskseq, generation.dev_t) {
         (Some(diskseq), Some((dev_major, dev_minor))) => Some(BrokerGeneration {
             diskseq,

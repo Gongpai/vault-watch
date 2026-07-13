@@ -12,12 +12,13 @@
 - [ ] verified SG_IO ABI wrapper in bounded blocking worker
   - [x] pure completion/residual/sense validation before ABI integration
   - [x] private Linux UAPI layout assertions, bounded typed request and semaphore-gated blocking worker foundation
-  - [ ] broker-owned actual ioctl and identity revalidation
+  - [x] broker-owned startup capability ioctl with whole-device generation revalidation
+  - [ ] broker-owned native SCSI health execution and hardware qualification
 - [x] typed read-only allowlist and unsafe-command rejection tests
 - [ ] capability discovery and SAS/SAT/controller-hidden routing
   - [x] pure evidence routing and advertised-page scheduling
   - [x] injectable sysfs SG mapping with hot-remove/no-interface/ambiguous states
-  - [ ] runtime command capability discovery through broker
+  - [x] runtime standard INQUIRY → supported VPD → ATA Information VPD capability discovery through broker
 - [ ] integrate through broker only after US-MON-37 gate
 
 ## Live/Operator Verification

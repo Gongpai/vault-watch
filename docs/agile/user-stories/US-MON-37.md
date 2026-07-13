@@ -23,5 +23,8 @@
 - [x] guarded Unix socket lifecycle, restricted mode, kernel peer credentials and inode-safe cleanup
 - [x] broker-owned read-only whole-device open and post-open generation/partition evidence acquisition
 - [x] typed bounded async ATA/SAT SG_IO executor; no caller-controlled CDB/direction/length/timeout
+- [x] typed bounded response frames and authenticated connection dispatcher with replay/budget/authorization/open/execute gates
+- [x] standalone default-deny broker process requires explicit peer UID/GID, bounds concurrent sessions and handles SIGTERM/Ctrl+C cleanup
+- [x] broker-owned opt-in capability discovery creates generation-bound ATA grants without accepting paths, CDBs or capability claims from IPC/config
 - [ ] broker process/server integration and hardware qualification
 - [ ] process separation, seccomp, concurrency limits and hostile integration qualification
