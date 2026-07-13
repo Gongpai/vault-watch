@@ -48,6 +48,7 @@ mod unix;
 pub use unix::{BrokerSocket, peer_credentials};
 
 pub const MAX_DEVICE_ID_LEN: usize = 128;
+pub const DEFAULT_BROKER_SOCKET_PATH: &str = "/run/vault-watch/broker.sock";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AtaBrokerOperation {

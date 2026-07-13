@@ -1,6 +1,8 @@
+use std::ffi::CString;
 use std::io;
 use std::mem::{MaybeUninit, size_of};
 use std::os::fd::AsRawFd;
+use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
@@ -62,6 +64,41 @@ impl BrokerSocket {
             device,
             inode,
         })
+    }
+
+    /// Binds and assigns the endpoint group required by a non-root peer. The
+    /// socket identity and restricted mode are revalidated after chown.
+    pub fn bind_for_peer(path: &Path, policy: BrokerPeerPolicy) -> io::Result<Self> {
+        let socket = Self::bind(path)?;
+        let metadata = std::fs::symlink_metadata(path)?;
+        if policy.allowed_uid != 0 && metadata.gid() != policy.allowed_gid {
+            let path_bytes = CString::new(path.as_os_str().as_bytes()).map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "broker socket path contains NUL",
+                )
+            })?;
+            // SAFETY: path_bytes is a live NUL-terminated pathname. The parent
+            // passed the no-symlink/no-untrusted-writer checks before bind.
+            let result =
+                unsafe { libc::chown(path_bytes.as_ptr(), libc::uid_t::MAX, policy.allowed_gid) };
+            if result != 0 {
+                return Err(io::Error::last_os_error());
+            }
+        }
+        let secured = std::fs::symlink_metadata(path)?;
+        if !secured.file_type().is_socket()
+            || secured.dev() != socket.device
+            || secured.ino() != socket.inode
+            || secured.mode() & 0o777 != BROKER_SOCKET_MODE
+            || (policy.allowed_uid != 0 && secured.gid() != policy.allowed_gid)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "broker socket peer ownership validation failed",
+            ));
+        }
+        Ok(socket)
     }
 
     pub const fn listener(&self) -> &UnixListener {
@@ -254,6 +291,31 @@ mod tests {
             }
             .accepts(left_peer)
         );
+    }
+
+    #[test]
+    fn peer_bound_socket_preserves_identity_mode_and_access_policy() {
+        let directory = private_test_directory();
+        let path = directory.join("peer.sock");
+        let policy = BrokerPeerPolicy {
+            // SAFETY: geteuid/getegid have no preconditions.
+            allowed_uid: unsafe { libc::geteuid() },
+            // SAFETY: geteuid/getegid have no preconditions.
+            allowed_gid: unsafe { libc::getegid() },
+        };
+        let socket = match BrokerSocket::bind_for_peer(&path, policy) {
+            Ok(socket) => socket,
+            Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+                fs::remove_dir(directory).unwrap();
+                return;
+            }
+            Err(error) => panic!("unexpected peer socket bind error: {error}"),
+        };
+
+        assert!(socket.permits_peer_policy(policy).unwrap());
+        drop(socket);
+        assert!(!path.exists());
+        fs::remove_dir(directory).unwrap();
     }
 
     #[test]

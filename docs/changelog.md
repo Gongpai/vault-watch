@@ -4,6 +4,33 @@
 
 ---
 
+## [0.39.0] - 2026-07-13
+
+> **MINOR bump:** เชื่อม opt-in native ATA health จาก broker เข้าสู่ TUI refresh loop ต่อจาก committed `0.38.0`
+
+### Added
+
+- `[system] broker_enabled = true` opt-in โดยใช้ fixed `/run/vault-watch/broker.sock` และตรวจ broker process UID/GID `0:0`
+- graph-derived broker subjects เฉพาะ whole SCSI-like nodes ที่มี `diskseq` และ `dev_t` ครบ
+- conservative SMART RETURN STATUS mapping: passed/failed/unknown เป็น typed health โดยไม่ตีความ vendor attribute IDs
+- per-device legacy fallback: ตัด `smartctl` เฉพาะ device ที่ broker ตอบ native status สำเร็จ
+- 30-second reconnect backoff หลัง connect/transport/protocol failure
+- broker-owned socket group assignment เป็น configured peer GID พร้อม post-chown inode/mode/ownership revalidation
+
+### Security
+
+- config เปิดได้เฉพาะ boolean; ไม่มี configurable broker path, UID/GID, request ID, operation, timeout หรือ payload
+- partial inventory ไม่ถูก route เข้า broker และ generation binding ยังคง revalidate ก่อนทุก command
+- native success ไม่สร้าง temperature, power-on hours หรือ vendor metric จาก raw SMART attributes
+- security disclosure แสดง broker/legacy ตาม collector ที่ใช้งานจริงใน refresh ล่าสุด
+
+### Validated
+
+- full library 90/90, main binary 81/81, broker binary 2/2 และ doc tests ผ่าน
+- `cargo clippy --all-targets --all-features -- -D warnings`, fuzz workspace build, format และ diff checks ผ่าน
+- regression tests ครอบ partial-inventory gate, conservative SMART mapping, reconnect backoff, hot-plug fallback routing และ peer-bound socket lifecycle
+- hardware qualification และ live root-to-user socket lifecycle ยังเป็นงานค้าง
+
 ## [0.38.0] - 2026-07-13
 
 > **MINOR bump:** เพิ่ม authenticated typed broker client transport ต่อจาก committed `0.37.0`

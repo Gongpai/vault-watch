@@ -294,6 +294,29 @@ sudo install -Dm755 /tmp/vault-watch /usr/local/bin/vault-watch
 | Running as normal user | Prepends `sudo` automatically |
 | `smartctl_prefix` set in config | Uses the configured value |
 
+### Native broker opt-in
+
+The native ATA path keeps raw device access in a separate root process. Create
+the fixed runtime directory, then start the broker for the current user's UID
+and primary GID:
+
+```bash
+sudo install -d -o root -g "$(id -g)" -m 0750 /run/vault-watch
+sudo vault-watch-broker --uid "$(id -u)" --gid "$(id -g)" --discover-ata
+```
+
+Enable the client in `~/.config/hdd-monitor/config.toml`:
+
+```toml
+[system]
+broker_enabled = true
+```
+
+The client accepts only a root broker at `/run/vault-watch/broker.sock`.
+Currently qualified routing is still pending: successful SAT devices use the
+standard SMART return status, while unsupported or unavailable devices retain
+the existing per-device `smartctl` fallback.
+
 ### Recommended: NOPASSWD sudo
 
 Add to `/etc/sudoers` using `visudo`:

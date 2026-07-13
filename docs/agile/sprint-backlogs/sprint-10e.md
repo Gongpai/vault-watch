@@ -33,7 +33,9 @@
     - [x] standalone default-deny broker binary with bounded session loop and signal shutdown
     - [x] opt-in broker-owned SAT discovery and generation-bound grant construction from VPD/IDENTIFY evidence
     - [x] authenticated typed client transport with monotonic request IDs, bounded response reads and per-operation deadlines
-    - [ ] broker process/server integration and hardware qualification
+    - [x] opt-in TUI mapping of standard SMART RETURN STATUS with conservative per-device legacy fallback
+    - [x] broker process/server/client/TUI refresh integration
+    - [ ] hardware qualification
 - [ ] BUG-06: เลิกบังคับ `-d scsi`; route SATA/ATA ตาม protocol และ parse ATA health/temperature/hours
 
 ## Exit Gate

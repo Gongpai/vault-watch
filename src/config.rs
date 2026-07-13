@@ -15,6 +15,8 @@ pub struct Config {
 
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct SystemConfig {
+    /// Opt in to the fixed-path, root-authenticated native health broker.
+    pub broker_enabled: Option<bool>,
     /// Override smartctl privilege prefix ("sudo", "doas", "" for none).
     /// When omitted, auto-detected via /proc/self/status Uid.
     pub smartctl_prefix: Option<String>,
@@ -24,6 +26,14 @@ pub struct SystemConfig {
     pub iostat_path: Option<String>,
     /// Explicit disk device list (e.g. ["sda", "sdb"]). Auto-detected from /sys/block if omitted.
     pub devices: Option<Vec<String>>,
+}
+
+pub fn broker_enabled(config: &Config) -> bool {
+    config
+        .system
+        .as_ref()
+        .and_then(|system| system.broker_enabled)
+        .unwrap_or(false)
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -389,6 +399,13 @@ mod tests {
         let config: Config = toml::from_str("[system]\ndevices = [\"sda\"]\n[discord]\n").unwrap();
         assert_eq!(config.system.unwrap().devices.unwrap(), vec!["sda"]);
         assert!(config.discord.unwrap().webhook_url.is_none());
+    }
+
+    #[test]
+    fn broker_is_explicit_opt_in_with_no_configurable_endpoint() {
+        assert!(!broker_enabled(&Config::default()));
+        let config: Config = toml::from_str("[system]\nbroker_enabled = true\n").unwrap();
+        assert!(broker_enabled(&config));
     }
 
     #[test]

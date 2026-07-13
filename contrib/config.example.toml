@@ -5,6 +5,10 @@
 #   - sudo is available and configured for smartctl (NOPASSWD recommended)
 
 [system]
+# Opt in to the root-owned native health broker at the fixed endpoint
+# /run/vault-watch/broker.sock. Disabled by default; no custom path is accepted.
+# broker_enabled = true
+
 # Override smartctl privilege prefix.
 # Values: "sudo" | "doas" | "" (empty = run smartctl directly, requires root/setcap)
 # Default: auto-detect — uses "" when running as root, "sudo" otherwise.

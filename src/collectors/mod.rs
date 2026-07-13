@@ -1,3 +1,5 @@
+#[cfg(target_os = "linux")]
+pub mod broker_health;
 pub mod diskstats;
 #[cfg(test)]
 pub mod iostat;

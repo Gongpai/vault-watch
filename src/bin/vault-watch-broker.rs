@@ -8,11 +8,9 @@ mod linux {
     use tokio::signal::unix::{SignalKind, signal};
     use vault_watch::broker::{
         BrokerPeerPolicy, BrokerServer, BrokerServerAuditRecord, BrokerSocket,
-        discover_ata_capabilities,
+        DEFAULT_BROKER_SOCKET_PATH, discover_ata_capabilities,
     };
     use vault_watch::storage;
-
-    const DEFAULT_SOCKET_PATH: &str = "/run/vault-watch/broker.sock";
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct Options {
@@ -59,18 +57,15 @@ mod linux {
             Vec::new()
         };
         let grant_count = grants.len();
+        let peer_policy = BrokerPeerPolicy {
+            allowed_uid: options.allowed_uid,
+            allowed_gid: options.allowed_gid,
+        };
         let server = Arc::new(
-            BrokerServer::new(
-                inventory,
-                grants,
-                BrokerPeerPolicy {
-                    allowed_uid: options.allowed_uid,
-                    allowed_gid: options.allowed_gid,
-                },
-            )
-            .map_err(|error| format!("refusing unsafe startup inventory: {error:?}"))?,
+            BrokerServer::new(inventory, grants, peer_policy)
+                .map_err(|error| format!("refusing unsafe startup inventory: {error:?}"))?,
         );
-        let socket = BrokerSocket::bind(&options.socket)
+        let socket = BrokerSocket::bind_for_peer(&options.socket, peer_policy)
             .map_err(|error| format!("cannot bind {}: {error}", options.socket.display()))?;
         let mut terminate = signal(SignalKind::terminate())
             .map_err(|error| format!("cannot install SIGTERM handler: {error}"))?;
@@ -111,7 +106,7 @@ mod linux {
     where
         I: IntoIterator<Item = OsString>,
     {
-        let mut socket = PathBuf::from(DEFAULT_SOCKET_PATH);
+        let mut socket = PathBuf::from(DEFAULT_BROKER_SOCKET_PATH);
         let mut socket_overridden = false;
         let mut uid = None;
         let mut gid = None;
@@ -232,7 +227,7 @@ mod linux {
             assert_eq!(
                 parse_args(args(&["--uid", "1000", "--gid", "100", "--discover-ata"])),
                 Ok(ParseOutcome::Run(Options {
-                    socket: PathBuf::from(DEFAULT_SOCKET_PATH),
+                    socket: PathBuf::from(DEFAULT_BROKER_SOCKET_PATH),
                     allowed_uid: 1000,
                     allowed_gid: 100,
                     discover_ata: true,

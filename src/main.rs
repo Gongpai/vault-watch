@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::io;
 use std::path::Path;
 use std::sync::Arc;
@@ -412,6 +412,16 @@ async fn collector_loop(
     cfg: Arc<config::Config>,
 ) {
     let (smartctl_prog, smartctl_base_args) = config::smartctl_base_cmd(&cfg);
+    let broker_enabled = config::broker_enabled(&cfg);
+    let configured_health_devices = cfg
+        .system
+        .as_ref()
+        .and_then(|system| system.devices.as_ref())
+        .filter(|devices| !devices.is_empty())
+        .cloned();
+    #[cfg(target_os = "linux")]
+    let mut broker_health =
+        broker_enabled.then(collectors::broker_health::BrokerHealthCollector::default);
     let mut native_diskstats = collectors::diskstats::DiskstatsSampler::default();
     let mut native_md = collectors::md_sysfs::MdOperationSampler::default();
 
@@ -420,9 +430,12 @@ async fn collector_loop(
         // resnapshot remains the correctness path, with the periodic timer as
         // a safety net for missed or unavailable events.
         let next_inventory = storage::discover_storage();
-        let (devices, throughput_subjects) = {
+        let (devices, throughput_subjects, health_inventory) = {
             let mut s = state.lock().await;
             s.reconcile_storage(next_inventory);
+            let devices =
+                health_devices(configured_health_devices.as_deref(), &s.storage_inventory);
+            s.disk_devices.clone_from(&devices);
             let subjects = s
                 .storage_inventory
                 .throughput_subjects()
@@ -433,7 +446,7 @@ async fn collector_loop(
                     diskseq: subject.diskseq,
                 })
                 .collect::<Vec<_>>();
-            (s.disk_devices.clone(), subjects)
+            (devices, subjects, s.storage_inventory.clone())
         };
         let io_result = native_diskstats
             .sample(
@@ -471,12 +484,31 @@ async fn collector_loop(
                 Err(_) => (Vec::new(), RaidAvailability::Unavailable),
             };
 
-        let disks_result =
-            collectors::smart::collect_all(&devices, &smartctl_prog, &smartctl_base_args).await;
+        #[cfg(target_os = "linux")]
+        let (mut native_disks, handled_devices, broker_connected) =
+            if let Some(collector) = broker_health.as_mut() {
+                let snapshot = collector.collect(&health_inventory).await;
+                (snapshot.disks, snapshot.handled_devices, snapshot.connected)
+            } else {
+                (Vec::new(), HashSet::new(), false)
+            };
+        #[cfg(not(target_os = "linux"))]
+        let (mut native_disks, handled_devices, broker_connected) =
+            (Vec::new(), HashSet::new(), false);
+        let fallback_devices = devices
+            .into_iter()
+            .filter(|device| !handled_devices.contains(device))
+            .collect::<Vec<_>>();
+        let mut disks_result =
+            collectors::smart::collect_all(&fallback_devices, &smartctl_prog, &smartctl_base_args)
+                .await;
+        disks_result.append(&mut native_disks);
 
         {
             let mut s = state.lock().await;
             s.reconcile_raids(raid_result, raid_availability);
+            s.security.privileged_broker = broker_connected;
+            s.security.legacy_external_collectors = !fallback_devices.is_empty();
 
             for disk in &disks_result {
                 if let Some(temp) = disk.temperature_c
@@ -561,6 +593,26 @@ async fn collector_loop(
             _ = notify.notified() => {}
         }
     }
+}
+
+fn health_devices(
+    configured: Option<&[String]>,
+    inventory: &storage::StorageInventory,
+) -> Vec<String> {
+    configured.map_or_else(
+        || {
+            inventory
+                .nodes
+                .iter()
+                .filter(|node| {
+                    node.kind == storage::StorageKind::ScsiLike
+                        && node.materialization == storage::Materialization::BlockDevice
+                })
+                .map(|node| node.name.clone())
+                .collect()
+        },
+        <[String]>::to_vec,
+    )
 }
 
 #[cfg(test)]
@@ -666,5 +718,42 @@ mod tests {
         assert_eq!(next_focused_panel(&state, false), FocusedPanel::RaidGraph);
         state.focused_panel = FocusedPanel::TempGraph;
         assert_eq!(next_focused_panel(&state, true), FocusedPanel::RaidGraph);
+    }
+
+    #[test]
+    fn health_device_routing_tracks_hotplug_unless_configured() {
+        use crate::storage::model::Generation;
+        use crate::storage::{Materialization, StorageKind, StorageNode};
+
+        let inventory = StorageInventory {
+            nodes: vec![
+                StorageNode {
+                    id: "block:sda".into(),
+                    name: "sda".into(),
+                    kind: StorageKind::ScsiLike,
+                    materialization: Materialization::BlockDevice,
+                    removable: Some(false),
+                    identities: Vec::new(),
+                    generation: Generation::default(),
+                },
+                StorageNode {
+                    id: "block:nvme0n1".into(),
+                    name: "nvme0n1".into(),
+                    kind: StorageKind::Nvme,
+                    materialization: Materialization::BlockDevice,
+                    removable: Some(false),
+                    identities: Vec::new(),
+                    generation: Generation::default(),
+                },
+            ],
+            edges: Vec::new(),
+            partial: false,
+        };
+
+        assert_eq!(health_devices(None, &inventory), vec!["sda"]);
+        assert_eq!(
+            health_devices(Some(&["configured".into()]), &inventory),
+            vec!["configured"]
+        );
     }
 }
